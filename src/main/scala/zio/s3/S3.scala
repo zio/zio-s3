@@ -17,7 +17,6 @@
 package zio.s3
 
 import java.io.{ FileInputStream, FileOutputStream }
-import java.net.URI
 import java.nio.ByteBuffer
 import java.nio.file.attribute.PosixFileAttributes
 import java.time.Instant
@@ -57,13 +56,15 @@ object S3 {
 
     def getObject(bucketName: String, key: String): ZStreamChunk[R, S3Exception, Byte]
 
-    def listObjects(bucketName: String, prefix: String): ZIO[R, S3Exception, S3ObjectListing]
+    def listObjects(bucketName: String, prefix: String, maxKeys: Int): ZIO[R, S3Exception, S3ObjectListing]
 
     def getNextObjects(listing: S3ObjectListing): ZIO[R, S3Exception, S3ObjectListing]
 
     def putObject[R1](
       bucketName: String,
       key: String,
+      contentLength: Long,
+      contentType: String,
       content: ZStreamChunk[R1, Throwable, Byte]
     ): ZIO[R with R1, S3Exception, Unit]
 
@@ -107,9 +108,10 @@ object S3 {
           .mapError(S3.S3ExceptionLike)
       )
 
-    override def listObjects(bucketName: String, prefix: String): ZIO[Any, S3Exception, S3ObjectListing] =
-      execute(_.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix).build()))
-        .map(S3ObjectListing(_))
+    override def listObjects(bucketName: String, prefix: String, maxKeys: Int): ZIO[Any, S3Exception, S3ObjectListing] =
+      execute(
+        _.listObjectsV2(ListObjectsV2Request.builder().maxKeys(maxKeys).bucket(bucketName).prefix(prefix).build())
+      ).map(S3ObjectListing(_))
 
     override def getNextObjects(listing: S3ObjectListing): ZIO[Any, S3Exception, S3ObjectListing] =
       listing.nextContinuationToken
@@ -124,6 +126,8 @@ object S3 {
     override def putObject[R1](
       bucketName: String,
       key: String,
+      contentLength: Long,
+      contentType: String,
       content: ZStreamChunk[R1, Throwable, Byte]
     ): ZIO[Any with R1, S3Exception, Unit] =
       content.chunks
@@ -133,7 +137,13 @@ object S3 {
           publisher =>
             execute(
               _.putObject(
-                PutObjectRequest.builder().bucket(bucketName).key(key).build(),
+                PutObjectRequest
+                  .builder()
+                  .bucket(bucketName)
+                  .contentLength(contentLength)
+                  .contentType(contentType)
+                  .key(key)
+                  .build(),
                 AsyncRequestBody.fromPublisher(publisher)
               )
             )
@@ -229,11 +239,16 @@ object S3 {
         .mapError(S3ExceptionLike)
     }
 
-    override def listObjects(bucketName: String, prefix: String): ZIO[Blocking, S3Exception, S3ObjectListing] =
+    override def listObjects(
+      bucketName: String,
+      prefix: String,
+      maxKeys: Int
+    ): ZIO[Blocking, S3Exception, S3ObjectListing] =
       Files
         .find(path / bucketName) { (p, _) =>
           p.filename.toString().startsWith(prefix)
         }
+        .take(maxKeys)
         .map(_.filename.toString())
         .runCollect
         .map(_.map(S3ObjectSummary(bucketName, _)))
@@ -247,6 +262,8 @@ object S3 {
     override def putObject[R1](
       bucketName: String,
       key: String,
+      contentLength: Long,
+      contentString: String,
       content: ZStreamChunk[R1, Throwable, Byte]
     ): ZIO[Blocking with R1, S3Exception, Unit] =
       ZManaged

@@ -4,12 +4,14 @@ import java.net.URI
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
-import zio.Managed
+import zio.{ Chunk, Managed }
 import zio.blocking.Blocking
 import zio.nio.file.{ Files, Path }
-import zio.stream.ZSink
+import zio.stream.{ ZSink, ZStreamChunk }
 import zio.test.Assertion._
 import zio.test._
+
+import scala.util.Random
 
 object S3Test
     extends DefaultRunnableSpec(
@@ -45,7 +47,7 @@ object S3Test
         testM("list objects with prefix") {
           val test =
             for {
-              succeed <- listObjects("bucket-1", "console")
+              succeed <- listObjects("bucket-1", "console", 10)
             } yield assert(
               succeed,
               equalTo(
@@ -57,7 +59,7 @@ object S3Test
         testM("list objects with not match prefix") {
           val test =
             for {
-              succeed <- listObjects("bucket-1", "blah")
+              succeed <- listObjects("bucket-1", "blah", 10)
             } yield assert(
               succeed,
               equalTo(
@@ -157,7 +159,43 @@ object S3Test
                           .fold(_ => false, _ => true)
             } yield assert(succeed, isFalse)
           test.provideManaged(utils.s3)
+        },
+        testM("get nextObjects") {
+          val test =
+            for {
+              token   <- listObjects("bucket-1", "", 1).map(_.nextContinuationToken)
+              listing <- getNextObjects(S3ObjectListing("bucket-1", Nil, token))
+            } yield assert(listing.objectSummaries, isNonEmpty)
+          test.provideManaged(utils.s3)
+        },
+        testM("get nextObjects - invalid token") {
+          val test =
+            for {
+              listing <- getNextObjects(S3ObjectListing("bucket-1", Nil, Some("blah")))
+            } yield assert(listing, equalTo(S3ObjectListing("bucket-1", Nil, None)))
+          test.provideManaged(utils.s3)
+        },
+        testM("put object") {
+          val c      = Chunk.fromArray("Hello F World".getBytes)
+          val data   = ZStreamChunk.fromChunks(c)
+          val tmpKey = Random.alphanumeric.take(10).mkString
+
+          val test = for {
+            _         <- putObject_("bucket-1", tmpKey, c.length, data)
+            fileExist <- Files.deleteIfExists(Path(s"minio/data/bucket-1/$tmpKey")).provide(Blocking.Live)
+          } yield assert(fileExist, isTrue)
+
+          test.provideManaged(utils.s3)
         }
+//        testM("put/get object") {
+//          val data = ZStreamChunk.fromChunks(Chunk.fromArray("Hello F World".getBytes))
+//
+//          val test = for {
+//            succeed <- putObject("bucket-1", "console.log", data).fold(_ => false, _ => true)
+//          } yield assert(succeed, isFalse)
+//
+//          test.provideManaged(utils.s3)
+//        }
       )
     )
 
