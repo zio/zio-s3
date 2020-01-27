@@ -60,13 +60,20 @@ object S3 {
 
     def getNextObjects(listing: S3ObjectListing): ZIO[R, S3Exception, S3ObjectListing]
 
-    def putObject[R1](
+    def putObject[R1 <: R](
       bucketName: String,
       key: String,
       contentLength: Long,
       contentType: String,
       content: ZStreamChunk[R1, Throwable, Byte]
-    ): ZIO[R with R1, S3Exception, Unit]
+    ): ZIO[R1, S3Exception, Unit]
+
+    def multipartUpload[R1 <: R](n: Int)(
+      bucketName: String,
+      key: String,
+      contentType: String,
+      content: ZStreamChunk[R1, Throwable, Byte]
+    ): ZIO[R1, S3Exception, Unit]
 
     def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[R, S3Exception, T]
   }
@@ -149,6 +156,58 @@ object S3 {
             )
         )
         .unit
+
+    def multipartUpload[R1 <: Any](n: Int)(
+      bucketName: String,
+      key: String,
+      contentType: String,
+      content: ZStreamChunk[R1, Throwable, Byte]
+    ): ZIO[R1, S3Exception, Unit] =
+      for {
+        uploadId <- execute(
+                     _.createMultipartUpload(
+                       CreateMultipartUploadRequest
+                         .builder()
+                         .bucket(bucketName)
+                         .key(key)
+                         .contentType(contentType)
+                         .build()
+                     )
+                   ).map(_.uploadId())
+
+        parts <- content.chunks.zipWithIndex
+                  .mapMPar(n) {
+                    case (chunk, partNumber) =>
+                      execute(
+                        _.uploadPart(
+                          UploadPartRequest
+                            .builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .partNumber(partNumber)
+                            .uploadId(uploadId)
+                            .contentLength(chunk.length.toLong)
+                            .build(),
+                          AsyncRequestBody.fromByteBuffer(ByteBuffer.wrap(chunk.toArray))
+                        )
+                      )
+                  }
+                  .map(r => CompletedPart.builder().eTag(r.eTag()).build())
+                  .runCollect
+                  .mapError(S3ExceptionLike)
+
+        _ <- execute(
+              _.completeMultipartUpload(
+                CompleteMultipartUploadRequest
+                  .builder()
+                  .bucket(bucketName)
+                  .key(key)
+                  .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+                  .uploadId(uploadId)
+                  .build()
+              )
+            )
+      } yield ()
 
     def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
       fromCompletionStage(UIO.apply(f(unsafeClient))).refineToOrDie[S3Exception]
@@ -259,19 +318,26 @@ object S3 {
     override def getNextObjects(listing: S3ObjectListing): ZIO[Blocking, S3Exception, S3ObjectListing] =
       ZIO.succeed(listing)
 
-    override def putObject[R1](
+    override def putObject[R1 <: Blocking](
       bucketName: String,
       key: String,
       contentLength: Long,
       contentString: String,
       content: ZStreamChunk[R1, Throwable, Byte]
-    ): ZIO[Blocking with R1, S3Exception, Unit] =
+    ): ZIO[R1, S3Exception, Unit] =
       ZManaged
         .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
         .use(os => content.run(ZSink.fromOutputStream(os)).unit)
         .mapError(S3ExceptionLike)
 
     override def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Blocking, S3Exception, T] = ???
+
+    override def multipartUpload[R1](n: Int)(
+      bucketName: String,
+      key: String,
+      contentType: String,
+      content: ZStreamChunk[R1, Throwable, Byte]
+    ): ZIO[R1, S3Exception, Unit] = ???
   }
 
 //  object Test {

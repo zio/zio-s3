@@ -1,6 +1,7 @@
 package zio.s3
 
 import java.net.URI
+import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
@@ -181,21 +182,46 @@ object S3Test
           val tmpKey = Random.alphanumeric.take(10).mkString
 
           val test = for {
-            _         <- putObject_("bucket-1", tmpKey, c.length, data)
+            _ <- putObject_("bucket-1", tmpKey, c.length, data)
+            fileSize <- Files
+                         .readAttributes[PosixFileAttributes](Path(s"minio/data/bucket-1/$tmpKey"))
+                         .map(_.size())
+                         .provide(Blocking.Live)
             fileExist <- Files.deleteIfExists(Path(s"minio/data/bucket-1/$tmpKey")).provide(Blocking.Live)
-          } yield assert(fileExist, isTrue)
+          } yield assert(fileExist, isTrue) && assert(fileSize, isGreaterThan(0L))
+
+          test.provideManaged(utils.s3)
+        },
+        testM("multipart object") {
+          val text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                       |Donec semper eros quis felis scelerisque, quis lobortis felis cursus.
+                       |Nulla vulputate arcu nec luctus lobortis.
+                       |Duis non est posuere, feugiat augue et, tincidunt magna.
+                       |Etiam tempor dolor at lorem volutpat, at efficitur purus sagittis.
+                       |Curabitur sed nibh nec libero viverra posuere.
+                       |Aenean ullamcorper tortor ac ligula rutrum, euismod pulvinar justo faucibus.
+                       |Mauris dictum ligula ut lacus pellentesque porta.
+                       |Etiam molestie dolor ac purus consectetur, eget pellentesque mauris bibendum.
+                       |Sed at purus volutpat, tempor elit id, maximus neque.
+                       |Quisque pellentesque velit sed lectus placerat cursus.
+                       |Vestibulum quis urna non nibh ornare elementum.
+                       |Aenean a massa feugiat, fringilla dui eget, ultrices velit.
+                       |Aliquam pellentesque felis eget mi tincidunt dapibus vel at turpis.""".stripMargin
+
+          val data   = ZStreamChunk.fromChunks(Chunk.fromArray(text.getBytes))
+          val tmpKey = Random.alphanumeric.take(10).mkString
+
+          val test = for {
+            _ <- multipartUpload(10)("bucket-1", tmpKey, "application/octet-stream", data)
+            fileSize <- Files
+                         .readAttributes[PosixFileAttributes](Path(s"minio/data/bucket-1/$tmpKey"))
+                         .map(_.size())
+                         .provide(Blocking.Live)
+            fileExist <- Files.deleteIfExists(Path(s"minio/data/bucket-1/$tmpKey")).provide(Blocking.Live)
+          } yield assert(fileExist, isTrue) && assert(fileSize, isGreaterThan(0L))
 
           test.provideManaged(utils.s3)
         }
-//        testM("put/get object") {
-//          val data = ZStreamChunk.fromChunks(Chunk.fromArray("Hello F World".getBytes))
-//
-//          val test = for {
-//            succeed <- putObject("bucket-1", "console.log", data).fold(_ => false, _ => true)
-//          } yield assert(succeed, isFalse)
-//
-//          test.provideManaged(utils.s3)
-//        }
       )
     )
 

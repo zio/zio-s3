@@ -77,23 +77,31 @@ package object s3 extends S3.Service[S3] {
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.s3.getNextObjects(listing))
 
-  def putObject_[R1](
+  def putObject_[R1 <: S3](
     bucketName: String,
     key: String,
     contentLength: Long,
     content: ZStreamChunk[R1, Throwable, Byte]
-  ): ZIO[S3 with R1, S3Exception, Unit] =
+  ): ZIO[R1, S3Exception, Unit] =
     ZIO.accessM(_.s3.putObject(bucketName, key, contentLength, "application/octet-stream", content))
 
-  def putObject[R1](
+  def putObject[R1 <: S3](
     bucketName: String,
     key: String,
     contentLength: Long,
     contentType: String,
     content: ZStreamChunk[R1, Throwable, Byte]
-  ): ZIO[S3 with R1, S3Exception, Unit] =
+  ): ZIO[R1, S3Exception, Unit] =
     ZIO.accessM(_.s3.putObject(bucketName, key, contentLength, contentType, content))
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =
     ZIO.accessM(_.s3.execute(f))
+
+  def multipartUpload[R1 <: S3](n: Int)(
+    bucketName: String,
+    key: String,
+    contentType: String,
+    content: ZStreamChunk[R1, Throwable, Byte]
+  ): ZIO[R1, S3Exception, Unit] =
+    ZIO.accessM(_.s3.multipartUpload(n)(bucketName, key, contentType, content))
 }
