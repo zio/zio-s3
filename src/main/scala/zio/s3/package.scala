@@ -28,7 +28,7 @@ package object s3 extends S3.Service[S3] {
 
   def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] = accessStream[S3] { env =>
     ZStream
-      .fromEffect(env.s3.listObjects(bucketName, prefix))
+      .fromEffect(env.s3.listObjects(bucketName, prefix, 1000))
       .flatMap(
         paginate(_).mapConcat(_.objectSummaries)
       )
@@ -69,20 +69,30 @@ package object s3 extends S3.Service[S3] {
     ZStreamChunk(accessStream(_.s3.getObject(bucketName, key).chunks))
 
   def listObjects_(bucketName: String): ZIO[S3, S3Exception, S3ObjectListing] =
-    ZIO.accessM(_.s3.listObjects(bucketName, ""))
+    ZIO.accessM(_.s3.listObjects(bucketName, "", 1000))
 
-  def listObjects(bucketName: String, prefix: String): ZIO[S3, S3Exception, S3ObjectListing] =
-    ZIO.accessM(_.s3.listObjects(bucketName, prefix))
+  def listObjects(bucketName: String, prefix: String, maxKeys: Int): ZIO[S3, S3Exception, S3ObjectListing] =
+    ZIO.accessM(_.s3.listObjects(bucketName, prefix, maxKeys))
 
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.s3.getNextObjects(listing))
 
+  def putObject_[R1](
+    bucketName: String,
+    key: String,
+    contentLength: Long,
+    content: ZStreamChunk[R1, Throwable, Byte]
+  ): ZIO[S3 with R1, S3Exception, Unit] =
+    ZIO.accessM(_.s3.putObject(bucketName, key, contentLength, "application/octet-stream", content))
+
   def putObject[R1](
     bucketName: String,
     key: String,
+    contentLength: Long,
+    contentType: String,
     content: ZStreamChunk[R1, Throwable, Byte]
   ): ZIO[S3 with R1, S3Exception, Unit] =
-    ZIO.accessM(_.s3.putObject(bucketName, key, content))
+    ZIO.accessM(_.s3.putObject(bucketName, key, contentLength, contentType, content))
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =
     ZIO.accessM(_.s3.execute(f))
