@@ -221,6 +221,31 @@ object S3Test
           } yield assert(fileExist, isTrue) && assert(fileSize, isGreaterThan(0L))
 
           test.provideManaged(utils.s3)
+        },
+        testM("stream lines") {
+          val test =
+            for {
+              list <- streamLines(S3ObjectSummary("bucket-1", "dir1/user.csv")).runCollect
+            } yield assert(list.headOption, isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) && assert(
+              list.lastOption,
+              isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220"))
+            )
+
+          test.provideManaged(utils.s3)
+        },
+        testM("stream lines - invalid key") {
+          val test = for {
+            succeed <- streamLines(S3ObjectSummary("bucket-1", "blah")).runCollect.fold(_ => false, _ => true)
+          } yield assert(succeed, isFalse)
+
+          test.provideManaged(utils.s3)
+        },
+        testM("listDescendant") {
+          val test = for {
+            list <- listObjectsDescendant("bucket-1", "").runCollect
+          } yield assert(list.map(_.key), hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
+
+          test.provideManaged(utils.s3)
         }
       )
     )

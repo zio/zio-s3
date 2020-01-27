@@ -60,6 +60,7 @@ object S3 {
 
     def getNextObjects(listing: S3ObjectListing): ZIO[R, S3Exception, S3ObjectListing]
 
+    //TODO should remove in favor of multipartUpload ?
     def putObject[R1 <: R](
       bucketName: String,
       key: String,
@@ -332,14 +333,15 @@ object S3 {
 
     override def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Blocking, S3Exception, T] = ???
 
-    override def multipartUpload[R1](n: Int)(
+    override def multipartUpload[R1 <: Blocking](n: Int)(
       bucketName: String,
       key: String,
       contentType: String,
       content: ZStreamChunk[R1, Throwable, Byte]
-    ): ZIO[R1, S3Exception, Unit] = ???
+    ): ZIO[R1, S3Exception, Unit] = putObject(bucketName, key, 0, contentType, content)
   }
 
+// TODO environment problem since we have Blocking Context and
 //  object Test {
 //
 //    def connect(path: Path): ZManaged[Blocking, Nothing, S3] =
