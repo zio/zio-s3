@@ -40,6 +40,8 @@ save_cache: &save_cache
         - "~/.ivy2/cache"
         - "~/.sbt"
         - "~/.m2"
+        - "~/.cache"
+        - "~/website/node_modules"
 
 clean_cache: &clean_cache
   - run:
