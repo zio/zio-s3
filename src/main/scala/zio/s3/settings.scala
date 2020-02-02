@@ -16,33 +16,21 @@
 
 package zio.s3
 
-import java.net.URI
-
 import software.amazon.awssdk.regions.Region
 import zio.{ IO, ZIO }
 
-import scala.util.Try
-
 final case class S3Credentials(accessKeyId: String, secretAccessKey: String)
 
-final private[s3] case class S3Settings(region: Region, credentials: S3Credentials, uriEndpoint: Option[URI])
+final private[s3] case class S3Settings(region: Region, credentials: S3Credentials)
 
 object S3Settings {
 
-  def from(region: Region, credentials: S3Credentials, uriEndpoint: String): IO[InvalidSettings, S3Settings] =
-    for {
-      uri <- ZIO
-              .fromTry(Try(URI.create(uriEndpoint)))
-              .mapError(InvalidSettings(s"Invalid uri endpoint : $uriEndpoint", _))
-      settings <- from(region, credentials, Some(uri))
-    } yield settings
-
-  def from(region: Region, credentials: S3Credentials, uriEndpoint: Option[URI]): IO[InvalidSettings, S3Settings] =
+  def from(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
     for {
       region <- ZIO
                  .succeed(region)
                  .filterOrFail(Region.regions().contains(_))(
                    InvalidSettings(s"Invalid aws region provided : ${region.toString}")
                  )
-    } yield S3Settings(region, credentials, uriEndpoint)
+    } yield S3Settings(region, credentials)
 }
