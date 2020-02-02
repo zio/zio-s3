@@ -140,20 +140,19 @@ object S3 {
       content.chunks
         .map(c => ByteBuffer.wrap(c.toArray))
         .toPublisher
-        .flatMap(
-          publisher =>
-            execute(
-              _.putObject(
-                PutObjectRequest
-                  .builder()
-                  .bucket(bucketName)
-                  .contentLength(contentLength)
-                  .contentType(contentType)
-                  .key(key)
-                  .build(),
-                AsyncRequestBody.fromPublisher(publisher)
-              )
+        .flatMap(publisher =>
+          execute(
+            _.putObject(
+              PutObjectRequest
+                .builder()
+                .bucket(bucketName)
+                .contentLength(contentLength)
+                .contentType(contentType)
+                .key(key)
+                .build(),
+              AsyncRequestBody.fromPublisher(publisher)
             )
+          )
         )
         .unit
 
@@ -266,11 +265,10 @@ object S3 {
             builder.build()
           }
         )
-        .map(
-          client =>
-            new S3 {
-              val s3 = new Live(client)
-            }
+        .map(client =>
+          new S3 {
+            val s3 = new Live(client)
+          }
         )
         .mapError(e => ConnectionError(e.getMessage, e.getCause))
   }
