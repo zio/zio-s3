@@ -34,8 +34,7 @@ import zio.interop.reactiveStreams._
 import zio.nio.file.{ Path => ZPath, _ }
 import zio.stream.{ ZSink, ZStream, ZStreamChunk }
 import zio._
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait S3 {
   val s3: S3.Service[Any]
