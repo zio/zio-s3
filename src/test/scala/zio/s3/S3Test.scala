@@ -5,262 +5,215 @@ import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
-import zio.Chunk
 import zio.blocking.Blocking
-import zio.nio.file.{ Files, Path }
-import zio.stream.{ ZSink, ZStream, ZStreamChunk }
+import zio.nio.core.file.{Path => ZPath}
+import zio.nio.file.{Files => ZFiles}
+import zio.stream.{ZSink, ZStreamChunk}
 import zio.test.Assertion._
 import zio.test._
+import zio.{Chunk, ZLayer}
 
 import scala.util.Random
-import utils._
 
-object S3Test
-    extends DefaultRunnableSpec(
-      suite("S3")(
-        testM("list buckets") {
-          val test = for {
-            listing <- listBuckets()
-          } yield assert(listing.buckets.map(_.name), equalTo(List(bucketName)))
+object S3LiveSpec extends DefaultRunnableSpec {
+  private val root = ZPath("minio/data")
 
-          test.provideManaged(utils.s3)
-        },
-        testM("list objects") {
-          val test =
-            for {
-              succeed <- listObjects_(bucketName)
-            } yield assert(
-              succeed,
-              equalTo(
-                S3ObjectListing(
-                  bucketName,
-                  List(
-                    S3ObjectSummary(bucketName, "console.log"),
-                    S3ObjectSummary(bucketName, "dir1/hello.txt"),
-                    S3ObjectSummary(bucketName, "dir1/user.csv")
-                  ),
-                  None
-                )
-              )
-            )
+  private val s3: ZLayer[Any, TestFailure[Nothing], S3] =
+    live(Region.CA_CENTRAL_1.id(), S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
+      .mapError(TestFailure.die)
 
-          test.provideManaged(utils.s3)
-        },
-        testM("list objects with prefix") {
-          val test =
-            for {
-              succeed <- listObjects(bucketName, "console", 10)
-            } yield assert(
-              succeed,
-              equalTo(
-                S3ObjectListing(bucketName, List(S3ObjectSummary(bucketName, "console.log")), None)
-              )
-            )
-          test.provideManaged(utils.s3)
-        },
-        testM("list objects with not match prefix") {
-          val test =
-            for {
-              succeed <- listObjects(bucketName, "blah", 10)
-            } yield assert(
-              succeed,
-              equalTo(
-                S3ObjectListing(bucketName, Nil, None)
-              )
-            )
-          test.provideManaged(utils.s3)
-        },
-        testM("create bucket") {
-          val bucketTmp = UUID.randomUUID().toString
-          val test =
-            for {
-              succeed <- createBucket(bucketTmp)
-              _       <- Files.delete(Path(s"minio/data/$bucketTmp")).provide(Blocking.Live)
-            } yield assert(succeed, isUnit)
+  override def spec = S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
+}
 
-          test.provideManaged(utils.s3)
-        },
-        testM("create invalid bucket") {
-          val test =
-            for {
-              succeed <- createBucket("bucket_$1")
-                          .foldCause(_ => false, _ => true)
-            } yield assert(succeed, isFalse)
-          test.provideManaged(utils.s3)
-        },
-        testM("create bucket already exist") {
-          val test =
-            for {
-              succeed <- createBucket(bucketName)
-                          .foldCause(_ => false, _ => true)
-            } yield assert(succeed, isFalse)
-          test.provideManaged(utils.s3)
-        },
-        testM("delete bucket") {
-          val bucketTmp = UUID.randomUUID().toString
+object S3TestSpec extends DefaultRunnableSpec {
+  private val root = ZPath("test-data")
 
-          val test =
-            for {
-              _       <- createBucket(bucketTmp)
-              succeed <- deleteBucket(bucketTmp)
-            } yield assert(succeed, isUnit)
-          test.provideManaged(utils.s3)
-        },
-        testM("delete bucket dont exist") {
-          val test =
-            for {
-              succeed <- deleteBucket(UUID.randomUUID().toString).foldCause(_ => false, _ => true)
-            } yield assert(succeed, isFalse)
-          test.provideManaged(utils.s3)
-        },
-        testM("exists bucket") {
-          val test =
-            for {
-              succeed <- isBucketExists(bucketName)
-            } yield assert(succeed, isTrue)
-          test.provideManaged(utils.s3)
-        },
-        testM("exists bucket - invalid identifier") {
-          val test =
-            for {
-              succeed <- isBucketExists(UUID.randomUUID().toString)
-            } yield assert(succeed, isFalse)
-          test.provideManaged(utils.s3)
-        },
-        testM("delete object") {
-          val objectTmp = UUID.randomUUID().toString
+  private val s3    = test(root).mapError(TestFailure.fail)
+  override def spec = S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(s3 ++ Blocking.live)
+}
 
-          val test =
-            for {
-              _       <- Files.createFile(Path(s"minio/data/$bucketName/$objectTmp")).provide(Blocking.Live)
-              succeed <- deleteObject(bucketName, objectTmp)
-            } yield assert(succeed, isUnit)
-          test.provideManaged(utils.s3)
-        },
-        testM("delete object - invalid identifier") {
-          val test =
-            for {
-              succeed <- deleteObject(bucketName, UUID.randomUUID().toString)
-            } yield assert(succeed, isUnit)
-          test.provideManaged(utils.s3)
-        },
-        testM("get object") {
-          val test =
-            for {
-              content <- getObject(bucketName, "dir1/hello.txt")
-                          .run(ZSink.utf8DecodeChunk)
-            } yield assert(content, equalTo("""|Hello ZIO s3
-                                               |this is a beautiful day""".stripMargin))
-          test.provideManaged(utils.s3)
-        },
-        testM("get object - invalid identifier") {
-          val test =
-            for {
-              succeed <- getObject(bucketName, UUID.randomUUID().toString)
-                          .run(ZSink.utf8DecodeChunk)
-                          .fold(_ => false, _ => true)
-            } yield assert(succeed, isFalse)
-          test.provideManaged(utils.s3)
-        },
-        testM("get nextObjects") {
-          val test =
-            for {
-              token   <- listObjects(bucketName, "", 1).map(_.nextContinuationToken)
-              listing <- getNextObjects(S3ObjectListing(bucketName, Nil, token))
-            } yield assert(listing.objectSummaries, isNonEmpty)
-          test.provideManaged(utils.s3)
-        },
-        testM("get nextObjects - invalid token") {
-          val test =
-            for {
-              listing <- getNextObjects(S3ObjectListing(bucketName, Nil, Some("blah")))
-            } yield assert(listing, equalTo(S3ObjectListing(bucketName, Nil, None)))
-          test.provideManaged(utils.s3)
-        },
-        testM("put object") {
-          val c      = Chunk.fromArray("Hello F World".getBytes)
-          val data   = ZStreamChunk.fromChunks(c)
-          val tmpKey = Random.alphanumeric.take(10).mkString
-
-          val test = for {
-            _ <- putObject_(bucketName, tmpKey, c.length.toLong, data)
-            fileSize <- Files
-                         .readAttributes[PosixFileAttributes](Path(s"minio/data/$bucketName/$tmpKey"))
-                         .map(_.size())
-                         .provide(Blocking.Live)
-            fileExist <- Files.deleteIfExists(Path(s"minio/data/$bucketName/$tmpKey")).provide(Blocking.Live)
-          } yield assert(fileExist, isTrue) && assert(fileSize, isGreaterThan(0L))
-
-          test.provideManaged(utils.s3)
-        },
-        testM("multipart object") {
-          val text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                       |Donec semper eros quis felis scelerisque, quis lobortis felis cursus.
-                       |Nulla vulputate arcu nec luctus lobortis.
-                       |Duis non est posuere, feugiat augue et, tincidunt magna.
-                       |Etiam tempor dolor at lorem volutpat, at efficitur purus sagittis.
-                       |Curabitur sed nibh nec libero viverra posuere.
-                       |Aenean ullamcorper tortor ac ligula rutrum, euismod pulvinar justo faucibus.
-                       |Mauris dictum ligula ut lacus pellentesque porta.
-                       |Etiam molestie dolor ac purus consectetur, eget pellentesque mauris bibendum.
-                       |Sed at purus volutpat, tempor elit id, maximus neque.
-                       |Quisque pellentesque velit sed lectus placerat cursus.
-                       |Vestibulum quis urna non nibh ornare elementum.
-                       |Aenean a massa feugiat, fringilla dui eget, ultrices velit.
-                       |Aliquam pellentesque felis eget mi tincidunt dapibus vel at turpis.""".stripMargin
-
-          val data   = ZStream.fromChunk(Chunk.fromArray(text.getBytes))
-          val tmpKey = Random.alphanumeric.take(10).mkString
-
-          val test = for {
-            _ <- multipartUpload(10)(bucketName, tmpKey, "application/octet-stream", data)
-            fileSize <- Files
-                         .readAttributes[PosixFileAttributes](Path(s"minio/data/$bucketName/$tmpKey"))
-                         .map(_.size())
-                         .provide(Blocking.Live)
-            fileExist <- Files.deleteIfExists(Path(s"minio/data/$bucketName/$tmpKey")).provide(Blocking.Live)
-          } yield assert(fileExist, isTrue) && assert(fileSize, isGreaterThan(0L))
-
-          test.provideManaged(utils.s3)
-        },
-        testM("stream lines") {
-          val test =
-            for {
-              list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
-            } yield assert(list.headOption, isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) && assert(
-              list.lastOption,
-              isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220"))
-            )
-
-          test.provideManaged(utils.s3)
-        },
-        testM("stream lines - invalid key") {
-          val test = for {
-            succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
-          } yield assert(succeed, isFalse)
-
-          test.provideManaged(utils.s3)
-        },
-        testM("listDescendant") {
-          val test = for {
-            list <- listObjectsDescendant(bucketName, "").runCollect
-          } yield assert(list.map(_.key), hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
-
-          test.provideManaged(utils.s3)
-        }
-      )
-    )
-
-object utils {
+object S3Suite {
   val bucketName = "bucket-1"
 
-  val s3 = for {
-    settings <- S3Settings
-                 .from(Region.CA_CENTRAL_1, S3Credentials("TESTKEY", "TESTSECRET"))
-                 .toManaged_
-    client <- S3.Live.connect(
-               settings,
-               Some(URI.create("http://localhost:9000"))
-             )
-  } yield client
+  def spec(label: String, root: ZPath): Spec[S3, TestFailure[Exception], TestSuccess] = suite(label)(
+    testM("list buckets") {
+      for {
+        buckets <- listBuckets()
+      } yield assert(buckets.map(_.name))(equalTo(List(bucketName)))
+    },
+    testM("list objects") {
+      for {
+        succeed <- listObjects_(bucketName)
+      } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries)(hasSameElements(List(
+        S3ObjectSummary(bucketName, "console.log"),
+        S3ObjectSummary(bucketName, "dir1/hello.txt"),
+        S3ObjectSummary(bucketName, "dir1/user.csv")
+      )))
+    },
+    testM("list objects with prefix") {
+      for {
+        succeed <- listObjects(bucketName, "console", 10)
+      } yield assert(succeed)(
+        equalTo(
+          S3ObjectListing(bucketName, List(S3ObjectSummary(bucketName, "console.log")), None)
+        )
+      )
+    },
+    testM("list objects with not match prefix") {
+      for {
+        succeed <- listObjects(bucketName, "blah", 10)
+      } yield assert(succeed)(
+        equalTo(
+          S3ObjectListing(bucketName, Nil, None)
+        )
+      )
+    },
+    testM("create bucket") {
+      val bucketTmp = UUID.randomUUID().toString
+      for {
+        succeed <- createBucket(bucketTmp)
+        _       <- ZFiles.delete(root / bucketTmp).provideLayer(Blocking.live)
+      } yield assert(succeed)(isUnit)
+    },
+    testM("create empty bucket name fail") {
+
+      for {
+        succeed <- createBucket("")
+                    .foldCause(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+    },
+    testM("create bucket already exist") {
+      for {
+        succeed <- createBucket(bucketName)
+                    .foldCause(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+    },
+    testM("delete bucket") {
+      val bucketTmp = UUID.randomUUID().toString
+
+      for {
+        _       <- createBucket(bucketTmp)
+        succeed <- deleteBucket(bucketTmp)
+      } yield assert(succeed)(isUnit)
+    },
+    testM("delete bucket dont exist") {
+      for {
+        succeed <- deleteBucket(UUID.randomUUID().toString).foldCause(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+    },
+    testM("exists bucket") {
+      for {
+        succeed <- isBucketExists(bucketName)
+      } yield assert(succeed)(isTrue)
+
+    },
+    testM("exists bucket - invalid identifier") {
+      for {
+        succeed <- isBucketExists(UUID.randomUUID().toString)
+      } yield assert(succeed)(isFalse)
+    },
+    testM("delete object") {
+      val objectTmp = UUID.randomUUID().toString
+
+      for {
+        _       <- ZFiles.createFile(root / bucketName / objectTmp).provideLayer(Blocking.live)
+        succeed <- deleteObject(bucketName, objectTmp)
+      } yield assert(succeed)(isUnit)
+    },
+    testM("delete object - invalid identifier") {
+      for {
+        succeed <- deleteObject(bucketName, UUID.randomUUID().toString)
+      } yield assert(succeed)(isUnit)
+    },
+    testM("get object") {
+      for {
+        content <- getObject(bucketName, "dir1/hello.txt")
+                    .run(ZSink.utf8DecodeChunk)
+      } yield assert(content)(equalTo("""|Hello ZIO s3
+                                         |this is a beautiful day""".stripMargin))
+    },
+    testM("get object - invalid identifier") {
+      for {
+        succeed <- getObject(bucketName, UUID.randomUUID().toString)
+                    .run(ZSink.utf8DecodeChunk)
+                    .fold(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+    },
+    testM("get nextObjects") {
+      for {
+        token   <- listObjects(bucketName, "", 1).map(_.nextContinuationToken)
+        listing <- getNextObjects(S3ObjectListing(bucketName, Nil, token))
+      } yield assert(listing.objectSummaries)(isNonEmpty)
+    },
+    testM("get nextObjects - invalid token") {
+      for {
+        succeed <- getNextObjects(S3ObjectListing(bucketName, Nil, Some(""))).foldCause(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+
+    },
+    testM("put object") {
+      val c      = Chunk.fromArray("Hello F World".getBytes)
+      val data   = ZStreamChunk.fromChunks(c)
+      val tmpKey = Random.alphanumeric.take(10).mkString
+
+      for {
+        _ <- putObject(bucketName, tmpKey, c.length.toLong, "text/plain", data)
+        fileSize <- ZFiles
+                     .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
+                     .map(_.size())
+                     .provideLayer(Blocking.live)
+        _ <- ZFiles.delete(root / bucketName / tmpKey).provideLayer(Blocking.live)
+      } yield assert(fileSize)(isGreaterThan(0L))
+
+    },
+    testM("multipart object") {
+      val text =
+        """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          |Donec semper eros quis felis scelerisque, quis lobortis felis cursus.
+          |Nulla vulputate arcu nec luctus lobortis.
+          |Duis non est posuere, feugiat augue et, tincidunt magna.
+          |Etiam tempor dolor at lorem volutpat, at efficitur purus sagittis.
+          |Curabitur sed nibh nec libero viverra posuere.
+          |Aenean ullamcorper tortor ac ligula rutrum, euismod pulvinar justo faucibus.
+          |Mauris dictum ligula ut lacus pellentesque porta.
+          |Etiam molestie dolor ac purus consectetur, eget pellentesque mauris bibendum.
+          |Sed at purus volutpat, tempor elit id, maximus neque.
+          |Quisque pellentesque velit sed lectus placerat cursus.
+          |Vestibulum quis urna non nibh ornare elementum.
+          |Aenean a massa feugiat, fringilla dui eget, ultrices velit.
+          |Aliquam pellentesque felis eget mi tincidunt dapibus vel at turpis.""".stripMargin
+
+      val data   = ZStreamChunk.fromChunks(Chunk.fromArray(text.getBytes))
+      val tmpKey = Random.alphanumeric.take(10).mkString
+
+      for {
+        _ <- multipartUpload(10)(bucketName, tmpKey, "application/octet-stream", data)
+        fileSize <- ZFiles
+                     .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
+                     .map(_.size())
+                     .provideLayer(Blocking.live)
+        _ <- ZFiles.delete(root / bucketName / tmpKey).provideLayer(Blocking.live)
+      } yield assert(fileSize)(isGreaterThan(0L))
+
+    },
+    testM("stream lines") {
+
+      for {
+        list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
+      } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
+        assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
+
+    },
+    testM("stream lines - invalid key") {
+      for {
+        succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
+      } yield assert(succeed)(isFalse)
+
+    },
+    testM("listDescendant") {
+      for {
+        list <- listObjectsDescendant(bucketName, "").runCollect
+      } yield assert(list.map(_.key))(hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
+    }
+  )
 }
