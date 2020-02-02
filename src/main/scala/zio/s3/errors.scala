@@ -16,13 +16,6 @@
 
 package zio.s3
 
-import java.io.IOException
+case class ConnectionError(message: String, cause: Throwable) extends Exception(message, cause)
 
-sealed trait S3Failure
-
-case class ConnectionError(message: String, cause: Throwable) extends IOException(message, cause) with S3Failure
-case class InvalidSettings(message: String, cause: Throwable) extends Exception(message, cause) with S3Failure
-
-object InvalidSettings {
-  def apply(message: String): InvalidSettings = new InvalidSettings(message, new Throwable(message))
-}
+case class InvalidSettings(message: String) extends Exception(message)

@@ -27,6 +27,7 @@ addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck"
 
 lazy val `zio-s3` = project
   .in(file("."))
+  .settings(stdSettings("zio-s3"))
   .settings(
     skip in publish := true,
     libraryDependencies ++= Seq(

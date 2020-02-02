@@ -17,6 +17,7 @@
 package zio.s3
 
 import java.io.{ FileInputStream, FileOutputStream }
+import java.net.URI
 import java.nio.ByteBuffer
 import java.nio.file.attribute.PosixFileAttributes
 import java.time.Instant
@@ -30,10 +31,9 @@ import software.amazon.awssdk.services.s3.model._
 import zio.blocking.Blocking
 import zio.interop.javaz.fromCompletionStage
 import zio.interop.reactiveStreams._
+import zio.nio.file.{ Path => ZPath, _ }
 import zio.stream.{ ZSink, ZStream, ZStreamChunk }
-import zio.nio.file._
-import zio.nio.file.{ Path => ZPath }
-import zio.{ Chunk, Managed, Task, UIO, ZIO, ZManaged }
+import zio._
 
 import scala.collection.JavaConverters._
 
@@ -60,7 +60,6 @@ object S3 {
 
     def getNextObjects(listing: S3ObjectListing): ZIO[R, S3Exception, S3ObjectListing]
 
-    //TODO should remove in favor of multipartUpload ?
     def putObject[R1 <: R](
       bucketName: String,
       key: String,
@@ -73,7 +72,7 @@ object S3 {
       bucketName: String,
       key: String,
       contentType: String,
-      content: ZStreamChunk[R1, Throwable, Byte]
+      content: ZStream[R1, Throwable, Byte]
     ): ZIO[R1, S3Exception, Unit]
 
     def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[R, S3Exception, T]
@@ -158,11 +157,12 @@ object S3 {
         )
         .unit
 
+    // only for file which are bigger than 5 Mb
     def multipartUpload[R1 <: Any](n: Int)(
       bucketName: String,
       key: String,
       contentType: String,
-      content: ZStreamChunk[R1, Throwable, Byte]
+      content: ZStream[R1, Throwable, Byte]
     ): ZIO[R1, S3Exception, Unit] =
       for {
         uploadId <- execute(
@@ -176,7 +176,11 @@ object S3 {
                      )
                    ).map(_.uploadId())
 
-        parts <- content.chunks.zipWithIndex
+        parts <- content
+                //part size limit is 5Mb, required by amazon api
+                  .chunkN(5 * 1024 * 1024)
+                  .chunks
+                  .zipWithIndex
                   .mapMPar(n) {
                     case (chunk, partNumber) =>
                       execute(
@@ -185,15 +189,14 @@ object S3 {
                             .builder()
                             .bucket(bucketName)
                             .key(key)
-                            .partNumber(partNumber)
+                            .partNumber(partNumber + 1)
                             .uploadId(uploadId)
                             .contentLength(chunk.length.toLong)
                             .build(),
-                          AsyncRequestBody.fromByteBuffer(ByteBuffer.wrap(chunk.toArray))
+                          AsyncRequestBody.fromBytes(chunk.toArray)
                         )
-                      )
+                      ).map(r => CompletedPart.builder().partNumber(partNumber + 1).eTag(r.eTag()).build())
                   }
-                  .map(r => CompletedPart.builder().eTag(r.eTag()).build())
                   .runCollect
                   .mapError(S3ExceptionLike)
 
@@ -225,22 +228,29 @@ object S3 {
 
     override def onResponse(response: GetObjectResponse): Unit = ()
 
-    override def onStream(publisher: SdkPublisher[ByteBuffer]): Unit =
+    override def onStream(publisher: SdkPublisher[ByteBuffer]): Unit = {
       cf.complete(publisher.toStream().map(ChunkUtils.fromByteBuffer))
+      ()
+    }
 
-    override def exceptionOccurred(error: Throwable): Unit =
+    override def exceptionOccurred(error: Throwable): Unit = {
       cf.completeExceptionally(error)
+      ()
+    }
   }
 
   object Live {
 
-    def connect(region: Region, credentials: S3Credentials): Managed[S3Failure, S3] =
+    def connect(region: Region, credentials: S3Credentials): Managed[ConnectionError, S3] =
       for {
-        settings <- S3Settings.from(region, credentials, None).toManaged_
-        client   <- connect(settings)
+        settings <- S3Settings
+                     .from(region, credentials)
+                     .toManaged_
+                     .mapError(e => ConnectionError(e.getMessage, e.getCause))
+        client <- connect(settings, None)
       } yield client
 
-    def connect(settings: S3Settings): Managed[S3Failure, S3] =
+    def connect(settings: S3Settings, uriEndpoint: Option[URI]): Managed[ConnectionError, S3] =
       ZManaged
         .fromAutoCloseable(
           Task {
@@ -252,7 +262,7 @@ object S3 {
                 )
               )
               .region(settings.region)
-            settings.uriEndpoint.foreach(builder.endpointOverride)
+            uriEndpoint.foreach(builder.endpointOverride)
             builder.build()
           }
         )
@@ -265,7 +275,8 @@ object S3 {
         .mapError(e => ConnectionError(e.getMessage, e.getCause))
   }
 
-  final class Test private (path: ZPath) extends Service[Blocking] {
+  //
+  final class Test(path: ZPath) extends Service[Blocking] {
 
     override def createBucket(bucketName: String): ZIO[Blocking, S3Exception, Unit] =
       Files.createDirectory(path / bucketName).mapError(S3ExceptionLike)
@@ -337,9 +348,12 @@ object S3 {
       bucketName: String,
       key: String,
       contentType: String,
-      content: ZStreamChunk[R1, Throwable, Byte]
-    ): ZIO[R1, S3Exception, Unit] = putObject(bucketName, key, 0, contentType, content)
+      content: ZStream[R1, Throwable, Byte]
+    ): ZIO[R1, S3Exception, Unit] = putObject(bucketName, key, 0, contentType, content.chunkN(10))
   }
+
+  //TODO remove when TestEnvironment is fixed
+  private val _ = new Test(_)
 
 // TODO environment problem since we have Blocking Context and
 //  object Test {

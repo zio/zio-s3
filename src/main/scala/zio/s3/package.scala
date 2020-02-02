@@ -101,7 +101,7 @@ package object s3 extends S3.Service[S3] {
     bucketName: String,
     key: String,
     contentType: String,
-    content: ZStreamChunk[R1, Throwable, Byte]
+    content: ZStream[R1, Throwable, Byte]
   ): ZIO[R1, S3Exception, Unit] =
     ZIO.accessM(_.s3.multipartUpload(n)(bucketName, key, contentType, content))
 }
