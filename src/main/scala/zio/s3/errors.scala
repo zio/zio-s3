@@ -16,6 +16,6 @@
 
 package zio.s3
 
-case class ConnectionError(message: String, cause: Throwable) extends Exception(message, cause)
+final case class ConnectionError(message: String, cause: Throwable) extends Exception(message, cause)
 
-case class InvalidSettings(message: String) extends Exception(message)
+final case class InvalidSettings(message: String) extends Exception(message)
