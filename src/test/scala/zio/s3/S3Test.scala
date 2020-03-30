@@ -5,13 +5,13 @@ import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
+import zio.{Chunk, ZLayer}
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
-import zio.nio.file.{ Files => ZFiles }
-import zio.stream.{ ZSink, ZStreamChunk }
+import zio.nio.core.file.{Path => ZPath}
+import zio.nio.file.{Files => ZFiles}
+import zio.stream.{ZSink, ZStreamChunk}
 import zio.test.Assertion._
 import zio.test._
-import zio.{ Chunk, ZLayer }
 
 import scala.util.Random
 
@@ -20,7 +20,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
 
   private val s3: ZLayer[Any, TestFailure[Nothing], S3] =
     live(Region.CA_CENTRAL_1.id(), S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
-      .mapError(TestFailure.die)
+      .mapError(TestFailure.die(_))
 
   override def spec = S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
 }
@@ -28,7 +28,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
 object S3TestSpec extends DefaultRunnableSpec {
   private val root = ZPath("test-data")
 
-  private val s3    = test(root).mapError(TestFailure.fail)
+  private val s3    = zio.s3.test(root).mapError(TestFailure.fail(_))
   override def spec = S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(s3 ++ Blocking.live)
 }
 
