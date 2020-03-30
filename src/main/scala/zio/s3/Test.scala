@@ -90,7 +90,7 @@ object Test {
       override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
         listing.nextContinuationToken match {
           case Some(token) if token.nonEmpty => listObjects(listing.bucketName, "", 100)
-          case _                             =>  IO.fail(S3ExceptionLike(new IllegalArgumentException("Empty token is invalid")))
+          case _                             => IO.fail(S3ExceptionLike(new IllegalArgumentException("Empty token is invalid")))
         }
 
       override def putObject[R <: zio.Has[_]: Tagged](

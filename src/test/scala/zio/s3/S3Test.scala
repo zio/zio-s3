@@ -6,12 +6,12 @@ import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
-import zio.nio.core.file.{Path => ZPath}
-import zio.nio.file.{Files => ZFiles}
-import zio.stream.{ZSink, ZStreamChunk}
+import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.file.{ Files => ZFiles }
+import zio.stream.{ ZSink, ZStreamChunk }
 import zio.test.Assertion._
 import zio.test._
-import zio.{Chunk, ZLayer}
+import zio.{ Chunk, ZLayer }
 
 import scala.util.Random
 
@@ -44,11 +44,15 @@ object S3Suite {
     testM("list objects") {
       for {
         succeed <- listObjects_(bucketName)
-      } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries)(hasSameElements(List(
-        S3ObjectSummary(bucketName, "console.log"),
-        S3ObjectSummary(bucketName, "dir1/hello.txt"),
-        S3ObjectSummary(bucketName, "dir1/user.csv")
-      )))
+      } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries)(
+        hasSameElements(
+          List(
+            S3ObjectSummary(bucketName, "console.log"),
+            S3ObjectSummary(bucketName, "dir1/hello.txt"),
+            S3ObjectSummary(bucketName, "dir1/user.csv")
+          )
+        )
+      )
     },
     testM("list objects with prefix") {
       for {
