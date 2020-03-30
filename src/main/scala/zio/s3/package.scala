@@ -23,8 +23,8 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.blocking.Blocking
 import zio.s3.S3Bucket.S3BucketListing
-import zio.stream.{StreamChunk, ZSink, ZStream, ZStreamChunk}
-import zio.nio.core.file.{Path => ZPath}
+import zio.stream.{ StreamChunk, ZSink, ZStream, ZStreamChunk }
+import zio.nio.core.file.{ Path => ZPath }
 
 package object s3 {
   type S3          = Has[S3.Service]
