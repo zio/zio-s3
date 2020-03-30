@@ -1,10 +1,10 @@
 version: 2.1
 
 scala_212: &scala_212
-  SCALA_VERSION: 2.12.8
+  SCALA_VERSION: 2.12.11
 
 scala_213: &scala_213
-  SCALA_VERSION: 2.13.0
+  SCALA_VERSION: 2.13.1
 
 jdk_8: &jdk_8
   JDK_VERSION: 8
@@ -31,11 +31,11 @@ install_jdk: &install_jdk
 
 load_cache: &load_cache
   - restore_cache:
-      key: sbt-nio-cache
+      key: sbt-s3-cache
 
 save_cache: &save_cache
   - save_cache:
-      key: sbt-nio-cache
+      key: sbt-s3-cache
       paths:
         - "~/.ivy2/cache"
         - "~/.sbt"
