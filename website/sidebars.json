@@ -1,0 +1,15 @@
+{
+  "quickstart-sidebar": {
+    "Quickstart": [
+      "quickstart/quickstart_index",
+      "quickstart/quickstart_environment"
+    ]
+  },
+  "about-sidebar": {
+    "About": [
+      "about/about_index",
+      "about/about_contributing",
+      "about/about_coc"
+    ]
+  }
+}

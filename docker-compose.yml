@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./minio/data:/data
+    environment:
+      - MINIO_ACCESS_KEY=TESTKEY
+      - MINIO_SECRET_KEY=TESTSECRET
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+    command: server --compat /data
+
+  mc:
+    image: minio/mc
+    depends_on:
+      - minio
+    environment:
+      - MINIO_ACCESS_KEY=TESTKEY
+      - MINIO_SECRET_KEY=TESTSECRET
+    entrypoint: >
+      /bin/sh -c "
+      echo Waiting for minio service to start...;
+      apk add --no-cache curl;
+
+      while ! curl -I 'http://minio:9000/minio/health/live' 2>&1 | grep -w '200\|301';
+      do
+        sleep 10;
+      done;
+      echo Minio is started;
+      /usr/bin/mc config host add my-minio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+      /usr/bin/mc mb -p my-minio/bucket-1;
+      "
