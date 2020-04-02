@@ -29,7 +29,6 @@ lazy val `zio-s3` = project
   .in(file("."))
   .settings(stdSettings("zio-s3"))
   .settings(
-    skip in publish := true,
     libraryDependencies ++= Seq(
       "dev.zio"                %% "zio"                         % zioVersion,
       "dev.zio"                %% "zio-streams"                 % zioVersion,
