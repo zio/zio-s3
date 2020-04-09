@@ -190,7 +190,7 @@ object S3Suite {
       val tmpKey = Random.alphanumeric.take(10).mkString
 
       for {
-        _ <- multipartUpload(10)(bucketName, tmpKey, "application/octet-stream", data)
+        _ <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
         fileSize <- ZFiles
                      .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
                      .map(_.size())

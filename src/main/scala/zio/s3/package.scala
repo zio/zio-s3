@@ -57,7 +57,7 @@ package object s3 {
         content: ZStreamChunk[R, Throwable, Byte]
       ): ZIO[R, S3Exception, Unit]
 
-      def multipartUpload[R <: zio.Has[_]: Tagged](n: Int)(
+      def multipartUpload[R <: zio.Has[_]: Tagged](
         bucketName: String,
         key: String,
         contentType: String,
@@ -141,13 +141,13 @@ package object s3 {
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, contentType, content))
 
-  def multipartUpload[R <: Has[_]: Tagged](n: Int)(
+  def multipartUpload[R <: Has[_]: Tagged](
     bucketName: String,
     key: String,
     contentType: String,
     content: ZStreamChunk[R, Throwable, Byte]
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](_.get.multipartUpload(n)(bucketName, key, contentType, content))
+    ZIO.accessM[S3 with R](_.get.multipartUpload(bucketName, key, contentType, content))
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =
     ZIO.accessM(_.get.execute(f))

@@ -113,7 +113,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .unit
 
   // only for file which are bigger than 5 Mb
-  def multipartUpload[R <: zio.Has[_]: Tagged](n: Int)(
+  def multipartUpload[R <: zio.Has[_]: Tagged](
     bucketName: String,
     key: String,
     contentType: String,
@@ -136,8 +136,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                 .chunkN(5 * 1024 * 1024)
                 .chunks
                 .zipWithIndex
-                //TODO check with `mapM`
-                .mapMPar(n) {
+                .mapM {
                   case (chunk, partNumber) =>
                     execute(
                       _.uploadPart(
