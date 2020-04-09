@@ -111,7 +111,7 @@ object Test {
           S3ExceptionLike(new NotImplementedError("Not implemented error - please don't call execute() S3 Test mode"))
         )
 
-      override def multipartUpload[R <: zio.Has[_]: Tagged](n: Int)(
+      override def multipartUpload[R <: zio.Has[_]: Tagged](
         bucketName: String,
         key: String,
         contentType: String,
