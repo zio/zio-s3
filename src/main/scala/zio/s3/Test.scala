@@ -29,8 +29,12 @@ import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.Files
 import zio.s3.Live.S3ExceptionLike
 import zio.s3.S3Bucket._
-import zio.stream.{ ZSink, ZStream, ZStreamChunk }
+import zio.stream.{ Stream, ZSink, ZStream }
+import zio.Tag
 
+/**
+ * Stub Service which is back by a filesystem storage
+ */
 object Test {
 
   def connect(path: ZPath): Blocking => S3.Service = { blocking =>
@@ -60,12 +64,12 @@ object Test {
       override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
         Files.deleteIfExists(path / bucketName / key).mapError(S3ExceptionLike(_)).provide(blocking).unit
 
-      override def getObject(bucketName: String, key: String): ZStreamChunk[Any, S3Exception, Byte] = ZStreamChunk {
+      override def getObject(bucketName: String, key: String): Stream[S3Exception, Byte] =
         ZStream
           .managed(ZManaged.fromAutoCloseable(Task(new FileInputStream((path / bucketName / key).toFile))))
-          .flatMap(ZStream.fromInputStream(_, 2048).chunks)
+          .flatMap(ZStream.fromInputStream(_, 2048))
           .mapError(S3ExceptionLike)
-      }
+          .provide(blocking)
 
       override def listObjects(
         bucketName: String,
@@ -93,29 +97,29 @@ object Test {
           case _                             => IO.fail(S3ExceptionLike(new IllegalArgumentException("Empty token is invalid")))
         }
 
-      override def putObject[R <: zio.Has[_]: Tagged](
+      override def putObject[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         contentLength: Long,
-        contentString: String,
-        content: ZStreamChunk[R, Throwable, Byte]
+        contentType: String,
+        content: ZStream[R, Throwable, Byte]
       ): ZIO[R, S3Exception, Unit] =
         ZManaged
           .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
           .use(os => content.run(ZSink.fromOutputStream(os)).unit)
           .mapError(S3ExceptionLike)
-          .provideSome[R](blocking.union[R])
+          .provideSomeLayer[R](ZLayer.succeed(blocking.get))
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
         IO.fail(
           S3ExceptionLike(new NotImplementedError("Not implemented error - please don't call execute() S3 Test mode"))
         )
 
-      override def multipartUpload[R <: zio.Has[_]: Tagged](
+      override def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         contentType: String,
-        content: ZStreamChunk[R, Throwable, Byte]
+        content: ZStream[R, Throwable, Byte]
       ): ZIO[R, S3Exception, Unit] =
         putObject(bucketName, key, 0, contentType, content.chunkN(10))
     }

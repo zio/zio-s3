@@ -3,12 +3,13 @@ package zio.s3
 import java.net.URI
 import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
+
 import software.amazon.awssdk.regions.Region
 import zio.Chunk
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
-import zio.stream.{ ZSink, ZStreamChunk }
+import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
 
@@ -35,9 +36,14 @@ object S3Suite {
   val bucketName = "bucket-1"
 
   def spec(label: String, root: ZPath): Spec[S3, TestFailure[Exception], TestSuccess] = suite(label)(
+    testM("listDescendant") {
+      for {
+        list <- listObjectsDescendant(bucketName, "").runCollect
+      } yield assert(list.map(_.key))(hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
+    },
     testM("list buckets") {
       for {
-        buckets <- listBuckets()
+        buckets <- listBuckets
       } yield assert(buckets.map(_.name))(equalTo(List(bucketName)))
     },
     testM("list objects") {
@@ -131,14 +137,16 @@ object S3Suite {
     testM("get object") {
       for {
         content <- getObject(bucketName, "dir1/hello.txt")
-                    .run(ZSink.utf8DecodeChunk)
-      } yield assert(content)(equalTo("""|Hello ZIO s3
-                                         |this is a beautiful day""".stripMargin))
+                    .transduce(ZTransducer.utf8Decode)
+                    .runCollect
+      } yield assert(content.mkString)(equalTo("""|Hello ZIO s3
+                                                  |this is a beautiful day""".stripMargin))
     },
     testM("get object - invalid identifier") {
       for {
         succeed <- getObject(bucketName, UUID.randomUUID().toString)
-                    .run(ZSink.utf8DecodeChunk)
+                    .transduce(ZTransducer.utf8Decode)
+                    .runCollect
                     .fold(_ => false, _ => true)
       } yield assert(succeed)(isFalse)
     },
@@ -156,16 +164,14 @@ object S3Suite {
     },
     testM("put object") {
       val c      = Chunk.fromArray("Hello F World".getBytes)
-      val data   = ZStreamChunk.fromChunks(c)
+      val data   = ZStream.fromChunks(c)
       val tmpKey = Random.alphanumeric.take(10).mkString
 
       for {
         _ <- putObject(bucketName, tmpKey, c.length.toLong, "text/plain", data)
-        fileSize <- ZFiles
+        fileSize <- (ZFiles
                      .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
-                     .map(_.size())
-                     .provideLayer(Blocking.live)
-        _ <- ZFiles.delete(root / bucketName / tmpKey).provideLayer(Blocking.live)
+                     .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
       } yield assert(fileSize)(isGreaterThan(0L))
 
     },
@@ -186,16 +192,14 @@ object S3Suite {
           |Aenean a massa feugiat, fringilla dui eget, ultrices velit.
           |Aliquam pellentesque felis eget mi tincidunt dapibus vel at turpis.""".stripMargin
 
-      val data   = ZStreamChunk.fromChunks(Chunk.fromArray(text.getBytes))
+      val data   = ZStream.fromChunks(Chunk.fromArray(text.getBytes))
       val tmpKey = Random.alphanumeric.take(10).mkString
 
       for {
         _ <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
-        fileSize <- ZFiles
+        fileSize <- (ZFiles
                      .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
-                     .map(_.size())
-                     .provideLayer(Blocking.live)
-        _ <- ZFiles.delete(root / bucketName / tmpKey).provideLayer(Blocking.live)
+                     .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
       } yield assert(fileSize)(isGreaterThan(0L))
 
     },
@@ -212,11 +216,6 @@ object S3Suite {
         succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
       } yield assert(succeed)(isFalse)
 
-    },
-    testM("listDescendant") {
-      for {
-        list <- listObjectsDescendant(bucketName, "").runCollect
-      } yield assert(list.map(_.key))(hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
     }
   )
 }
