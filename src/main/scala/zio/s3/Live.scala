@@ -25,13 +25,18 @@ import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransf
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio._
+import zio.Tag
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionLike, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
-import zio.stream.{ StreamChunk, ZStream, ZStreamChunk }
-
+import zio.stream.{ Stream, ZStream }
 import scala.jdk.CollectionConverters._
 
+/**
+ * Service use to wrap the unsafe amazon s3 client and access safely to s3 storage
+ *
+ * @param unsafeClient: Amazon Async S3 Client
+ */
 final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   override def createBucket(bucketName: String): IO[S3Exception, Unit] =
@@ -51,20 +56,19 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     execute(_.listBuckets())
       .map(r => S3Bucket.fromBuckets(r.buckets().asScala.toList))
 
-  override def getObject(bucketName: String, key: String): StreamChunk[S3Exception, Byte] =
-    ZStreamChunk(
-      ZStream
-        .fromEffect(
-          execute(
-            _.getObject[StreamResponse](
-              GetObjectRequest.builder().bucket(bucketName).key(key).build(),
-              StreamAsyncResponseTransformer(new CompletableFuture[StreamResponse]())
-            )
+  override def getObject(bucketName: String, key: String): Stream[S3Exception, Byte] =
+    ZStream
+      .fromEffect(
+        execute(
+          _.getObject[StreamResponse](
+            GetObjectRequest.builder().bucket(bucketName).key(key).build(),
+            StreamAsyncResponseTransformer(new CompletableFuture[StreamResponse]())
           )
         )
-        .flatMap(identity)
-        .mapError(S3ExceptionLike)
-    )
+      )
+      .flatMap(identity)
+      .flattenChunks
+      .mapError(S3ExceptionLike)
 
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
@@ -86,14 +90,15 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
         ).map(S3ObjectListing.fromResponse)
       }
 
-  override def putObject[R <: zio.Has[_]: Tagged](
+  override def putObject[R <: zio.Has[_]: Tag](
     bucketName: String,
     key: String,
     contentLength: Long,
     contentType: String,
-    content: ZStreamChunk[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte]
   ): ZIO[R, S3Exception, Unit] =
-    content.chunks
+    content
+      .mapChunks(Chunk.single)
       .map(c => ByteBuffer.wrap(c.toArray))
       .toPublisher
       .flatMap(publisher =>
@@ -113,11 +118,11 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .unit
 
   // only for file which are bigger than 5 Mb
-  def multipartUpload[R <: zio.Has[_]: Tagged](
+  def multipartUpload[R <: zio.Has[_]: Tag](
     bucketName: String,
     key: String,
     contentType: String,
-    content: ZStreamChunk[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte]
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
@@ -134,7 +139,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       parts <- content
               //part size limit is 5Mb, required by amazon api
                 .chunkN(5 * 1024 * 1024)
-                .chunks
+                .mapChunks(Chunk.single)
                 .zipWithIndex
                 .mapM {
                   case (chunk, partNumber) =>
