@@ -33,7 +33,7 @@ lazy val `zio-s3` = project
       "dev.zio"                %% "zio"                         % zioVersion,
       "dev.zio"                %% "zio-streams"                 % zioVersion,
       "dev.zio"                %% "zio-nio"                     % "1.0.0-RC7",
-      "dev.zio"                %% "zio-interop-reactivestreams" % "1.0.3.5-RC8",
+      "dev.zio"                %% "zio-interop-reactivestreams" % "1.0.3.5-RC9",
       "org.scala-lang.modules" %% "scala-collection-compat"     % "2.1.6",
       "software.amazon.awssdk" % "s3"                           % "2.13.23",
       "dev.zio"                %% "zio-test"                    % zioVersion % Test,
