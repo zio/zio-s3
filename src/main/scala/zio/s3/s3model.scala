@@ -19,23 +19,25 @@ package zio.s3
 import java.time.Instant
 
 import software.amazon.awssdk.services.s3.model.{ Bucket, ListObjectsV2Response }
+import zio.Chunk
+
 import scala.jdk.CollectionConverters._
 
 final case class S3Bucket(name: String, creationDate: Instant)
 
 object S3Bucket {
-  type S3BucketListing = List[S3Bucket]
+  type S3BucketListing = Chunk[S3Bucket]
 
   def fromBucket(bucket: Bucket): S3Bucket =
     new S3Bucket(bucket.name(), bucket.creationDate())
 
   def fromBuckets(l: List[Bucket]): S3BucketListing =
-    l.map(fromBucket)
+    Chunk.fromIterable(l.map(fromBucket))
 }
 
 final case class S3ObjectListing(
   bucketName: String,
-  objectSummaries: List[S3ObjectSummary],
+  objectSummaries: Chunk[S3ObjectSummary],
   nextContinuationToken: Option[String]
 )
 
@@ -44,7 +46,7 @@ object S3ObjectListing {
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
       r.name(),
-      r.contents().asScala.toList.map(o => S3ObjectSummary(r.name(), o.key())),
+      Chunk.fromIterable(r.contents().asScala.toList).map(o => S3ObjectSummary(r.name(), o.key())),
       Option(r.nextContinuationToken())
     )
 }

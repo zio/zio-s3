@@ -45,7 +45,7 @@ object S3Suite {
       testM("list buckets") {
         for {
           buckets <- listBuckets
-        } yield assert(buckets.map(_.name))(equalTo(List(bucketName)))
+        } yield assert(buckets.map(_.name))(equalTo(Chunk.single(bucketName)))
       },
       testM("list objects") {
         for {
@@ -65,7 +65,7 @@ object S3Suite {
           succeed <- listObjects(bucketName, "console", 10)
         } yield assert(succeed)(
           equalTo(
-            S3ObjectListing(bucketName, List(S3ObjectSummary(bucketName, "console.log")), None)
+            S3ObjectListing(bucketName, Chunk.single(S3ObjectSummary(bucketName, "console.log")), None)
           )
         )
       },
@@ -74,7 +74,7 @@ object S3Suite {
           succeed <- listObjects(bucketName, "blah", 10)
         } yield assert(succeed)(
           equalTo(
-            S3ObjectListing(bucketName, Nil, None)
+            S3ObjectListing(bucketName, Chunk.empty, None)
           )
         )
       },
@@ -154,12 +154,12 @@ object S3Suite {
       testM("get nextObjects") {
         for {
           token   <- listObjects(bucketName, "", 1).map(_.nextContinuationToken)
-          listing <- getNextObjects(S3ObjectListing(bucketName, Nil, token))
+          listing <- getNextObjects(S3ObjectListing(bucketName, Chunk.empty, token))
         } yield assert(listing.objectSummaries)(isNonEmpty)
       },
       testM("get nextObjects - invalid token") {
         for {
-          succeed <- getNextObjects(S3ObjectListing(bucketName, Nil, Some(""))).foldCause(_ => false, _ => true)
+          succeed <- getNextObjects(S3ObjectListing(bucketName, Chunk.empty, Some(""))).foldCause(_ => false, _ => true)
         } yield assert(succeed)(isFalse)
 
       },
