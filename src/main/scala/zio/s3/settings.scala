@@ -27,10 +27,11 @@ sealed trait S3Region {
 
 object S3Region {
 
-  def fromRegion(region: Region): Either[InvalidSettings, S3Region] = region match {
-    case r if Region.regions().contains(r) => Right(new S3Region { val region = r })
-    case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
-  }
+  def fromRegion(region: Region): Either[InvalidSettings, S3Region] =
+    region match {
+      case r if Region.regions().contains(r) => Right(new S3Region { val region = r })
+      case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
+    }
 
   def fromString(value: String): Either[InvalidSettings, S3Region] = fromRegion(Region.of(value))
 }

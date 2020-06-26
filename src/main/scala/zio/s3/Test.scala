@@ -86,7 +86,7 @@ object Test {
           .map {
             case list if list.size > maxKeys =>
               S3ObjectListing(bucketName, list.take(maxKeys.toInt), Some(UUID.randomUUID().toString))
-            case list => S3ObjectListing(bucketName, list, None)
+            case list                        => S3ObjectListing(bucketName, list, None)
           }
           .mapError(S3ExceptionLike)
           .provide(blocking)

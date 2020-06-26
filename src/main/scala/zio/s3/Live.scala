@@ -126,51 +126,51 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
-                   _.createMultipartUpload(
-                     CreateMultipartUploadRequest
-                       .builder()
-                       .bucket(bucketName)
-                       .key(key)
-                       .contentType(contentType)
-                       .build()
-                   )
-                 ).map(_.uploadId())
+                    _.createMultipartUpload(
+                      CreateMultipartUploadRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(contentType)
+                        .build()
+                    )
+                  ).map(_.uploadId())
 
-      parts <- content
-              //part size limit is 5Mb, required by amazon api
-                .chunkN(5 * 1024 * 1024)
-                .mapChunks(Chunk.single)
-                .zipWithIndex
-                .mapM {
-                  case (chunk, partNumber) =>
-                    execute(
-                      _.uploadPart(
-                        UploadPartRequest
-                          .builder()
-                          .bucket(bucketName)
-                          .key(key)
-                          .partNumber(partNumber.toInt + 1)
-                          .uploadId(uploadId)
-                          .contentLength(chunk.length.toLong)
-                          .build(),
-                        AsyncRequestBody.fromBytes(chunk.toArray)
-                      )
-                    ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
-                }
-                .runCollect
-                .mapError(S3ExceptionLike)
+      parts    <- content
+                  //part size limit is 5Mb, required by amazon api
+                    .chunkN(5 * 1024 * 1024)
+                    .mapChunks(Chunk.single)
+                    .zipWithIndex
+                    .mapM {
+                      case (chunk, partNumber) =>
+                        execute(
+                          _.uploadPart(
+                            UploadPartRequest
+                              .builder()
+                              .bucket(bucketName)
+                              .key(key)
+                              .partNumber(partNumber.toInt + 1)
+                              .uploadId(uploadId)
+                              .contentLength(chunk.length.toLong)
+                              .build(),
+                            AsyncRequestBody.fromBytes(chunk.toArray)
+                          )
+                        ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
+                    }
+                    .runCollect
+                    .mapError(S3ExceptionLike)
 
-      _ <- execute(
-            _.completeMultipartUpload(
-              CompleteMultipartUploadRequest
-                .builder()
-                .bucket(bucketName)
-                .key(key)
-                .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                .uploadId(uploadId)
-                .build()
-            )
-          )
+      _        <- execute(
+                    _.completeMultipartUpload(
+                      CompleteMultipartUploadRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+                        .uploadId(uploadId)
+                        .build()
+                    )
+                  )
     } yield ()
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =

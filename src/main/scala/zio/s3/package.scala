@@ -56,7 +56,6 @@ package object s3 {
        * Check if bucket exists
        *
        * @param bucketName name of the bucket
-       *
        */
       def isBucketExists(bucketName: String): IO[S3Exception, Boolean]
 
@@ -88,7 +87,6 @@ package object s3 {
        * @param bucketName name of the bucket
        * @param prefix filter all object key by the prefix
        * @param maxKeys max total number of objects
-       *
        */
       def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing]
 
@@ -96,7 +94,6 @@ package object s3 {
        * Fetch the next object listing from a specific object listing.
        *
        * @param listing listing to use as a start
-       *
        */
       def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing]
 
@@ -119,7 +116,8 @@ package object s3 {
         content: ZStream[R, Throwable, Byte]
       ): ZIO[R, S3Exception, Unit]
 
-      /***
+      /**
+       * *
        *
        * Store data object into a specific bucket, minimun size of the data is 5 Mb to use multipartt upload (restriction from amazon API)
        *
@@ -135,7 +133,8 @@ package object s3 {
         content: ZStream[R, Throwable, Byte]
       ): ZIO[R, S3Exception, Unit]
 
-      /***
+      /**
+       * *
        * expose safely amazon s3 async client
        *
        * @param f call any operations on s3 async client
@@ -162,7 +161,6 @@ package object s3 {
    *
    * @param bucketName name of the bucket
    * @param prefix filter all object identifier which start with this `prefix`
-   *
    */
   def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
     ZStream.accessStream[S3](env =>
@@ -192,12 +190,13 @@ package object s3 {
    *
    * @param objectSummary object to read define by a bucketName and object key
    */
-  def streamLines(objectSummary: S3ObjectSummary): S3Stream[String] = ZStream.accessStream[S3](
-    _.get
-      .getObject(objectSummary.bucketName, objectSummary.key)
-      .transduce(ZTransducer.utf8Decode)
-      .transduce(ZTransducer.splitLines)
-  )
+  def streamLines(objectSummary: S3ObjectSummary): S3Stream[String] =
+    ZStream.accessStream[S3](
+      _.get
+        .getObject(objectSummary.bucketName, objectSummary.key)
+        .transduce(ZTransducer.utf8Decode)
+        .transduce(ZTransducer.splitLines)
+    )
 
   def createBucket(bucketName: String): ZIO[S3, S3Exception, Unit] =
     ZIO.accessM(_.get.createBucket(bucketName))
