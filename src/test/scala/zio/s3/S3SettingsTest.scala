@@ -11,8 +11,8 @@ object S3SettingsTest extends DefaultRunnableSpec {
       testM("invalid region") {
         for {
           failure <- S3Settings
-                      .from("invalid", S3Credentials("key", "secret"))
-                      .foldCause(_.failureOption.map(_.message).mkString, _ => "")
+                       .from("invalid", S3Credentials("key", "secret"))
+                       .foldCause(_.failureOption.map(_.message).mkString, _ => "")
         } yield assert(failure)(equalTo("Invalid aws region provided : invalid"))
       },
       testM("valid region") {

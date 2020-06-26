@@ -3,13 +3,14 @@ import sbt.Keys._
 
 object BuildHelper {
 
-  def stdSettings(prjName: String) = Seq(
-    name := s"$prjName",
-    crossScalaVersions := Seq(Scala212, Scala213),
-    scalaVersion in ThisBuild := Scala212,
-    scalacOptions := CommonOpts ++ extraOptions(scalaVersion.value),
-    incOptions ~= (_.withLogRecompileOnMacro(false))
-  )
+  def stdSettings(prjName: String) =
+    Seq(
+      name := s"$prjName",
+      crossScalaVersions := Seq(Scala212, Scala213),
+      scalaVersion in ThisBuild := Scala212,
+      scalacOptions := CommonOpts ++ extraOptions(scalaVersion.value),
+      incOptions ~= (_.withLogRecompileOnMacro(false))
+    )
 
   final private val Scala212 = "2.12.11"
   final private val Scala213 = "2.13.1"
@@ -69,7 +70,7 @@ object BuildHelper {
           "-opt:l:inline",
           "-opt-inline-from:<source>"
         ) ++ OptsTo212
-      case _ =>
+      case _             =>
         Seq("-Xexperimental") ++ OptsTo212
     }
 }

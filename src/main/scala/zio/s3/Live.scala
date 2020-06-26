@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.s3.model._
 import zio._
 import zio.Tag
 import zio.interop.reactivestreams._
-import zio.s3.Live.{ S3ExceptionLike, StreamAsyncResponseTransformer, StreamResponse }
+import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZStream }
 import scala.jdk.CollectionConverters._
@@ -68,7 +68,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       )
       .flatMap(identity)
       .flattenChunks
-      .mapError(S3ExceptionLike)
+      .mapError(S3ExceptionUtils.fromThrowable)
 
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
@@ -83,7 +83,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
     listing.nextContinuationToken
       .fold[ZIO[Any, S3Exception, S3ObjectListing]](
-        ZIO.succeed(listing.copy(nextContinuationToken = None, objectSummaries = Nil))
+        ZIO.succeed(listing.copy(nextContinuationToken = None, objectSummaries = Chunk.empty))
       ) { token =>
         execute(
           _.listObjectsV2(ListObjectsV2Request.builder().bucket(listing.bucketName).continuationToken(token).build())
@@ -126,51 +126,51 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
-                   _.createMultipartUpload(
-                     CreateMultipartUploadRequest
-                       .builder()
-                       .bucket(bucketName)
-                       .key(key)
-                       .contentType(contentType)
-                       .build()
-                   )
-                 ).map(_.uploadId())
+                    _.createMultipartUpload(
+                      CreateMultipartUploadRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(contentType)
+                        .build()
+                    )
+                  ).map(_.uploadId())
 
-      parts <- content
-              //part size limit is 5Mb, required by amazon api
-                .chunkN(5 * 1024 * 1024)
-                .mapChunks(Chunk.single)
-                .zipWithIndex
-                .mapM {
-                  case (chunk, partNumber) =>
-                    execute(
-                      _.uploadPart(
-                        UploadPartRequest
-                          .builder()
-                          .bucket(bucketName)
-                          .key(key)
-                          .partNumber(partNumber.toInt + 1)
-                          .uploadId(uploadId)
-                          .contentLength(chunk.length.toLong)
-                          .build(),
-                        AsyncRequestBody.fromBytes(chunk.toArray)
-                      )
-                    ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
-                }
-                .runCollect
-                .mapError(S3ExceptionLike)
+      parts    <- content
+                  //part size limit is 5Mb, required by amazon api
+                    .chunkN(5 * 1024 * 1024)
+                    .mapChunks(Chunk.single)
+                    .zipWithIndex
+                    .mapM {
+                      case (chunk, partNumber) =>
+                        execute(
+                          _.uploadPart(
+                            UploadPartRequest
+                              .builder()
+                              .bucket(bucketName)
+                              .key(key)
+                              .partNumber(partNumber.toInt + 1)
+                              .uploadId(uploadId)
+                              .contentLength(chunk.length.toLong)
+                              .build(),
+                            AsyncRequestBody.fromBytes(chunk.toArray)
+                          )
+                        ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
+                    }
+                    .runCollect
+                    .mapError(S3ExceptionUtils.fromThrowable)
 
-      _ <- execute(
-            _.completeMultipartUpload(
-              CompleteMultipartUploadRequest
-                .builder()
-                .bucket(bucketName)
-                .key(key)
-                .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                .uploadId(uploadId)
-                .build()
-            )
-          )
+      _        <- execute(
+                    _.completeMultipartUpload(
+                      CompleteMultipartUploadRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+                        .uploadId(uploadId)
+                        .build()
+                    )
+                  )
     } yield ()
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
@@ -209,8 +209,11 @@ object Live {
       .map(new Live(_))
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
 
-  private[s3] case class S3ExceptionLike(error: Throwable)
-      extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error.getCause))
+  private[s3] object S3ExceptionUtils {
+
+    def fromThrowable(error: Throwable): S3Exception =
+      S3Exception.builder().message(error.getMessage).cause(error.getCause).build().asInstanceOf[S3Exception]
+  }
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
 
