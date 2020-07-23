@@ -115,7 +115,7 @@ package object s3 {
         contentLength: Long,
         contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String]
+        metadata: Map[String, String] = Map.empty
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -133,7 +133,7 @@ package object s3 {
         key: String,
         contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String]
+        metadata: Map[String, String] = Map.empty
       ): ZIO[R, S3Exception, Unit]
 
       /**
