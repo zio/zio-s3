@@ -102,7 +102,8 @@ object Test {
         key: String,
         contentLength: Long,
         contentType: String,
-        content: ZStream[R, Throwable, Byte]
+        content: ZStream[R, Throwable, Byte],
+        metadata: Map[String, String]
       ): ZIO[R, S3Exception, Unit] =
         ZManaged
           .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
@@ -121,9 +122,10 @@ object Test {
         bucketName: String,
         key: String,
         contentType: String,
-        content: ZStream[R, Throwable, Byte]
+        content: ZStream[R, Throwable, Byte],
+        metadata: Map[String, String]
       ): ZIO[R, S3Exception, Unit] =
-        putObject(bucketName, key, 0, contentType, content.chunkN(10))
+        putObject(bucketName, key, 0, contentType, content.chunkN(10), metadata)
     }
   }
 }
