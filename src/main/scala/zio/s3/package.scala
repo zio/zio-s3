@@ -106,6 +106,7 @@ package object s3 {
        * @param contentLength length of the data in bytes
        * @param contentType content type of the object (json, csv, txt, binary, ...)
        * @param content object data
+       * @param metadata metadata
        * @return
        */
       def putObject[R <: zio.Has[_]: Tag](
@@ -113,7 +114,8 @@ package object s3 {
         key: String,
         contentLength: Long,
         contentType: String,
-        content: ZStream[R, Throwable, Byte]
+        content: ZStream[R, Throwable, Byte],
+        metadata: Map[String, String] = Map.empty
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -130,7 +132,8 @@ package object s3 {
         bucketName: String,
         key: String,
         contentType: String,
-        content: ZStream[R, Throwable, Byte]
+        content: ZStream[R, Throwable, Byte],
+        metadata: Map[String, String] = Map.empty
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -235,17 +238,19 @@ package object s3 {
     key: String,
     contentLength: Long,
     contentType: String,
-    content: ZStream[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte],
+    metadata: Map[String, String]
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, contentType, content))
+    ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, contentType, content, metadata))
 
   def multipartUpload[R <: Has[_]: Tag](
     bucketName: String,
     key: String,
     contentType: String,
-    content: ZStream[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte],
+    metadata: Map[String, String]
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](_.get.multipartUpload(bucketName, key, contentType, content))
+    ZIO.accessM[S3 with R](_.get.multipartUpload(bucketName, key, contentType, content, metadata))
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =
     ZIO.accessM(_.get.execute(f))

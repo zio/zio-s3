@@ -95,7 +95,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     key: String,
     contentLength: Long,
     contentType: String,
-    content: ZStream[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte],
+    metadata: Map[String, String] = Map.empty
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -110,6 +111,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
               .contentLength(contentLength)
               .contentType(contentType)
               .key(key)
+              .metadata(metadata.asJava)
               .build(),
             AsyncRequestBody.fromPublisher(publisher)
           )
@@ -122,7 +124,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     contentType: String,
-    content: ZStream[R, Throwable, Byte]
+    content: ZStream[R, Throwable, Byte],
+    metadata: Map[String, String] = Map.empty
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
@@ -132,6 +135,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                         .bucket(bucketName)
                         .key(key)
                         .contentType(contentType)
+                        .metadata(metadata.asJava)
                         .build()
                     )
                   ).map(_.uploadId())

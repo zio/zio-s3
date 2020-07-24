@@ -169,7 +169,7 @@ object S3Suite {
         val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          _        <- putObject(bucketName, tmpKey, c.length.toLong, "text/plain", data)
+          _        <- putObject(bucketName, tmpKey, c.length.toLong, "text/plain", data, metadata = Map.empty)
           fileSize <- (ZFiles
                           .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
                           .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
@@ -197,7 +197,7 @@ object S3Suite {
         val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
+          _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data, metadata = Map.empty)
           fileSize <- (ZFiles
                           .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
                           .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
