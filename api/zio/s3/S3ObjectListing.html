@@ -170,7 +170,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="scala.List">List</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -226,9 +226,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="zio.s3.S3ObjectListing#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(bucketName:String,objectSummaries:List[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing"></a><a id="&lt;init&gt;:S3ObjectListing"></a>
+      <a id="&lt;init&gt;(bucketName:String,objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing"></a><a id="&lt;init&gt;:S3ObjectListing"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3ObjectListing.html#&lt;init&gt;(bucketName:String,objectSummaries:List[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing" title="Permalink">
+      <a href="../../zio/s3/S3ObjectListing.html#&lt;init&gt;(bucketName:String,objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -237,7 +237,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="scala.List">List</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
+        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
       </span>
       
       
@@ -499,9 +499,9 @@
               
         </dd></dl></div>
     </li><li name="zio.s3.S3ObjectListing#objectSummaries" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="objectSummaries:List[zio.s3.S3ObjectSummary]"></a><a id="objectSummaries:List[S3ObjectSummary]"></a>
+      <a id="objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary]"></a><a id="objectSummaries:Chunk[S3ObjectSummary]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3ObjectListing.html#objectSummaries:List[zio.s3.S3ObjectSummary]" title="Permalink">
+      <a href="../../zio/s3/S3ObjectListing.html#objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -510,7 +510,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">objectSummaries</span><span class="result">: <span class="extype" name="scala.List">List</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>
+        <span class="name">objectSummaries</span><span class="result">: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>
       </span>
       
       
