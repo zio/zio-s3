@@ -20,13 +20,15 @@ import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZStream, ZTransducer }
 
 package object s3 {
+  final val MinChunkSize: Int = 5 * 1024 * 1024 // 5 MB
+
   type S3          = Has[S3.Service]
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
@@ -127,13 +129,20 @@ package object s3 {
        * @param key unique object identifier
        * @param contentType content type of the object (json, csv, txt, binary, ...)
        * @param content object data
+       * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
+       * @param chunkSize the size of the part in bytes, the minimum is 5 MB
+       * @param parallelism the number of parallel requests to upload chunks, default to 1
+       * @param cannedAcl a canned acl, defaults to [[ObjectCannedACL.PRIVATE]]
        */
       def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String] = Map.empty
+        metadata: Map[String, String] = Map.empty,
+        chunkSize: Int = MinChunkSize,
+        parallelism: Int = 1,
+        cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -248,9 +257,14 @@ package object s3 {
     key: String,
     contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String]
+    metadata: Map[String, String] = Map.empty,
+    chunkSize: Int = MinChunkSize,
+    parallelism: Int = 1,
+    cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](_.get.multipartUpload(bucketName, key, contentType, content, metadata))
+    ZIO.accessM[S3 with R](
+      _.get.multipartUpload(bucketName, key, contentType, content, metadata, chunkSize, parallelism, cannedAcl)
+    )
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =
     ZIO.accessM(_.get.execute(f))

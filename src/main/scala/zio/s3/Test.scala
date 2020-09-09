@@ -22,7 +22,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio._
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
@@ -123,7 +123,10 @@ object Test {
         key: String,
         contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String]
+        metadata: Map[String, String],
+        chunkSize: Int,
+        parallelism: Int,
+        cannedAcl: ObjectCannedACL
       ): ZIO[R, S3Exception, Unit] =
         putObject(bucketName, key, 0, contentType, content.chunkN(10), metadata)
     }

@@ -24,12 +24,12 @@ import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCred
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
-import zio._
-import zio.Tag
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZStream }
+import zio.{ Tag, _ }
+
 import scala.jdk.CollectionConverters._
 
 /**
@@ -119,15 +119,18 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       )
       .unit
 
-  // only for file which are bigger than 5 Mb
   def multipartUpload[R <: zio.Has[_]: Tag](
     bucketName: String,
     key: String,
     contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty
+    metadata: Map[String, String] = Map.empty,
+    chunkSize: Int = MinChunkSize,
+    parallelism: Int = 1,
+    cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
   ): ZIO[R, S3Exception, Unit] =
     for {
+      _        <- Live.validateChunkSize(chunkSize)
       uploadId <- execute(
                     _.createMultipartUpload(
                       CreateMultipartUploadRequest
@@ -136,16 +139,16 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                         .key(key)
                         .contentType(contentType)
                         .metadata(metadata.asJava)
+                        .acl(cannedAcl)
                         .build()
                     )
                   ).map(_.uploadId())
 
       parts    <- content
-                  //part size limit is 5Mb, required by amazon api
-                    .chunkN(5 * 1024 * 1024)
+                    .chunkN(chunkSize)
                     .mapChunks(Chunk.single)
                     .zipWithIndex
-                    .mapM {
+                    .mapMPar(parallelism) {
                       case (chunk, partNumber) =>
                         execute(
                           _.uploadPart(
@@ -164,17 +167,29 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                     .runCollect
                     .mapError(S3ExceptionUtils.fromThrowable)
 
-      _        <- execute(
-                    _.completeMultipartUpload(
-                      CompleteMultipartUploadRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                        .uploadId(uploadId)
-                        .build()
+      _        <- if (parts.nonEmpty)
+                    execute(
+                      _.completeMultipartUpload(
+                        CompleteMultipartUploadRequest
+                          .builder()
+                          .bucket(bucketName)
+                          .key(key)
+                          .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+                          .uploadId(uploadId)
+                          .build()
+                      )
                     )
-                  )
+                  else
+                    execute(
+                      _.abortMultipartUpload(
+                        AbortMultipartUploadRequest
+                          .builder()
+                          .bucket(bucketName)
+                          .key(key)
+                          .uploadId(uploadId)
+                          .build()
+                      )
+                    )
     } yield ()
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
@@ -237,4 +252,18 @@ object Live {
       ()
     }
   }
+
+  private[s3] def validateChunkSize(chunkSize: Int): IO[S3Exception, Unit] =
+    if (chunkSize >= MinChunkSize) Task.unit
+    else
+      IO.fail(
+        S3ExceptionUtils.fromThrowable(
+          InvalidSettings(
+            s"The objects must have size from 5 MB to 5 TB. The provided setting was $chunkSize bytes"
+          )
+        )
+      )
+
+  final val SingleEmptyChunkStream = ZStream(Chunk.empty)
+
 }

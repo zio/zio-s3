@@ -5,13 +5,14 @@ import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
-import zio.{ Chunk, ZLayer }
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
-import zio.nio.file.{ Files => ZFiles }
-import zio.stream.{ ZStream, ZTransducer }
+import zio.nio.core.file.{Path => ZPath}
+import zio.nio.file.{Files => ZFiles}
+import zio.stream.{ZStream, ZTransducer}
 import zio.test.Assertion._
 import zio.test._
+import zio.{Chunk, ZLayer}
 
 import scala.util.Random
 
@@ -22,7 +23,12 @@ object S3LiveSpec extends DefaultRunnableSpec {
     live(Region.CA_CENTRAL_1.id(), S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
       .mapError(TestFailure.die(_))
 
-  override def spec = S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
+  override def spec = {
+    suite("S3LiveSpec") (
+      S3Suite.spec("Common spec", root),
+      S3Suite.liveSpec("Live spec", root)
+    ).provideCustomLayerShared(s3)
+  }
 }
 
 object S3TestSpec extends DefaultRunnableSpec {
@@ -197,7 +203,7 @@ object S3Suite {
         val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data, metadata = Map.empty)
+          _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
           fileSize <- (ZFiles
                           .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
                           .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
@@ -219,4 +225,71 @@ object S3Suite {
 
       }
     )
+
+  def liveSpec(label: String, root: ZPath): Spec[S3, TestFailure[Exception], TestSuccess] =
+    suite(label)(
+      testM("multipart object when the chunk size and parallelism are customized") {
+        val chunkSize = MinChunkSize + 123
+        val dataSize  = MinChunkSize * 10
+        val bytes     = new Array[Byte](dataSize)
+        Random.nextBytes(bytes)
+        val data      = ZStream.fromChunks(Chunk.fromArray(bytes))
+        val tmpKey    = Random.alphanumeric.take(10).mkString
+
+        for {
+          _        <- multipartUpload(
+            bucketName,
+            tmpKey,
+            "application/octet-stream",
+            data,
+            chunkSize = chunkSize,
+            parallelism = 4
+          )
+          fileSize <- (ZFiles
+            .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
+            .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
+        } yield assert(fileSize)(equalTo(dataSize.toLong))
+
+      },
+      testM("multipart object when the chunk size is smaller than minimum") {
+        val data   = ZStream.fromChunks(Chunk.fromArray("123".getBytes()))
+        val tmpKey = Random.alphanumeric.take(10).mkString
+
+        for {
+          uploadResult <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data, chunkSize = 123).either
+        } yield assert(uploadResult)(isLeft(Assertion.anything))
+
+      },
+      testM("multipart object when the content is empty") {
+        val data   = ZStream.empty
+        val tmpKey = Random.alphanumeric.take(10).mkString
+
+        for {
+          _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
+          uploaded <- (ZFiles.exists(root / bucketName / tmpKey)).provideLayer(Blocking.live)
+        } yield assert(uploaded)(isFalse)
+
+      },
+      testM("multipart object when there is a canned acl") {
+        val dataSize = 100
+        val bytes    = new Array[Byte](dataSize)
+        Random.nextBytes(bytes)
+        val data     = ZStream.fromChunks(Chunk.fromArray(bytes))
+        val tmpKey   = Random.alphanumeric.take(10).mkString
+
+        for {
+          _        <- multipartUpload(
+            bucketName,
+            tmpKey,
+            "application/octet-stream",
+            data,
+            cannedAcl = ObjectCannedACL.AUTHENTICATED_READ
+          )
+          fileSize <- (ZFiles
+            .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
+            .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
+        } yield assert(fileSize)(equalTo(dataSize.toLong))
+      }
+    )
+
 }
