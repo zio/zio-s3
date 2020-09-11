@@ -130,66 +130,59 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
   ): ZIO[R, S3Exception, Unit] =
     for {
-      uploadId <- execute(
-                    _.createMultipartUpload(
-                      CreateMultipartUploadRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .contentType(contentType)
-                        .metadata(metadata.asJava)
-                        .acl(cannedAcl)
-                        .build()
-                    )
-                  ).map(_.uploadId())
+      uploadId      <- execute(
+                         _.createMultipartUpload(
+                           CreateMultipartUploadRequest
+                             .builder()
+                             .bucket(bucketName)
+                             .key(key)
+                             .contentType(contentType)
+                             .metadata(metadata.asJava)
+                             .acl(cannedAcl)
+                             .build()
+                         )
+                       ).map(_.uploadId())
 
-      parts    <- content
-                    .chunkN(chunkSize)
-                    .mapChunks(Chunk.single)
-                    .zipWithIndex
-                    .mapMPar(parallelism) {
-                      case (chunk, partNumber) =>
-                        execute(
-                          _.uploadPart(
-                            UploadPartRequest
-                              .builder()
-                              .bucket(bucketName)
-                              .key(key)
-                              .partNumber(partNumber.toInt + 1)
-                              .uploadId(uploadId)
-                              .contentLength(chunk.length.toLong)
-                              .build(),
-                            AsyncRequestBody.fromBytes(chunk.toArray)
-                          )
-                        ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
-                    }
-                    .runCollect
-                    .mapError(S3ExceptionUtils.fromThrowable)
+      parts         <- content
+                         .chunkN(chunkSize)
+                         .mapChunks(Chunk.single)
+                         .zipWithIndex
+                         .mapMPar(parallelism) {
+                           case (chunk, partNumber) => uploadPart(bucketName, key, partNumber.toInt + 1, uploadId, chunk)
+                         }
+                         .runCollect
+                         .mapError(S3ExceptionUtils.fromThrowable)
 
-      _        <- if (parts.nonEmpty)
-                    execute(
-                      _.completeMultipartUpload(
-                        CompleteMultipartUploadRequest
-                          .builder()
-                          .bucket(bucketName)
-                          .key(key)
-                          .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                          .uploadId(uploadId)
-                          .build()
-                      )
-                    )
-                  else
-                    execute(
-                      _.abortMultipartUpload(
-                        AbortMultipartUploadRequest
-                          .builder()
-                          .bucket(bucketName)
-                          .key(key)
-                          .uploadId(uploadId)
-                          .build()
-                      )
-                    )
+      nonEmptyParts <- if (parts.nonEmpty) UIO(parts)
+                       else uploadPart(bucketName, key, 1, uploadId, Chunk.empty).map(List(_))
+
+      _             <- execute(
+                         _.completeMultipartUpload(
+                           CompleteMultipartUploadRequest
+                             .builder()
+                             .bucket(bucketName)
+                             .key(key)
+                             .multipartUpload(CompletedMultipartUpload.builder().parts(nonEmptyParts.asJavaCollection).build())
+                             .uploadId(uploadId)
+                             .build()
+                         )
+                       )
     } yield ()
+
+  private def uploadPart(bucketName: String, key: String, partNumber: Int, uploadId: String, chunk: Chunk[Byte]) =
+    execute(
+      _.uploadPart(
+        UploadPartRequest
+          .builder()
+          .bucket(bucketName)
+          .key(key)
+          .partNumber(partNumber.toInt + 1)
+          .uploadId(uploadId)
+          .contentLength(chunk.length.toLong)
+          .build(),
+        AsyncRequestBody.fromBytes(chunk.toArray)
+      )
+    ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineToOrDie[S3Exception]

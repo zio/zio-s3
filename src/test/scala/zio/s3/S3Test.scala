@@ -223,14 +223,12 @@ object S3Suite {
       }
     )
 
-  def liveSpec(label: String, root: ZPath): Spec[S3, TestFailure[Exception], TestSuccess] =
+  def liveSpec(label: String, root: ZPath): Spec[S3, TestFailure[Exception], TestSuccess] = {
     suite(label)(
       testM("multipart object when the chunk size and parallelism are customized") {
         val chunkSize = MinChunkSize + 123
         val dataSize  = MinChunkSize * 10
-        val bytes     = new Array[Byte](dataSize)
-        Random.nextBytes(bytes)
-        val data      = ZStream.fromChunks(Chunk.fromArray(bytes))
+        val data   = byteStream(dataSize)
         val tmpKey    = Random.alphanumeric.take(10).mkString
 
         for {
@@ -251,9 +249,7 @@ object S3Suite {
       testM("multipart object when the chunk size is smaller than minimum") {
         val chunkSize = MinChunkSize - 100
         val dataSize  = MinChunkSize * 10
-        val bytes     = new Array[Byte](dataSize)
-        Random.nextBytes(bytes)
-        val data   = ZStream.fromChunks(Chunk.fromArray(bytes))
+        val data   = byteStream(dataSize)
         val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
@@ -266,8 +262,10 @@ object S3Suite {
 
         for {
           _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
-          uploaded <- ZFiles.exists(root / bucketName / tmpKey).provideLayer(Blocking.live)
-        } yield assert(uploaded)(isFalse)
+          fileSize <- (ZFiles
+            .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
+            .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
+        } yield assert(fileSize)(equalTo(0L))
       },
       testM("multipart object when there is a canned acl") {
         val dataSize = 100
@@ -290,5 +288,12 @@ object S3Suite {
         } yield assert(fileSize)(equalTo(dataSize.toLong))
       }
     )
+  }
+
+  private[this] def byteStream(dataSize: Int): ZStream[Any, Nothing, Byte] = {
+    val bytes     = new Array[Byte](dataSize)
+    Random.nextBytes(bytes)
+    ZStream.fromChunks(Chunk.fromArray(bytes))
+  }
 
 }
