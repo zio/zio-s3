@@ -7,7 +7,7 @@ import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
-import zio.s3.UploadOptions.MinMultipartPartSize
+import zio.s3.MultipartUploadOptions.MinMultipartPartSize
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
@@ -279,7 +279,7 @@ object S3Suite {
                               bucketName,
                               tmpKey,
                               data,
-                              UploadOptions(metadata = metadata, contentType = Some("application/json"))
+                              MultipartUploadOptions(UploadOptions(metadata = metadata, contentType = Some("application/json")))
                             )
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
@@ -292,7 +292,7 @@ object S3Suite {
         val tmpKey   = randomKey()
 
         for {
-          _             <- multipartUpload(bucketName, tmpKey, data, partSize = partSize, parallelism = 4)
+          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(parallelism = 4, partSize = partSize))
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataSize.toLong))
@@ -304,7 +304,7 @@ object S3Suite {
         val tmpKey   = randomKey()
 
         for {
-          uploadResult <- multipartUpload(bucketName, tmpKey, data, partSize = partSize).either
+          uploadResult <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = partSize)).either
         } yield assert(uploadResult)(isLeft(Assertion.anything))
       }
     )

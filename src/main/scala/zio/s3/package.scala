@@ -132,16 +132,12 @@ package object s3 {
        * @param key unique object identifier
        * @param content object data
        * @param options the optional configurations of the multipart upload
-       * @param parallelism the number of parallel requests to upload chunks, default to 1
-       * @param partSize the size of the part in bytes, the minimum is 5 MB
        */
       def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: UploadOptions = UploadOptions.default,
-        partSize: Int = UploadOptions.MinMultipartPartSize,
-        parallelism: Int = 1
+        options: MultipartUploadOptions = MultipartUploadOptions.default
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -257,12 +253,10 @@ package object s3 {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default,
-    partSize: Int = UploadOptions.MinMultipartPartSize,
-    parallelism: Int = 1
+    options: MultipartUploadOptions = MultipartUploadOptions.default
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](
-      _.get.multipartUpload(bucketName, key, content, options, partSize, parallelism)
+      _.get.multipartUpload(bucketName, key, content, options)
     )
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =

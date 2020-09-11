@@ -24,7 +24,7 @@ object MultipartUploadExample extends zio.App {
         "my-test",
         s"1GB-${System.currentTimeMillis()}.zip",
         ZStream.fromInputStream(new FileInputStream(Paths.get("1GB.zip").toFile)),
-        parallelism = parallelism
+        MultipartUploadOptions(parallelism = parallelism)
       ))
         .tap(begin => ZIO(println(s"Parallelism $parallelism ${System.currentTimeMillis() - begin}")))
         .provideSomeLayer[Blocking](s3)

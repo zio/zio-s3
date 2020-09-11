@@ -1,6 +1,6 @@
 package zio.s3
 
-import software.amazon.awssdk.services.s3.model.{ CreateMultipartUploadRequest, ObjectCannedACL, PutObjectRequest }
+import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, PutObjectRequest }
 
 import scala.jdk.CollectionConverters._
 
@@ -17,18 +17,7 @@ case class UploadOptions(
 )
 
 object UploadOptions {
-  final val MinMultipartPartSize: Int = 5 * 1024 * 1024 // 5 MB
-
   final val default = UploadOptions()
-
-  def multipartUploadBuilder(options: UploadOptions): CreateMultipartUploadRequest.Builder = {
-    val builder = CreateMultipartUploadRequest
-      .builder()
-      .metadata(options.metadata.asJava)
-      .acl(options.cannedAcl)
-
-    options.contentType.fold(builder)(builder.contentType)
-  }
 
   def putObjectBuilder(options: UploadOptions): PutObjectRequest.Builder = {
     val builder = PutObjectRequest

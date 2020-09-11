@@ -126,11 +126,9 @@ object Test {
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: UploadOptions,
-        partSize: Int,
-        parallelism: Int
+        options: MultipartUploadOptions = MultipartUploadOptions.default
       ): ZIO[R, S3Exception, Unit] =
-        putObject(bucketName, key, 0, content.chunkN(partSize), options)
+        putObject(bucketName, key, 0, content.chunkN(options.partSize), options.uploadOptions)
     }
   }
 }

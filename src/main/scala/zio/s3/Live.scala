@@ -124,14 +124,12 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default,
-    partSize: Int = UploadOptions.MinMultipartPartSize,
-    parallelism: Int = 1
+    options: MultipartUploadOptions = MultipartUploadOptions.default
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId              <- execute(
                                  _.createMultipartUpload(
-                                   UploadOptions
+                                   MultipartUploadOptions
                                      .multipartUploadBuilder(options)
                                      .bucket(bucketName)
                                      .key(key)
@@ -139,14 +137,14 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                                  )
                                ).map(_.uploadId())
 
-      chunkedStream          = content.chunkN(partSize).mapChunks(Chunk.single).mapError(S3ExceptionUtils.fromThrowable)
+      chunkedStream          = content.chunkN(options.partSize).mapChunks(Chunk.single).mapError(S3ExceptionUtils.fromThrowable)
       nonEmptyChunkedStream <- chunkedStream.peel(ZSink.head[Chunk[Byte]]).use {
                                  case (Some(head), rest) => ZIO.succeed(ZStream(head) ++ rest)
                                  case (None, _)          => ZIO.succeed(SingleEmptyChunkStream)
                                }
 
       parts                 <- nonEmptyChunkedStream.zipWithIndex
-                                 .mapMPar(parallelism) {
+                                 .mapMPar(options.parallelism) {
                                    case (chunk, partNumber) =>
                                      execute(
                                        _.uploadPart(
