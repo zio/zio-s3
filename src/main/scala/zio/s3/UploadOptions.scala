@@ -7,7 +7,7 @@ import scala.jdk.CollectionConverters._
 /**
  * The options of the multipart upload and the put object request.
  * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
- * @param cannedAcl a canned acl, defaults to [[ObjectCannedACL.PRIVATE]]
+ * @param cannedAcl a canned acl, defaults to "private"
  * @param contentType the content type of the object (application/json, application/zip, text/plain, ...)
  */
 case class UploadOptions(
