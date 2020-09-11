@@ -24,7 +24,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
 
   override def spec =
     suite("S3LiveSpec")(
-      S3Suite.spec("Common spec", root),
+//      S3Suite.spec("Common spec", root),
       S3Suite.liveSpec("Live spec", root)
     ).provideCustomLayerShared(s3)
 }
@@ -206,6 +206,16 @@ object S3Suite {
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(isGreaterThan(0L))
       },
+      testM("multipart object when the content is empty") {
+        val data   = ZStream.empty
+        val tmpKey = randomKey()
+
+        for {
+          _             <- multipartUpload(bucketName, tmpKey, data)
+          contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
+                             ZFiles.delete(root / bucketName / tmpKey)
+        } yield assert(contentLength)(equalTo(0L))
+      },
       testM("stream lines") {
 
         for {
@@ -296,16 +306,6 @@ object S3Suite {
         for {
           uploadResult <- multipartUpload(bucketName, tmpKey, data, partSize = partSize).either
         } yield assert(uploadResult)(isLeft(Assertion.anything))
-      },
-      testM("multipart object when the content is empty") {
-        val data   = ZStream.empty
-        val tmpKey = randomKey()
-
-        for {
-          _             <- multipartUpload(bucketName, tmpKey, data)
-          contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentLength)(equalTo(0L))
       }
     )
 
