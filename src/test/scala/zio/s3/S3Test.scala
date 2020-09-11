@@ -208,7 +208,6 @@ object S3Suite {
                           .readAttributes[PosixFileAttributes](root / bucketName / tmpKey)
                           .map(_.size()) <* ZFiles.delete(root / bucketName / tmpKey)).provideLayer(Blocking.live)
         } yield assert(fileSize)(isGreaterThan(0L))
-
       },
       testM("stream lines") {
 
@@ -216,13 +215,11 @@ object S3Suite {
           list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
         } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
           assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
-
       },
       testM("stream lines - invalid key") {
         for {
           succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
         } yield assert(succeed)(isFalse)
-
       }
     )
 
@@ -252,13 +249,16 @@ object S3Suite {
 
       },
       testM("multipart object when the chunk size is smaller than minimum") {
-        val data   = ZStream.fromChunks(Chunk.fromArray("123".getBytes()))
+        val chunkSize = MinChunkSize - 100
+        val dataSize  = MinChunkSize * 10
+        val bytes     = new Array[Byte](dataSize)
+        Random.nextBytes(bytes)
+        val data   = ZStream.fromChunks(Chunk.fromArray(bytes))
         val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          uploadResult <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data, chunkSize = 123).either
+          uploadResult <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data, chunkSize = chunkSize).either
         } yield assert(uploadResult)(isLeft(Assertion.anything))
-
       },
       testM("multipart object when the content is empty") {
         val data   = ZStream.empty
@@ -266,9 +266,8 @@ object S3Suite {
 
         for {
           _        <- multipartUpload(bucketName, tmpKey, "application/octet-stream", data)
-          uploaded <- (ZFiles.exists(root / bucketName / tmpKey)).provideLayer(Blocking.live)
+          uploaded <- ZFiles.exists(root / bucketName / tmpKey).provideLayer(Blocking.live)
         } yield assert(uploaded)(isFalse)
-
       },
       testM("multipart object when there is a canned acl") {
         val dataSize = 100

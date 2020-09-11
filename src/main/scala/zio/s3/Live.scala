@@ -130,7 +130,6 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
   ): ZIO[R, S3Exception, Unit] =
     for {
-      _        <- Live.validateChunkSize(chunkSize)
       uploadId <- execute(
                     _.createMultipartUpload(
                       CreateMultipartUploadRequest
@@ -252,18 +251,5 @@ object Live {
       ()
     }
   }
-
-  private[s3] def validateChunkSize(chunkSize: Int): IO[S3Exception, Unit] =
-    if (chunkSize >= MinChunkSize) Task.unit
-    else
-      IO.fail(
-        S3ExceptionUtils.fromThrowable(
-          InvalidSettings(
-            s"The objects must have size from 5 MB to 5 TB. The provided setting was $chunkSize bytes"
-          )
-        )
-      )
-
-  final val SingleEmptyChunkStream = ZStream(Chunk.empty)
 
 }
