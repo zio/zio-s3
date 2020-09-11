@@ -20,15 +20,13 @@ import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
+import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZStream, ZTransducer }
 
 package object s3 {
-  final val MinChunkSize: Int = 5 * 1024 * 1024 // 5 MB
-
   type S3          = Has[S3.Service]
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
@@ -84,6 +82,15 @@ package object s3 {
       def getObject(bucketName: String, key: String): Stream[S3Exception, Byte]
 
       /**
+       * Retrieves metadata from an object without returning the object itself.
+       * This operation is useful if you're only interested in an object's metadata.
+       * @param bucketName name of the bucket
+       * @param key object identifier to read
+       * @return the [[ObjectMetadata]]
+       */
+      def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata]
+
+      /**
        * list all object for a specific bucket
        *
        * @param bucketName name of the bucket
@@ -104,20 +111,16 @@ package object s3 {
        *
        * @param bucketName name of the bucket
        * @param key unique object identifier
-       *
        * @param contentLength length of the data in bytes
-       * @param contentType content type of the object (json, csv, txt, binary, ...)
        * @param content object data
-       * @param metadata metadata
        * @return
        */
       def putObject[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         contentLength: Long,
-        contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String] = Map.empty
+        options: UploadOptions
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -127,22 +130,18 @@ package object s3 {
        *
        * @param bucketName name of the bucket
        * @param key unique object identifier
-       * @param contentType content type of the object (json, csv, txt, binary, ...)
        * @param content object data
-       * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
-       * @param chunkSize the size of the part in bytes, the minimum is 5 MB
+       * @param options the optional configurations of the multipart upload
        * @param parallelism the number of parallel requests to upload chunks, default to 1
-       * @param cannedAcl a canned acl, defaults to [[ObjectCannedACL.PRIVATE]]
+       * @param partSize the size of the part in bytes, the minimum is 5 MB
        */
       def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
-        contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String] = Map.empty,
-        chunkSize: Int = MinChunkSize,
-        parallelism: Int = 1,
-        cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
+        options: UploadOptions = UploadOptions.default,
+        partSize: Int = UploadOptions.MinMultipartPartSize,
+        parallelism: Int = 1
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -228,6 +227,9 @@ package object s3 {
   def getObject(bucketName: String, key: String): ZStream[S3, S3Exception, Byte] =
     ZStream.accessStream(_.get.getObject(bucketName, key))
 
+  def getObjectMetadata(bucketName: String, key: String): ZIO[S3, S3Exception, ObjectMetadata] =
+    ZIO.accessM(_.get.getObjectMetadata(bucketName, key))
+
   /**
    * Same as listObjects with default values for an empty prefix and sets the maximum number of object max to `1000`
    *
@@ -246,24 +248,21 @@ package object s3 {
     bucketName: String,
     key: String,
     contentLength: Long,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String]
+    options: UploadOptions = UploadOptions.default
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, contentType, content, metadata))
+    ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, content, options))
 
   def multipartUpload[R <: Has[_]: Tag](
     bucketName: String,
     key: String,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty,
-    chunkSize: Int = MinChunkSize,
-    parallelism: Int = 1,
-    cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
+    options: UploadOptions = UploadOptions.default,
+    partSize: Int = UploadOptions.MinMultipartPartSize,
+    parallelism: Int = 1
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](
-      _.get.multipartUpload(bucketName, key, contentType, content, metadata, chunkSize, parallelism, cannedAcl)
+      _.get.multipartUpload(bucketName, key, content, options, partSize, parallelism)
     )
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =

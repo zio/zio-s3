@@ -23,7 +23,6 @@ object MultipartUploadExample extends zio.App {
       (ZIO.effectTotal(System.currentTimeMillis()) <* multipartUpload(
         "my-test",
         s"1GB-${System.currentTimeMillis()}.zip",
-        "application/zip",
         ZStream.fromInputStream(new FileInputStream(Paths.get("1GB.zip").toFile)),
         parallelism = parallelism
       ))

@@ -70,6 +70,10 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .flattenChunks
       .mapError(S3ExceptionUtils.fromThrowable)
 
+  override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
+    execute(_.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build()))
+      .map(ObjectMetadata.fromResponse)
+
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
 
@@ -94,9 +98,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     contentLength: Long,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty
+    options: UploadOptions = UploadOptions.default
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -105,13 +108,11 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .flatMap(publisher =>
         execute(
           _.putObject(
-            PutObjectRequest
-              .builder()
+            UploadOptions
+              .putObjectBuilder(options)
               .bucket(bucketName)
               .contentLength(contentLength)
-              .contentType(contentType)
               .key(key)
-              .metadata(metadata.asJava)
               .build(),
             AsyncRequestBody.fromPublisher(publisher)
           )
@@ -122,29 +123,24 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   def multipartUpload[R <: zio.Has[_]: Tag](
     bucketName: String,
     key: String,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty,
-    chunkSize: Int = MinChunkSize,
-    parallelism: Int = 1,
-    cannedAcl: ObjectCannedACL = ObjectCannedACL.PRIVATE
+    options: UploadOptions = UploadOptions.default,
+    partSize: Int = UploadOptions.MinMultipartPartSize,
+    parallelism: Int = 1
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId      <- execute(
                          _.createMultipartUpload(
-                           CreateMultipartUploadRequest
-                             .builder()
+                           UploadOptions
+                             .multipartUploadBuilder(options)
                              .bucket(bucketName)
                              .key(key)
-                             .contentType(contentType)
-                             .metadata(metadata.asJava)
-                             .acl(cannedAcl)
                              .build()
                          )
                        ).map(_.uploadId())
 
       parts         <- content
-                         .chunkN(chunkSize)
+                         .chunkN(partSize)
                          .mapChunks(Chunk.single)
                          .zipWithIndex
                          .mapMPar(parallelism) {

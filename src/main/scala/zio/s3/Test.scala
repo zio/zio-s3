@@ -22,7 +22,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
+import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
@@ -30,7 +30,6 @@ import zio.nio.file.Files
 import zio.s3.Live.S3ExceptionUtils
 import zio.s3.S3Bucket._
 import zio.stream.{ Stream, ZSink, ZStream }
-import zio.Tag
 
 /**
  * Stub Service which is back by a filesystem storage
@@ -71,6 +70,12 @@ object Test {
           .mapError(S3ExceptionUtils.fromThrowable)
           .provide(blocking)
 
+      override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
+        Files
+          .readAttributes[PosixFileAttributes](path / bucketName / key)
+          .bimap(S3ExceptionUtils.fromThrowable, p => ObjectMetadata(Map.empty, "binary/octet-stream", p.size()))
+          .provide(blocking)
+
       override def listObjects(
         bucketName: String,
         prefix: String,
@@ -101,9 +106,8 @@ object Test {
         bucketName: String,
         key: String,
         contentLength: Long,
-        contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String]
+        options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
         ZManaged
           .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
@@ -121,14 +125,12 @@ object Test {
       override def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
-        contentType: String,
         content: ZStream[R, Throwable, Byte],
-        metadata: Map[String, String],
-        chunkSize: Int,
-        parallelism: Int,
-        cannedAcl: ObjectCannedACL
+        options: UploadOptions,
+        partSize: Int,
+        parallelism: Int
       ): ZIO[R, S3Exception, Unit] =
-        putObject(bucketName, key, 0, contentType, content.chunkN(10), metadata)
+        putObject(bucketName, key, 0, content.chunkN(partSize), options)
     }
   }
 }
