@@ -28,7 +28,7 @@ import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
-import zio._
+import zio.{ Tag, _ }
 
 import scala.jdk.CollectionConverters._
 
