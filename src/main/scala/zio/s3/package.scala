@@ -137,7 +137,7 @@ package object s3 {
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: MultipartUploadOptions = MultipartUploadOptions.default
+        options: MultipartUploadOptions = MultipartUploadOptions()
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -245,7 +245,7 @@ package object s3 {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default
+    options: UploadOptions = UploadOptions()
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, content, options))
 
@@ -253,7 +253,7 @@ package object s3 {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions.default
+    options: MultipartUploadOptions = MultipartUploadOptions()
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](
       _.get.multipartUpload(bucketName, key, content, options)

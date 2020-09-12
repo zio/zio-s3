@@ -7,7 +7,7 @@ import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
-import zio.s3.MultipartUploadOptions.MinMultipartPartSize
+import zio.s3.MultipartUploadOptions.MinPartSize
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
@@ -286,8 +286,8 @@ object S3Suite {
           assert(objectMetadata.metadata)(equalTo(metadata))
       },
       testM("multipart object when the chunk size and parallelism are customized") {
-        val partSize = MinMultipartPartSize + 123
-        val dataSize = MinMultipartPartSize * 10
+        val partSize = MinPartSize + 123
+        val dataSize = MinPartSize * 10
         val data     = byteStream(dataSize)
         val tmpKey   = randomKey()
 
@@ -298,8 +298,8 @@ object S3Suite {
         } yield assert(contentLength)(equalTo(dataSize.toLong))
       },
       testM("multipart object when the chunk size is smaller than minimum") {
-        val partSize = MinMultipartPartSize - 100
-        val dataSize = MinMultipartPartSize * 10
+        val partSize = MinPartSize - 100
+        val dataSize = MinPartSize * 10
         val data     = byteStream(dataSize)
         val tmpKey   = randomKey()
 
@@ -309,7 +309,7 @@ object S3Suite {
       }
     )
 
-  final private val DefaultContentLength = MinMultipartPartSize * 2
+  final private val DefaultContentLength = MinPartSize * 2
 
   private[this] def byteStream(dataSize: Int = DefaultContentLength): ZStream[Any, Nothing, Byte] = {
     val bytes = new Array[Byte](dataSize)

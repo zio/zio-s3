@@ -28,7 +28,7 @@ import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
-import zio.{ Tag, _ }
+import zio._
 
 import scala.jdk.CollectionConverters._
 
@@ -99,7 +99,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default
+    options: UploadOptions = UploadOptions()
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -108,12 +108,18 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .flatMap(publisher =>
         execute(
           _.putObject(
-            UploadOptions
-              .putObjectBuilder(options)
-              .bucket(bucketName)
-              .contentLength(contentLength)
-              .key(key)
-              .build(),
+            {
+              val builder = PutObjectRequest
+                .builder()
+                .bucket(bucketName)
+                .contentLength(contentLength)
+                .key(key)
+                .metadata(options.metadata.asJava)
+                .acl(options.cannedAcl)
+              options.contentType
+                .fold(builder)(builder.contentType)
+                .build()
+            },
             AsyncRequestBody.fromPublisher(publisher)
           )
         )
@@ -124,17 +130,21 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions.default
+    options: MultipartUploadOptions = MultipartUploadOptions()
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
-                    _.createMultipartUpload(
-                      MultipartUploadOptions
-                        .multipartUploadBuilder(options)
+                    _.createMultipartUpload {
+                      val builder = CreateMultipartUploadRequest
+                        .builder()
                         .bucket(bucketName)
                         .key(key)
+                        .metadata(options.uploadOptions.metadata.asJava)
+                        .acl(options.uploadOptions.cannedAcl)
+                      options.uploadOptions.contentType
+                        .fold(builder)(builder.contentType)
                         .build()
-                    )
+                    }
                   ).map(_.uploadId())
 
       parts    <- ZStream
