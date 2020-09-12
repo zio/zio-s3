@@ -24,12 +24,12 @@ import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCred
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
-import zio._
-import zio.Tag
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
-import zio.stream.{ Stream, ZStream }
+import zio.stream.{ Stream, ZSink, ZStream }
+import zio.{ Tag, _ }
+
 import scala.jdk.CollectionConverters._
 
 /**
@@ -70,6 +70,10 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .flattenChunks
       .mapError(S3ExceptionUtils.fromThrowable)
 
+  override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
+    execute(_.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build()))
+      .map(ObjectMetadata.fromResponse)
+
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
 
@@ -94,9 +98,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     contentLength: Long,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty
+    options: UploadOptions = UploadOptions()
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -105,47 +108,58 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       .flatMap(publisher =>
         execute(
           _.putObject(
-            PutObjectRequest
-              .builder()
-              .bucket(bucketName)
-              .contentLength(contentLength)
-              .contentType(contentType)
-              .key(key)
-              .metadata(metadata.asJava)
-              .build(),
+            {
+              val builder = PutObjectRequest
+                .builder()
+                .bucket(bucketName)
+                .contentLength(contentLength)
+                .key(key)
+                .metadata(options.metadata.asJava)
+                .acl(options.cannedAcl)
+              options.contentType
+                .fold(builder)(builder.contentType)
+                .build()
+            },
             AsyncRequestBody.fromPublisher(publisher)
           )
         )
       )
       .unit
 
-  // only for file which are bigger than 5 Mb
   def multipartUpload[R <: zio.Has[_]: Tag](
     bucketName: String,
     key: String,
-    contentType: String,
     content: ZStream[R, Throwable, Byte],
-    metadata: Map[String, String] = Map.empty
+    options: MultipartUploadOptions = MultipartUploadOptions()
   ): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
-                    _.createMultipartUpload(
-                      CreateMultipartUploadRequest
+                    _.createMultipartUpload {
+                      val builder = CreateMultipartUploadRequest
                         .builder()
                         .bucket(bucketName)
                         .key(key)
-                        .contentType(contentType)
-                        .metadata(metadata.asJava)
+                        .metadata(options.uploadOptions.metadata.asJava)
+                        .acl(options.uploadOptions.cannedAcl)
+                      options.uploadOptions.contentType
+                        .fold(builder)(builder.contentType)
                         .build()
-                    )
+                    }
                   ).map(_.uploadId())
 
-      parts    <- content
-                  //part size limit is 5Mb, required by amazon api
-                    .chunkN(5 * 1024 * 1024)
-                    .mapChunks(Chunk.single)
+      parts    <- ZStream
+                    .managed(
+                      content
+                        .chunkN(options.partSize)
+                        .mapChunks(Chunk.single)
+                        .peel(ZSink.head[Chunk[Byte]])
+                    )
+                    .flatMap {
+                      case (Some(head), rest) => ZStream(head) ++ rest
+                      case (None, _)          => ZStream(Chunk.empty)
+                    }
                     .zipWithIndex
-                    .mapM {
+                    .mapMPar(options.parallelism) {
                       case (chunk, partNumber) =>
                         execute(
                           _.uploadPart(
@@ -237,4 +251,5 @@ object Live {
       ()
     }
   }
+
 }

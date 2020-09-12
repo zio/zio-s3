@@ -69,26 +69,39 @@ Examples
 --------
 
 ```scala
-import zio.stream.{ZSink, ZStream}
-import zio.s3._
+import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
+import zio.blocking.Blocking
+import zio.stream.{ ZSink, ZStream }
 
- // upload 
-  val json: Chunk[String] = Chunk.fromArray("""{  "id" : 1 , "name" : "A1" }""".getBytes)
-  val up: ZIO[S3, S3Exception, Unit] = putObject("bucket-1", "user.json", json.length, "application/json", ZStream.fromChunk(json))
- 
-  // multipartUpload only for file than bigger 5Mb
-  import java.io.FileInputStream
-  import java.nio.file.Paths
-   
-  val is = ZStream.fromInputStreamEffect(ZIO(new FileInputStream(Paths.get("/my/path/to/myfile").toFile)))
-  val proc2: ZIO[S3 with Blocking, S3Exception, Unit] = multipartUpload("bucket-1", "upload/myfile","application/zip", is)
-  
-  // download
-  import java.io.OutputStream
-  
-  val os: OutputStream = ??? 
-  val proc3: ZIO[Blocking with S3, Exception, Int] = getObject("bucket-1", "upload/myfile.zip").run(ZSink.fromOutputStream(os))
+// upload
+val json: Chunk[Byte] = Chunk.fromArray("""{  "id" : 1 , "name" : "A1" }""".getBytes)
+val up: ZIO[S3, S3Exception, Unit] = putObject(
+  "bucket-1",
+  "user.json",
+  json.length,
+  ZStream.fromChunk(json),
+  UploadOptions(contentType = Some("application/json"))
+)
+
+// multipartUpload
+import java.io.FileInputStream
+import java.nio.file.Paths
+
+val is = ZStream.fromInputStream(new FileInputStream(Paths.get("/my/path/to/myfile").toFile))
+val proc2: ZIO[S3 with Blocking, S3Exception, Unit] =
+  multipartUpload(
+    "bucket-1",
+    "upload/myfile",
+    is,
+    MultipartUploadOptions(UploadOptions(contentType = Some("application/zip")), parallelism = 4)
+  )
+
+// download
+import java.io.OutputStream
+
+val os: OutputStream = ???
+val proc3: ZIO[Blocking with S3, Exception, Long] = getObject("bucket-1", "upload/myfile.zip").run(ZSink.fromOutputStream(os))
 ```
 
 Support any commands ?

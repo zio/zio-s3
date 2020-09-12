@@ -18,7 +18,7 @@ package zio.s3
 
 import java.time.Instant
 
-import software.amazon.awssdk.services.s3.model.{ Bucket, ListObjectsV2Response }
+import software.amazon.awssdk.services.s3.model.{ Bucket, HeadObjectResponse, ListObjectsV2Response }
 import zio.Chunk
 
 import scala.jdk.CollectionConverters._
@@ -52,3 +52,16 @@ object S3ObjectListing {
 }
 
 final case class S3ObjectSummary(bucketName: String, key: String)
+
+/**
+ * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
+ * @param contentType the content type of the object (application/json, application/zip, text/plain, ...)
+ * @param contentLength the size of the object in bytes
+ */
+case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
+
+object ObjectMetadata {
+
+  def fromResponse(r: HeadObjectResponse) =
+    ObjectMetadata(r.metadata().asScala.toMap, r.contentType(), r.contentLength())
+}
