@@ -24,7 +24,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
 
   override def spec =
     suite("S3LiveSpec")(
-//      S3Suite.spec("Common spec", root),
+      S3Suite.spec("Common spec", root),
       S3Suite.liveSpec("Live spec", root)
     ).provideCustomLayerShared(s3)
 }

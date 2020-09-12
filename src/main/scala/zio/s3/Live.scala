@@ -25,7 +25,7 @@ import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransf
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio.interop.reactivestreams._
-import zio.s3.Live.{ S3ExceptionUtils, SingleEmptyChunkStream, StreamAsyncResponseTransformer, StreamResponse }
+import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
 import zio.{ Tag, _ }
@@ -127,52 +127,58 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     options: MultipartUploadOptions = MultipartUploadOptions.default
   ): ZIO[R, S3Exception, Unit] =
     for {
-      uploadId              <- execute(
-                                 _.createMultipartUpload(
-                                   MultipartUploadOptions
-                                     .multipartUploadBuilder(options)
-                                     .bucket(bucketName)
-                                     .key(key)
-                                     .build()
-                                 )
-                               ).map(_.uploadId())
+      uploadId <- execute(
+                    _.createMultipartUpload(
+                      MultipartUploadOptions
+                        .multipartUploadBuilder(options)
+                        .bucket(bucketName)
+                        .key(key)
+                        .build()
+                    )
+                  ).map(_.uploadId())
 
-      chunkedStream          = content.chunkN(options.partSize).mapChunks(Chunk.single).mapError(S3ExceptionUtils.fromThrowable)
-      nonEmptyChunkedStream <- chunkedStream.peel(ZSink.head[Chunk[Byte]]).use {
-                                 case (Some(head), rest) => ZIO.succeed(ZStream(head) ++ rest)
-                                 case (None, _)          => ZIO.succeed(SingleEmptyChunkStream)
-                               }
+      parts    <- ZStream
+                    .managed(
+                      content
+                        .chunkN(options.partSize)
+                        .mapChunks(Chunk.single)
+                        .peel(ZSink.head[Chunk[Byte]])
+                    )
+                    .flatMap {
+                      case (Some(head), rest) => ZStream(head) ++ rest
+                      case (None, _)          => ZStream(Chunk.empty)
+                    }
+                    .zipWithIndex
+                    .mapMPar(options.parallelism) {
+                      case (chunk, partNumber) =>
+                        execute(
+                          _.uploadPart(
+                            UploadPartRequest
+                              .builder()
+                              .bucket(bucketName)
+                              .key(key)
+                              .partNumber(partNumber.toInt + 1)
+                              .uploadId(uploadId)
+                              .contentLength(chunk.length.toLong)
+                              .build(),
+                            AsyncRequestBody.fromBytes(chunk.toArray)
+                          )
+                        ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
+                    }
+                    .runCollect
+                    .mapError(S3ExceptionUtils.fromThrowable)
 
-      parts                 <- nonEmptyChunkedStream.zipWithIndex
-                                 .mapMPar(options.parallelism) {
-                                   case (chunk, partNumber) =>
-                                     execute(
-                                       _.uploadPart(
-                                         UploadPartRequest
-                                           .builder()
-                                           .bucket(bucketName)
-                                           .key(key)
-                                           .partNumber(partNumber.toInt + 1)
-                                           .uploadId(uploadId)
-                                           .contentLength(chunk.length.toLong)
-                                           .build(),
-                                         AsyncRequestBody.fromBytes(chunk.toArray)
-                                       )
-                                     ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
-                                 }
-                                 .runCollect
-
-      _                     <- execute(
-                                 _.completeMultipartUpload(
-                                   CompleteMultipartUploadRequest
-                                     .builder()
-                                     .bucket(bucketName)
-                                     .key(key)
-                                     .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                                     .uploadId(uploadId)
-                                     .build()
-                                 )
-                               )
+      _        <- execute(
+                    _.completeMultipartUpload(
+                      CompleteMultipartUploadRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+                        .uploadId(uploadId)
+                        .build()
+                    )
+                  )
     } yield ()
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
@@ -235,7 +241,5 @@ object Live {
       ()
     }
   }
-
-  final val SingleEmptyChunkStream = ZStream(Chunk.empty)
 
 }
