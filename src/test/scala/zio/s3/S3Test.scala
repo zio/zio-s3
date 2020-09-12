@@ -7,7 +7,6 @@ import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
-import zio.s3.MultipartUploadOptions.MinPartSize
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
@@ -171,7 +170,7 @@ object S3Suite {
         val c             = Chunk.fromArray("Hello F World".getBytes)
         val contentLength = c.length.toLong
         val data          = ZStream.fromChunks(c)
-        val tmpKey        = randomKey()
+        val tmpKey        = Random.alphanumeric.take(10).mkString
 
         for {
           _                   <- putObject(bucketName, tmpKey, contentLength, data)
@@ -198,20 +197,20 @@ object S3Suite {
             |Aliquam pellentesque felis eget mi tincidunt dapibus vel at turpis.""".stripMargin
 
         val data   = ZStream.fromChunks(Chunk.fromArray(text.getBytes))
-        val tmpKey = randomKey()
+        val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          _             <- multipartUpload(bucketName, tmpKey, data)
+          _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(isGreaterThan(0L))
       },
       testM("multipart object when the content is empty") {
         val data   = ZStream.empty
-        val tmpKey = randomKey()
+        val tmpKey = Random.alphanumeric.take(10).mkString
 
         for {
-          _             <- multipartUpload(bucketName, tmpKey, data)
+          _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(0L))
@@ -233,46 +232,46 @@ object S3Suite {
   def liveSpec(label: String, root: ZPath): Spec[S3 with Blocking, TestFailure[Exception], TestSuccess] =
     suite(label)(
       testM("put object when the content type is not provided") {
-        val data   = byteStream()
-        val tmpKey = randomKey()
+        val (dataSize, data) = randomNEStream
+        val tmpKey           = Random.alphanumeric.take(10).mkString
 
         for {
-          _           <- putObject(bucketName, tmpKey, DefaultContentLength.toLong, data)
+          _           <- putObject(bucketName, tmpKey, dataSize.toLong, data)
           contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
                            ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentType)(equalTo("application/octet-stream"))
       },
       testM("put object when there is a content type and metadata") {
-        val metadata = Map("user-defined-key" -> "user-defined-value")
-        val data     = byteStream()
-        val tmpKey   = randomKey()
+        val _metadata  = Map("key1" -> "value1")
+        val (dataSize, data) = randomNEStream
+        val tmpKey    = Random.alphanumeric.take(10).mkString
 
         for {
           _              <- putObject(
                               bucketName,
                               tmpKey,
-                              DefaultContentLength.toLong,
+                              dataSize.toLong,
                               data,
-                              UploadOptions(metadata = metadata, contentType = Some("application/json"))
+                              UploadOptions(metadata = _metadata, contentType = Some("application/json"))
                             )
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata)(equalTo(metadata))
+          assert(objectMetadata.metadata)(equalTo(Map("Key1" -> "value1")))
       },
       testM("multipart object when the content type is not provided") {
-        val data   = byteStream()
-        val tmpKey = randomKey()
+        val (_, data) = randomNEStream
+        val tmpKey    = Random.alphanumeric.take(10).mkString
 
         for {
-          _           <- multipartUpload(bucketName, tmpKey, data)
+          _           <- multipartUpload(bucketName, tmpKey, data)(1)
           contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
                            ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentType)(equalTo("binary/octet-stream"))
       },
       testM("multipart object when there is a content type and metadata") {
-        val metadata = Map("user-defined-key" -> "user-defined-value")
-        val data     = byteStream()
-        val tmpKey   = randomKey()
+        val metadata  = Map("key1" -> "value1")
+        val (_, data) = randomNEStream
+        val tmpKey    = Random.alphanumeric.take(10).mkString
 
         for {
           _              <- multipartUpload(
@@ -280,42 +279,30 @@ object S3Suite {
                               tmpKey,
                               data,
                               MultipartUploadOptions(UploadOptions(metadata = metadata, contentType = Some("application/json")))
-                            )
+                            )(1)
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata)(equalTo(metadata))
+          assert(objectMetadata.metadata)(equalTo(Map("Key1" -> "value1")))
       },
       testM("multipart object when the chunk size and parallelism are customized") {
-        val partSize = MinPartSize + 123
-        val dataSize = MinPartSize * 10
-        val data     = byteStream(dataSize)
-        val tmpKey   = randomKey()
+        val (dataSize, data) = randomNEStream
+        val tmpKey           = Random.alphanumeric.take(10).mkString
 
         for {
-          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(parallelism = 4, partSize = partSize))
+          _partSize     <- PartSize.from(10 * PartSize.Mega)
+          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = _partSize))(4)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataSize.toLong))
-      },
-      testM("multipart object when the chunk size is smaller than minimum") {
-        val partSize = MinPartSize - 100
-        val dataSize = MinPartSize * 10
-        val data     = byteStream(dataSize)
-        val tmpKey   = randomKey()
-
-        for {
-          uploadResult <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = partSize)).either
-        } yield assert(uploadResult)(isLeft(Assertion.anything))
       }
     )
 
-  final private val DefaultContentLength = MinPartSize * 2
-
-  private[this] def byteStream(dataSize: Int = DefaultContentLength): ZStream[Any, Nothing, Byte] = {
-    val bytes = new Array[Byte](dataSize)
+  //TODO remove and use generator
+  private[this] def randomNEStream = {
+    val size  = PartSize.Min.size + Random.nextInt(100)
+    val bytes = new Array[Byte](size)
     Random.nextBytes(bytes)
-    ZStream.fromChunks(Chunk.fromArray(bytes))
+    (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
 
-  private[this] def randomKey(): String = Random.alphanumeric.take(10).mkString
 }

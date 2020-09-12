@@ -99,7 +99,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions()
+    options: UploadOptions
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -130,8 +130,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions()
-  ): ZIO[R, S3Exception, Unit] =
+    options: MultipartUploadOptions
+  )(parallelism: Int): ZIO[R, S3Exception, Unit] =
     for {
       uploadId <- execute(
                     _.createMultipartUpload {
@@ -150,7 +150,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       parts    <- ZStream
                     .managed(
                       content
-                        .chunkN(options.partSize)
+                        .chunkN(options.partSize.size)
                         .mapChunks(Chunk.single)
                         .peel(ZSink.head[Chunk[Byte]])
                     )
@@ -159,7 +159,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                       case (None, _)          => ZStream(Chunk.empty)
                     }
                     .zipWithIndex
-                    .mapMPar(options.parallelism) {
+                    .mapMPar(parallelism) {
                       case (chunk, partNumber) =>
                         execute(
                           _.uploadPart(

@@ -126,9 +126,9 @@ object Test {
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: MultipartUploadOptions = MultipartUploadOptions()
-      ): ZIO[R, S3Exception, Unit] =
-        putObject(bucketName, key, 0, content.chunkN(options.partSize), options.uploadOptions)
+        options: MultipartUploadOptions
+      )(parallelism: Int): ZIO[R, S3Exception, Unit] =
+        putObject(bucketName, key, 0, content.chunkN(options.partSize.size), options.uploadOptions)
     }
   }
 }
