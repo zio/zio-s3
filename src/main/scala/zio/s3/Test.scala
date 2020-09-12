@@ -107,7 +107,7 @@ object Test {
         key: String,
         contentLength: Long,
         content: ZStream[R, Throwable, Byte],
-        options: UploadOptions = UploadOptions()
+        options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
         ZManaged
           .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
