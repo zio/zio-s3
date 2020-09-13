@@ -22,17 +22,17 @@ object S3LiveSpec extends DefaultRunnableSpec {
       .mapError(TestFailure.die(_))
 
   override def spec =
-    suite("S3LiveSpec")(
-      S3Suite.spec("Common spec", root),
-      S3Suite.liveSpec("Live spec", root)
-    ).provideCustomLayerShared(s3)
+    S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
 }
 
 object S3TestSpec extends DefaultRunnableSpec {
   private val root = ZPath("test-data")
 
-  private val s3: ZLayer[Blocking, TestFailure[Any], S3] = zio.s3.test(root).mapError(TestFailure.fail)
-  override def spec                                      = S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(Blocking.live >>> s3)
+  private val s3: ZLayer[Blocking, TestFailure[Any], S3] =
+    zio.s3.test(root).mapError(TestFailure.fail)
+
+  override def spec =
+    S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(Blocking.live >>> s3)
 }
 
 object S3Suite {
@@ -215,55 +215,12 @@ object S3Suite {
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(0L))
       },
-      testM("stream lines") {
-
-        for {
-          list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
-        } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
-          assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
-      },
-      testM("stream lines - invalid key") {
-        for {
-          succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
-      }
-    )
-
-  def liveSpec(label: String, root: ZPath): Spec[S3 with Blocking, TestFailure[Exception], TestSuccess] =
-    suite(label)(
-      testM("put object when the content type is not provided") {
-        val (dataSize, data) = randomNEStream
-        val tmpKey           = Random.alphanumeric.take(10).mkString
-
-        for {
-          _           <- putObject(bucketName, tmpKey, dataSize.toLong, data)
-          contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
-                           ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentType)(equalTo("application/octet-stream"))
-      },
-      testM("put object when there is a content type and metadata") {
-        val _metadata  = Map("key1" -> "value1")
-        val (dataSize, data) = randomNEStream
-        val tmpKey    = Random.alphanumeric.take(10).mkString
-
-        for {
-          _              <- putObject(
-                              bucketName,
-                              tmpKey,
-                              dataSize.toLong,
-                              data,
-                              UploadOptions(metadata = _metadata, contentType = Some("application/json"))
-                            )
-          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata)(equalTo(Map("Key1" -> "value1")))
-      },
       testM("multipart object when the content type is not provided") {
         val (_, data) = randomNEStream
         val tmpKey    = Random.alphanumeric.take(10).mkString
 
         for {
-          _           <- multipartUpload(bucketName, tmpKey, data)(1)
+          _           <- multipartUpload(bucketName, tmpKey, data)(4)
           contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
                            ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentType)(equalTo("binary/octet-stream"))
@@ -279,10 +236,10 @@ object S3Suite {
                               tmpKey,
                               data,
                               MultipartUploadOptions(UploadOptions(metadata = metadata, contentType = Some("application/json")))
-                            )(1)
+                            )(4)
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata)(equalTo(Map("Key1" -> "value1")))
+          assert(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v })(equalTo(Map("key1" -> "value1")))
       },
       testM("multipart object when the chunk size and parallelism are customized") {
         val (dataSize, data) = randomNEStream
@@ -294,6 +251,45 @@ object S3Suite {
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataSize.toLong))
+      },
+      testM("stream lines") {
+
+        for {
+          list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
+        } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
+          assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
+      },
+      testM("stream lines - invalid key") {
+        for {
+          succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
+        } yield assert(succeed)(isFalse)
+      },
+      testM("put object when the content type is not provided") {
+        val (dataSize, data) = randomNEStream
+        val tmpKey           = Random.alphanumeric.take(10).mkString
+
+        for {
+          _           <- putObject(bucketName, tmpKey, dataSize.toLong, data)
+          contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
+                           ZFiles.delete(root / bucketName / tmpKey)
+        } yield assert(contentType)(equalTo("application/octet-stream"))
+      },
+      testM("put object when there is a content type and metadata") {
+        val _metadata        = Map("key1" -> "value1")
+        val (dataSize, data) = randomNEStream
+        val tmpKey           = Random.alphanumeric.take(10).mkString
+
+        for {
+          _              <- putObject(
+                              bucketName,
+                              tmpKey,
+                              dataSize.toLong,
+                              data,
+                              UploadOptions(metadata = _metadata, contentType = Some("application/json"))
+                            )
+          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
+        } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
+          assert(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v })(equalTo(Map("key1" -> "value1")))
       }
     )
 
@@ -304,5 +300,4 @@ object S3Suite {
     Random.nextBytes(bytes)
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
-
 }
