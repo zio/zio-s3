@@ -133,6 +133,14 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     options: MultipartUploadOptions
   )(parallelism: Int): ZIO[R, S3Exception, Unit] =
     for {
+      _        <- ZIO.cond(
+                    parallelism > 0,
+                    (),
+                    S3ExceptionUtils.fromThrowable(
+                      new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
+                    )
+                  )
+
       uploadId <- execute(
                     _.createMultipartUpload {
                       val builder = CreateMultipartUploadRequest

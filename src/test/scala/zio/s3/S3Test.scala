@@ -205,6 +205,16 @@ object S3Suite {
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(isGreaterThan(0L))
       },
+      testM("multipart with invalid parrallelism value 0") {
+        val data   = ZStream.empty
+        val tmpKey = Random.alphanumeric.take(10).mkString
+
+        for {
+          failure <- multipartUpload(bucketName, tmpKey, data)(0)
+                       .foldCause(_.failureOption.map(_.getMessage).mkString, _ => "")
+
+        } yield assert(failure)(equalTo(s"parallelism must be > 0. 0 is invalid"))
+      },
       testM("multipart object when the content is empty") {
         val data   = ZStream.empty
         val tmpKey = Random.alphanumeric.take(10).mkString

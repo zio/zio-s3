@@ -145,13 +145,23 @@ object Test {
         options: MultipartUploadOptions
       )(parallelism: Int): ZIO[R, S3Exception, Unit] = {
         val _contentType = options.uploadOptions.contentType.orElse(Some("binary/octet-stream"))
-        putObject(
-          bucketName,
-          key,
-          0,
-          content.chunkN(options.partSize.size),
-          options.uploadOptions.copy(contentType = _contentType)
-        )
+
+        for {
+          _ <- ZIO.cond(
+                 parallelism > 0,
+                 (),
+                 S3ExceptionUtils.fromThrowable(
+                   new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
+                 )
+               )
+          _ <- putObject(
+                 bucketName,
+                 key,
+                 0,
+                 content.chunkN(options.partSize.size),
+                 options.uploadOptions.copy(contentType = _contentType)
+               )
+        } yield ()
       }
     }
   }
