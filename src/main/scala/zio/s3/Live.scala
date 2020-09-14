@@ -99,7 +99,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions()
+    options: UploadOptions
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapChunks(Chunk.single)
@@ -130,9 +130,27 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions()
-  ): ZIO[R, S3Exception, Unit] =
+    options: MultipartUploadOptions
+  )(parallelism: Int): ZIO[R, S3Exception, Unit] =
     for {
+      _        <- ZIO.cond(
+                    parallelism > 0,
+                    (),
+                    S3ExceptionUtils.fromThrowable(
+                      new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
+                    )
+                  )
+
+      _        <- ZIO.cond(
+                    options.partSize >= PartSize.Min,
+                    (),
+                    S3ExceptionUtils.fromThrowable(
+                      new IllegalArgumentException(
+                        s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+                      )
+                    )
+                  )
+
       uploadId <- execute(
                     _.createMultipartUpload {
                       val builder = CreateMultipartUploadRequest
@@ -159,7 +177,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                       case (None, _)          => ZStream(Chunk.empty)
                     }
                     .zipWithIndex
-                    .mapMPar(options.parallelism) {
+                    .mapMPar(parallelism) {
                       case (chunk, partNumber) =>
                         execute(
                           _.uploadPart(
@@ -227,9 +245,9 @@ object Live {
       .map(new Live(_))
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
 
-  private[s3] object S3ExceptionUtils {
+  object S3ExceptionUtils {
 
-    def fromThrowable(error: Throwable): S3Exception =
+    private[s3] def fromThrowable(error: Throwable): S3Exception =
       S3Exception.builder().message(error.getMessage).cause(error.getCause).build().asInstanceOf[S3Exception]
   }
 

@@ -1,7 +1,6 @@
 package zio.s3
 
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
-import zio.s3.MultipartUploadOptions.MinPartSize
 
 /**
  * The options of the multipart upload and the put object request.
@@ -21,14 +20,17 @@ case class UploadOptions(
  *
  * @param uploadOptions [[UploadOptions]]
  * @param partSize the size of the part in bytes, the minimum is 5 MB
- * @param parallelism the number of parallel requests to upload chunks, default to 1
  */
 case class MultipartUploadOptions(
   uploadOptions: UploadOptions = UploadOptions(),
-  partSize: Int = MinPartSize,
-  parallelism: Int = 1
+  partSize: Int = PartSize.Min
 )
 
-object MultipartUploadOptions {
-  final val MinPartSize: Int = 5 * 1024 * 1024 // 5 MB
+object PartSize {
+  final val Kilo: Int = 1024
+  final val Mega: Int = 1024 * Kilo
+  final val Giga: Int = 1024 * Mega
+
+  //part size limit is 5Mb, required by amazon api
+  final val Min: Int = 5 * Mega
 }

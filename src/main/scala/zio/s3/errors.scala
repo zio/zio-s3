@@ -16,6 +16,11 @@
 
 package zio.s3
 
-final case class ConnectionError(message: String, cause: Throwable) extends Exception(message, cause)
+import software.amazon.awssdk.services.s3.model.S3Exception
 
-final case class InvalidSettings(message: String) extends Exception(message)
+final case class ConnectionError(message: String, cause: Throwable)
+    extends S3Exception(S3Exception.builder().message(message))
+
+final case class InvalidSettings(message: String) extends S3Exception(S3Exception.builder().message(message))
+
+final case class InvalidPartSize(message: String, size: Int) extends S3Exception(S3Exception.builder().message(message))

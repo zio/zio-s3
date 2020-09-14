@@ -120,7 +120,7 @@ package object s3 {
         key: String,
         contentLength: Long,
         content: ZStream[R, Throwable, Byte],
-        options: UploadOptions
+        options: UploadOptions = UploadOptions()
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -132,13 +132,14 @@ package object s3 {
        * @param key unique object identifier
        * @param content object data
        * @param options the optional configurations of the multipart upload
+       * @param parallelism the number of parallel requests to upload chunks
        */
       def multipartUpload[R <: zio.Has[_]: Tag](
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
         options: MultipartUploadOptions = MultipartUploadOptions()
-      ): ZIO[R, S3Exception, Unit]
+      )(parallelism: Int): ZIO[R, S3Exception, Unit]
 
       /**
        * *
@@ -159,7 +160,7 @@ package object s3 {
 
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(Live.connect(_, None))
 
-  def test(path: ZPath): ZLayer[Blocking, Any, S3] =
+  def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
   /**
@@ -249,14 +250,32 @@ package object s3 {
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, content, options))
 
-  def multipartUpload[R <: Has[_]: Tag](
+  /**
+   * Same as multipartUpload with default parallelism = 1
+   *
+   * @param bucketName name of the bucket
+   * @param key unique object identifier
+   * @param content object data
+   * @param options the optional configurations of the multipart upload
+   */
+  def multipartUpload_[R <: Has[_]: Tag](
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
     options: MultipartUploadOptions = MultipartUploadOptions()
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](
-      _.get.multipartUpload(bucketName, key, content, options)
+      _.get.multipartUpload(bucketName, key, content, options)(1)
+    )
+
+  def multipartUpload[R <: Has[_]: Tag](
+    bucketName: String,
+    key: String,
+    content: ZStream[R, Throwable, Byte],
+    options: MultipartUploadOptions = MultipartUploadOptions()
+  )(parallelism: Int): ZIO[S3 with R, S3Exception, Unit] =
+    ZIO.accessM[S3 with R](
+      _.get.multipartUpload(bucketName, key, content, options)(parallelism)
     )
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[S3, S3Exception, T] =

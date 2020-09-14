@@ -37,7 +37,13 @@ import zio.stream.{ Stream, ZSink, ZStream }
 object Test {
 
   def connect(path: ZPath): Blocking => S3.Service = { blocking =>
+    type ContentType = String
+    type Metadata    = Map[String, String]
+
     new S3.Service {
+      private val refDb: Ref[Map[String, (ContentType, Metadata)]] =
+        Ref.unsafeMake(Map.empty[String, (ContentType, Metadata)])
+
       override def createBucket(bucketName: String): IO[S3Exception, Unit] =
         Files.createDirectory(path / bucketName).mapError(S3ExceptionUtils.fromThrowable).provide(blocking)
 
@@ -71,10 +77,14 @@ object Test {
           .provide(blocking)
 
       override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
-        Files
-          .readAttributes[PosixFileAttributes](path / bucketName / key)
-          .bimap(S3ExceptionUtils.fromThrowable, p => ObjectMetadata(Map.empty, "binary/octet-stream", p.size()))
-          .provide(blocking)
+        (for {
+          (contentType, metadata) <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
+
+          file <- Files
+                    .readAttributes[PosixFileAttributes](path / bucketName / key)
+                    .map(p => ObjectMetadata(metadata, contentType, p.size()))
+                    .provide(blocking)
+        } yield file).mapError(S3ExceptionUtils.fromThrowable)
 
       override def listObjects(
         bucketName: String,
@@ -109,11 +119,17 @@ object Test {
         content: ZStream[R, Throwable, Byte],
         options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
-        ZManaged
-          .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
-          .use(os => content.run(ZSink.fromOutputStream(os)).unit)
-          .mapError(S3ExceptionUtils.fromThrowable)
-          .provideSomeLayer[R](ZLayer.succeed(blocking.get))
+        (for {
+          _ <-
+            refDb.update(db =>
+              db + (bucketName + key -> (options.contentType.getOrElse("application/octet-stream") -> options.metadata))
+            )
+
+          _ <- ZManaged
+                 .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
+                 .use(os => content.run(ZSink.fromOutputStream(os)).unit)
+                 .provideSomeLayer[R](ZLayer.succeed(blocking.get))
+        } yield ()).mapError(S3ExceptionUtils.fromThrowable)
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
         IO.fail(
@@ -126,9 +142,38 @@ object Test {
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: MultipartUploadOptions = MultipartUploadOptions()
-      ): ZIO[R, S3Exception, Unit] =
-        putObject(bucketName, key, 0, content.chunkN(options.partSize), options.uploadOptions)
+        options: MultipartUploadOptions
+      )(parallelism: Int): ZIO[R, S3Exception, Unit] = {
+        val _contentType = options.uploadOptions.contentType.orElse(Some("binary/octet-stream"))
+
+        for {
+          _ <- ZIO.cond(
+                 parallelism > 0,
+                 (),
+                 S3ExceptionUtils.fromThrowable(
+                   new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
+                 )
+               )
+
+          _ <- ZIO.cond(
+                 options.partSize >= PartSize.Min,
+                 (),
+                 S3ExceptionUtils.fromThrowable(
+                   new IllegalArgumentException(
+                     s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+                   )
+                 )
+               )
+
+          _ <- putObject(
+                 bucketName,
+                 key,
+                 0,
+                 content.chunkN(options.partSize),
+                 options.uploadOptions.copy(contentType = _contentType)
+               )
+        } yield ()
+      }
     }
   }
 }
