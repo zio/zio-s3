@@ -32,12 +32,12 @@ sealed trait PartSize {
 }
 
 object PartSize {
-  final private[s3] val Kilo: Int = 1024
-  final private[s3] val Mega: Int = 1024 * Kilo
+  final val Kilo: Int = 1024
+  final val Mega: Int = 1024 * Kilo
 
   final val Min: PartSize = new PartSize {
     //part size limit is 5Mb, required by amazon api
-    val size: Int = (5 * Mega).toInt
+    val size: Int = (5 * Mega)
   }
 
   /**
