@@ -235,8 +235,9 @@ object Live {
       .map(new Live(_))
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
 
-   object S3ExceptionUtils {
-     private [s3] def fromThrowable(error: Throwable): S3Exception =
+  object S3ExceptionUtils {
+
+    private[s3] def fromThrowable(error: Throwable): S3Exception =
       S3Exception.builder().message(error.getMessage).cause(error.getCause).build().asInstanceOf[S3Exception]
   }
 

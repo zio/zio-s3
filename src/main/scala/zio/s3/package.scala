@@ -250,6 +250,24 @@ package object s3 {
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, content, options))
 
+  /**
+   * Same as multipartUpload with default parallelism = 1
+   *
+   * @param bucketName name of the bucket
+   * @param key unique object identifier
+   * @param content object data
+   * @param options the optional configurations of the multipart upload
+   */
+  def multipartUpload_[R <: Has[_]: Tag](
+    bucketName: String,
+    key: String,
+    content: ZStream[R, Throwable, Byte],
+    options: MultipartUploadOptions = MultipartUploadOptions()
+  ): ZIO[S3 with R, S3Exception, Unit] =
+    ZIO.accessM[S3 with R](
+      _.get.multipartUpload(bucketName, key, content, options)(1)
+    )
+
   def multipartUpload[R <: Has[_]: Tag](
     bucketName: String,
     key: String,

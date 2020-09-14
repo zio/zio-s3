@@ -37,7 +37,7 @@ object PartSize {
 
   final val Min: PartSize = new PartSize {
     //part size limit is 5Mb, required by amazon api
-    val size: Int = (5 * Mega)
+    val size: Int = 5 * Mega
   }
 
   /**
@@ -52,12 +52,12 @@ object PartSize {
           val size: Int = s
         })
       case invalid            =>
-        val invalidFloor =
+        val invalidSize =
           if (partSize >= Mega) s"${Math.floor(invalid.toDouble / Mega * 100) / 100} Mb"
           else s"${Math.floor(invalid.toDouble / Kilo * 100) / 100} Kb"
 
         IO.fail(
-          InvalidPartSize(s"Invalid part size $invalidFloor, minimum size is ${Min.size / Mega} Mb", invalid)
+          InvalidPartSize(s"Invalid part size $invalidSize, minimum size is ${Min.size / Mega} Mb", invalid)
         )
     }
 }

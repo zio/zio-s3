@@ -205,6 +205,16 @@ object S3Suite {
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(isGreaterThan(0L))
       },
+      testM("multipart_ with parrallelism = 1") {
+        val (dataLength, data) = randomNEStream
+        val tmpKey             = Random.alphanumeric.take(10).mkString
+
+        for {
+          _             <- multipartUpload_(bucketName, tmpKey, data)
+          contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
+                             ZFiles.delete(root / bucketName / tmpKey)
+        } yield assert(contentLength)(equalTo(dataLength.toLong))
+      },
       testM("multipart with invalid parrallelism value 0") {
         val data   = ZStream.empty
         val tmpKey = Random.alphanumeric.take(10).mkString
@@ -256,8 +266,8 @@ object S3Suite {
         val tmpKey           = Random.alphanumeric.take(10).mkString
 
         for {
-          _partSize     <- PartSize.from(10 * PartSize.Mega)
-          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = _partSize))(4)
+          partSize      <- PartSize.from(10 * PartSize.Mega)
+          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = partSize))(4)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataSize.toLong))
