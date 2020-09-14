@@ -52,14 +52,14 @@ import zio.s3._
 import zio.blocking.Blocking
 
 // required to provide a Blocking context
-val testS3: ZLayer[Blocking, Any, S3] = test(ZPath("/tmp/s3-data")) 
+val stub: ZLayer[Blocking, Any, S3] = stub(ZPath("/tmp/s3-data")) 
 
 // use a Blocking context to build s3 Layer
-val s3: ZLayer[Any, Any, S3] = Blocking.live >>> test(ZPath("/tmp/s3-data"))
+val stubS3: ZLayer[Any, Any, S3] = Blocking.live >>> stub(ZPath("/tmp/s3-data"))
 
 // list all buckets available by using S3 Stub Layer 
 // will list all directories of `/tmp/s3-data`
-listBuckets.provideLayer(s3) 
+listBuckets.provideLayer(stubS3) 
 ```
 
 More informations here how to use [ZLayer https://zio.dev/docs/howto/howto_use_layers](https://zio.dev/docs/howto/howto_use_layers)

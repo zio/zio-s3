@@ -160,7 +160,7 @@ package object s3 {
 
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(Live.connect(_, None))
 
-  def test(path: ZPath): ZLayer[Blocking, Any, S3] =
+  def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
   /**
