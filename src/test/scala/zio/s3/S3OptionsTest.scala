@@ -1,7 +1,8 @@
 package zio.s3
 
+import zio.s3.PartSize.Mega
 import zio.test.Assertion._
-import zio.test._
+import zio.test.{ test, testM, _ }
 
 object S3OptionsTest extends DefaultRunnableSpec {
 
@@ -16,8 +17,14 @@ object S3OptionsTest extends DefaultRunnableSpec {
       },
       testM("valid partSize") {
         for {
-          success <- PartSize.from(10 * PartSize.Mega.toInt)
-        } yield assert(success.size)(equalTo(10 * PartSize.Mega))
+          success <- PartSize.from(10 * Mega.toInt)
+        } yield assert(success.size)(equalTo(10 * Mega))
+      },
+      test("add partSize - 7Mb") {
+        assert((PartSize.Min + (2 * Mega)).size)(equalTo(7 * Mega))
+      },
+      test("multiply partSize - 10Mb") {
+        assert((PartSize.Min * 2).size)(equalTo(10 * Mega))
       }
     )
 }

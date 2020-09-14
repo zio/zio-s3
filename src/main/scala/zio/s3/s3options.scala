@@ -27,18 +27,26 @@ case class MultipartUploadOptions(
   partSize: PartSize = PartSize.Min
 )
 
-sealed trait PartSize {
-  def size: Int
+sealed trait PartSize { self =>
+  val size: Int
+
+  def + (other: Int): PartSize = PartSize(self.size + other)
+
+  def * (n: Int): PartSize = PartSize(self.size * n)
 }
 
 object PartSize {
   final val Kilo: Int = 1024
   final val Mega: Int = 1024 * Kilo
+  final val Giga: Int = 1024 * Mega
 
-  final val Min: PartSize = new PartSize {
-    //part size limit is 5Mb, required by amazon api
-    val size: Int = 5 * Mega
-  }
+  //part size limit is 5Mb, required by amazon api
+  final val Min: PartSize = PartSize(5 * Mega)
+
+  private[s3] def apply(v: Int): PartSize =
+    new PartSize {
+      val size: Int = v
+    }
 
   /**
    * Create a Part Size, minimum value is 5 Mb
