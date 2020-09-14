@@ -107,12 +107,28 @@
                         <a href="" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="class" href="InvalidPartSize.html" title=""></a>
+                        <a href="InvalidPartSize.html" title="">InvalidPartSize</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="class" href="InvalidSettings.html" title=""></a>
                         <a href="InvalidSettings.html" title="">InvalidSettings</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="Live$.html" title=""></a>
                         <a class="class" href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage"></a>
                         <a href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage">Live</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads"></a>
+                        <a href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads">MultipartUploadOptions</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="ObjectMetadata$.html" title=""></a>
+                        <a class="class" href="ObjectMetadata.html" title=""></a>
+                        <a href="ObjectMetadata.html" title="">ObjectMetadata</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="PartSize$.html" title=""></a>
+                        <a href="PartSize$.html" title="">PartSize</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="object" href="package$$S3$.html" title="The S3 module provides access to a s3 amazon storage."></a>
@@ -145,6 +161,10 @@
                         <span class="separator"></span>
                         <a class="object" href="Test$.html" title="Stub Service which is back by a filesystem storage"></a>
                         <a href="Test$.html" title="Stub Service which is back by a filesystem storage">Test</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="UploadOptions.html" title="The options of the multipart upload and the put object request."></a>
+                        <a href="UploadOptions.html" title="The options of the multipart upload and the put object request.">UploadOptions</a>
                       </li>
               </ul>
             </div>
@@ -168,7 +188,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">ConnectionError</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">ConnectionError</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result"> extends <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -177,7 +197,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="java.lang.Exception">Exception</span>, <span class="extype" name="java.lang.Throwable">Throwable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="software.amazon.awssdk.awscore.exception.AwsServiceException">AwsServiceException</span>, <span class="extype" name="software.amazon.awssdk.core.exception.SdkServiceException">SdkServiceException</span>, <span class="extype" name="software.amazon.awssdk.core.SdkPojo">SdkPojo</span>, <span class="extype" name="software.amazon.awssdk.core.exception.SdkException">SdkException</span>, <span class="extype" name="java.lang.RuntimeException">RuntimeException</span>, <span class="extype" name="java.lang.Exception">Exception</span>, <span class="extype" name="java.lang.Throwable">Throwable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -203,7 +223,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="zio.s3.ConnectionError"><span>ConnectionError</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="java.lang.Exception"><span>Exception</span></li><li class="in" name="java.lang.Throwable"><span>Throwable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="zio.s3.ConnectionError"><span>ConnectionError</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="software.amazon.awssdk.services.s3.model.S3Exception"><span>S3Exception</span></li><li class="in" name="software.amazon.awssdk.awscore.exception.AwsServiceException"><span>AwsServiceException</span></li><li class="in" name="software.amazon.awssdk.core.exception.SdkServiceException"><span>SdkServiceException</span></li><li class="in" name="software.amazon.awssdk.core.SdkPojo"><span>SdkPojo</span></li><li class="in" name="software.amazon.awssdk.core.exception.SdkException"><span>SdkException</span></li><li class="in" name="java.lang.RuntimeException"><span>RuntimeException</span></li><li class="in" name="java.lang.Exception"><span>Exception</span></li><li class="in" name="java.lang.Throwable"><span>Throwable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -329,6 +349,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="software.amazon.awssdk.awscore.exception.AwsServiceException#awsErrorDetails" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="awsErrorDetails():software.amazon.awssdk.awscore.exception.AwsErrorDetails"></a><a id="awsErrorDetails():AwsErrorDetails"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#awsErrorDetails():software.amazon.awssdk.awscore.exception.AwsErrorDetails" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">awsErrorDetails</span><span class="params">()</span><span class="result">: <span class="extype" name="software.amazon.awssdk.awscore.exception.AwsErrorDetails">AwsErrorDetails</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AwsServiceException</dd></dl></div>
     </li><li name="zio.s3.ConnectionError#cause" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="cause:Throwable"></a>
       <span class="permalink">
@@ -385,6 +421,38 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.SdkPojo#equalsBySdkFields" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equalsBySdkFields(x$1:Any):Boolean"></a><a id="equalsBySdkFields(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#equalsBySdkFields(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equalsBySdkFields</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkPojo</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.exception.SdkServiceException#extendedRequestId" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="extendedRequestId():String"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#extendedRequestId():String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">extendedRequestId</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkServiceException</dd></dl></div>
     </li><li name="java.lang.Throwable#fillInStackTrace" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="fillInStackTrace():Throwable"></a>
       <span class="permalink">
@@ -474,7 +542,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Throwable</dd></dl></div>
-    </li><li name="java.lang.Throwable#getMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="software.amazon.awssdk.awscore.exception.AwsServiceException#getMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getMessage():String"></a>
       <span class="permalink">
       <a href="../../zio/s3/ConnectionError.html#getMessage():String" title="Permalink">
@@ -489,7 +557,7 @@
         <span class="name">getMessage</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Throwable</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AwsServiceException → Throwable</dd></dl></div>
     </li><li name="java.lang.Throwable#getStackTrace" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getStackTrace():Array[StackTraceElement]"></a>
       <span class="permalink">
@@ -538,6 +606,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Throwable</dd></dl></div>
+    </li><li name="software.amazon.awssdk.awscore.exception.AwsServiceException#isClockSkewException" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isClockSkewException():Boolean"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#isClockSkewException():Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isClockSkewException</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AwsServiceException → SdkServiceException</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -554,6 +638,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="software.amazon.awssdk.awscore.exception.AwsServiceException#isThrottlingException" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isThrottlingException():Boolean"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#isThrottlingException():Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isThrottlingException</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AwsServiceException → SdkServiceException</dd></dl></div>
     </li><li name="zio.s3.ConnectionError#message" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="message:String"></a>
       <span class="permalink">
@@ -672,6 +772,54 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Throwable</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.exception.SdkServiceException#requestId" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="requestId():String"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#requestId():String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">requestId</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkServiceException</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.exception.SdkException#retryable" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="retryable():Boolean"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#retryable():Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">retryable</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkException</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.exception.SdkServiceException#sdkFields" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sdkFields():java.util.List[software.amazon.awssdk.core.SdkField[_]]"></a><a id="sdkFields():List[SdkField[_]]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#sdkFields():java.util.List[software.amazon.awssdk.core.SdkField[_]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sdkFields</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="software.amazon.awssdk.core.SdkField">SdkField</span>[_]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkServiceException → SdkPojo</dd></dl></div>
     </li><li name="java.lang.Throwable#setStackTrace" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="setStackTrace(x$1:Array[StackTraceElement]):Unit"></a><a id="setStackTrace(Array[StackTraceElement]):Unit"></a>
       <span class="permalink">
@@ -688,6 +836,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Throwable</dd></dl></div>
+    </li><li name="software.amazon.awssdk.core.exception.SdkServiceException#statusCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="statusCode():Int"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#statusCode():Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">statusCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SdkServiceException</dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -704,6 +868,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="software.amazon.awssdk.services.s3.model.S3Exception#toBuilder" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toBuilder():software.amazon.awssdk.services.s3.model.S3Exception.Builder"></a><a id="toBuilder():Builder"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/ConnectionError.html#toBuilder():software.amazon.awssdk.services.s3.model.S3Exception.Builder" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toBuilder</span><span class="params">()</span><span class="result">: <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception.Builder">Builder</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>S3Exception → AwsServiceException → SdkServiceException → SdkException</dd></dl></div>
     </li><li name="java.lang.Throwable#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
@@ -804,6 +984,18 @@
               <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
             </div><div class="parent" name="scala.Equals">
               <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="software.amazon.awssdk.services.s3.model.S3Exception">
+              <h3>Inherited from <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span></h3>
+            </div><div class="parent" name="software.amazon.awssdk.awscore.exception.AwsServiceException">
+              <h3>Inherited from <span class="extype" name="software.amazon.awssdk.awscore.exception.AwsServiceException">AwsServiceException</span></h3>
+            </div><div class="parent" name="software.amazon.awssdk.core.exception.SdkServiceException">
+              <h3>Inherited from <span class="extype" name="software.amazon.awssdk.core.exception.SdkServiceException">SdkServiceException</span></h3>
+            </div><div class="parent" name="software.amazon.awssdk.core.SdkPojo">
+              <h3>Inherited from <span class="extype" name="software.amazon.awssdk.core.SdkPojo">SdkPojo</span></h3>
+            </div><div class="parent" name="software.amazon.awssdk.core.exception.SdkException">
+              <h3>Inherited from <span class="extype" name="software.amazon.awssdk.core.exception.SdkException">SdkException</span></h3>
+            </div><div class="parent" name="java.lang.RuntimeException">
+              <h3>Inherited from <span class="extype" name="java.lang.RuntimeException">RuntimeException</span></h3>
             </div><div class="parent" name="java.lang.Exception">
               <h3>Inherited from <span class="extype" name="java.lang.Exception">Exception</span></h3>
             </div><div class="parent" name="java.lang.Throwable">

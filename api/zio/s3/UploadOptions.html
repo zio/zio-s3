@@ -131,8 +131,8 @@
                         <a href="PartSize$.html" title="">PartSize</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="object" href="" title="The S3 module provides access to a s3 amazon storage."></a>
-                        <a href="" title="The S3 module provides access to a s3 amazon storage.">S3</a>
+                        <a class="object" href="package$$S3$.html" title="The S3 module provides access to a s3 amazon storage."></a>
+                        <a href="package$$S3$.html" title="The S3 module provides access to a s3 amazon storage.">S3</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Bucket$.html" title=""></a>
                         <a class="class" href="S3Bucket.html" title=""></a>
@@ -163,19 +163,19 @@
                         <a href="Test$.html" title="Stub Service which is back by a filesystem storage">Test</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="UploadOptions.html" title="The options of the multipart upload and the put object request."></a>
-                        <a href="UploadOptions.html" title="The options of the multipart upload and the put object request.">UploadOptions</a>
+                        <a class="class" href="" title="The options of the multipart upload and the put object request."></a>
+                        <a href="" title="The options of the multipart upload and the put object request.">UploadOptions</a>
                       </li>
               </ul>
             </div>
           </div>
           <div id="content">
-            <body class="object value">
+            <body class="class type">
       <div id="definition">
-        <div class="big-circle object">o</div>
+        <div class="big-circle class">c</div>
         <p id="owner"><a href="../index.html" class="extype" name="zio">zio</a>.<a href="index.html" class="extype" name="zio.s3">s3</a></p>
-        <h1>S3<span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html" title="Permalink">
+        <h1>UploadOptions<span class="permalink">
+      <a href="../../zio/s3/UploadOptions.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
@@ -185,21 +185,20 @@
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">S3</span>
+        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map.empty</span></span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span> = <span class="symbol">ObjectCannedACL.PRIVATE</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The <code>S3</code> module provides access to a s3 amazon storage.
-All operations are async since we are relying on the amazon async client
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The options of the multipart upload and the put object request.
+</p></div><dl class="paramcmts block"><dt class="param">metadata</dt><dd class="cmt"><p>the user-defined metadata without the &quot;x-amz-meta-&quot; prefix</p></dd><dt class="param">cannedAcl</dt><dd class="cmt"><p>a canned acl, defaults to &quot;private&quot;</p></dd><dt class="param">contentType</dt><dd class="cmt"><p>the content type of the object (application/json, application/zip, text/plain, ...)</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -225,7 +224,7 @@ All operations are async since we are relying on the amazon async client
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="zio.s3.S3"><span>S3</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="zio.s3.UploadOptions"><span>UploadOptions</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -243,28 +242,28 @@ All operations are async since we are relying on the amazon async client
 
       <div id="template">
         <div id="allMembers">
-        
-
-        <div id="types" class="types members">
-              <h3>Type Members</h3>
-              <ol><li name="zio.s3.S3.Service" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ServiceextendsAnyRef"></a><a id="Service:Service"></a>
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="zio.s3.UploadOptions#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(metadata:Map[String,String],cannedAcl:software.amazon.awssdk.services.s3.model.ObjectCannedACL,contentType:Option[String]):zio.s3.UploadOptions"></a><a id="&lt;init&gt;:UploadOptions"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$$Service.html" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#&lt;init&gt;(metadata:Map[String,String],cannedAcl:software.amazon.awssdk.services.s3.model.ObjectCannedACL,contentType:Option[String]):zio.s3.UploadOptions" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">trait</span>
+        <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <a title="" href="package$$S3$$Service.html"><span class="name">Service</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map.empty</span></span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span> = <span class="symbol">ObjectCannedACL.PRIVATE</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span>
       </span>
       
-      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">metadata</dt><dd class="cmt"><p>the user-defined metadata without the &quot;x-amz-meta-&quot; prefix</p></dd><dt class="param">cannedAcl</dt><dd class="cmt"><p>a canned acl, defaults to &quot;private&quot;</p></dd><dt class="param">contentType</dt><dd class="cmt"><p>the content type of the object (application/json, application/zip, text/plain, ...)</p></dd></dl></div>
     </li></ol>
             </div>
+
+        
 
         
 
@@ -274,7 +273,7 @@ All operations are async since we are relying on the amazon async client
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -290,7 +289,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html###():Int" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -306,7 +305,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -322,7 +321,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -335,10 +334,26 @@ All operations are async since we are relying on the amazon async client
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="zio.s3.UploadOptions#cannedAcl" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cannedAcl:software.amazon.awssdk.services.s3.model.ObjectCannedACL"></a><a id="cannedAcl:ObjectCannedACL"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/UploadOptions.html#cannedAcl:software.amazon.awssdk.services.s3.model.ObjectCannedACL" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cannedAcl</span><span class="result">: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#clone():Object" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -359,10 +374,26 @@ All operations are async since we are relying on the amazon async client
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="zio.s3.UploadOptions#contentType" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="contentType:Option[String]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/UploadOptions.html#contentType:Option[String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">contentType</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -375,26 +406,10 @@ All operations are async since we are relying on the amazon async client
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#equals(x$1:Any):Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#finalize():Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -416,7 +431,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#getClass():Class[_]" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -432,29 +447,10 @@ All operations are async since we are relying on the amazon async client
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#hashCode():Int" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
-      </span>
-      
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
-                <span class="name">@native</span><span class="args">()</span>
-              
-        </dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -467,10 +463,26 @@ All operations are async since we are relying on the amazon async client
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="zio.s3.UploadOptions#metadata" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="metadata:Map[String,String]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/UploadOptions.html#metadata:Map[String,String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">metadata</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -486,7 +498,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#notify():Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -505,7 +517,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#notifyAll():Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -524,7 +536,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -537,26 +549,10 @@ All operations are async since we are relying on the amazon async client
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#toString():String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#wait():Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -578,7 +574,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -600,7 +596,7 @@ All operations are async since we are relying on the amazon async client
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/package$$S3$.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../zio/s3/UploadOptions.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -631,7 +627,15 @@ All operations are async since we are relying on the amazon async client
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
