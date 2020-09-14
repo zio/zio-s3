@@ -141,6 +141,16 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                     )
                   )
 
+      _        <- ZIO.cond(
+                    options.partSize >= PartSize.Min,
+                    (),
+                    S3ExceptionUtils.fromThrowable(
+                      new IllegalArgumentException(
+                        s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+                      )
+                    )
+                  )
+
       uploadId <- execute(
                     _.createMultipartUpload {
                       val builder = CreateMultipartUploadRequest
@@ -158,7 +168,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       parts    <- ZStream
                     .managed(
                       content
-                        .chunkN(options.partSize.size)
+                        .chunkN(options.partSize)
                         .mapChunks(Chunk.single)
                         .peel(ZSink.head[Chunk[Byte]])
                     )

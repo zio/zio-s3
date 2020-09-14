@@ -154,11 +154,22 @@ object Test {
                    new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
                  )
                )
+
+          _ <- ZIO.cond(
+                 options.partSize >= PartSize.Min,
+                 (),
+                 S3ExceptionUtils.fromThrowable(
+                   new IllegalArgumentException(
+                     s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+                   )
+                 )
+               )
+
           _ <- putObject(
                  bucketName,
                  key,
                  0,
-                 content.chunkN(options.partSize.size),
+                 content.chunkN(options.partSize),
                  options.uploadOptions.copy(contentType = _contentType)
                )
         } yield ()

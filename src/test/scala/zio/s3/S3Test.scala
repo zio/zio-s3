@@ -215,7 +215,7 @@ object S3Suite {
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataLength.toLong))
       },
-      testM("multipart with invalid parrallelism value 0") {
+      testM("multipart with invalid parallelism value 0") {
         val data   = ZStream.empty
         val tmpKey = Random.alphanumeric.take(10).mkString
 
@@ -224,6 +224,16 @@ object S3Suite {
                        .foldCause(_.failureOption.map(_.getMessage).mkString, _ => "")
 
         } yield assert(failure)(equalTo(s"parallelism must be > 0. 0 is invalid"))
+      },
+      testM("multipart with invalid partSize value 0") {
+        val tmpKey        = Random.alphanumeric.take(10).mkString
+        val invalidOption = MultipartUploadOptions(partSize = 0)
+
+        for {
+          failure <- multipartUpload_(bucketName, tmpKey, ZStream.empty, invalidOption)
+                       .foldCause(_.failureOption.map(_.getMessage).mkString, _ => "")
+
+        } yield assert(failure)(equalTo(s"Invalid part size 0.0 Mb, minimum size is 5 Mb"))
       },
       testM("multipart object when the content is empty") {
         val data   = ZStream.empty
@@ -266,8 +276,7 @@ object S3Suite {
         val tmpKey           = Random.alphanumeric.take(10).mkString
 
         for {
-          partSize      <- PartSize.from(10 * PartSize.Mega)
-          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = partSize))(4)
+          _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions(partSize = 10 * PartSize.Mega))(4)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataSize.toLong))
@@ -315,7 +324,7 @@ object S3Suite {
 
   //TODO remove and use generator
   private[this] def randomNEStream = {
-    val size  = PartSize.Min.size + Random.nextInt(100)
+    val size  = PartSize.Min + Random.nextInt(100)
     val bytes = new Array[Byte](size)
     Random.nextBytes(bytes)
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
