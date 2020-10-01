@@ -33,6 +33,68 @@ object S3Region {
       case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
     }
 
+    val AP_SOUTH_1 = "ap-south-1"
+
+    val EU_SOUTH_1 = "eu-south-1"
+
+    val US_GOV_EAST_1 = "us-gov-east-1"
+
+    val CA_CENTRAL_1 = "ca-central-1"
+
+    val EU_CENTRAL_1 = "eu-central-1"
+
+    val US_WEST_1 = "us-west-1"
+
+    val US_WEST_2 = "us-west-2"
+
+    val AF_SOUTH_1 = "af-south-1"
+
+    val EU_NORTH_1 = "eu-north-1"
+
+    val EU_WEST_3 = "eu-west-3"
+
+    val EU_WEST_2 = "eu-west-2"
+
+    val EU_WEST_1 = "eu-west-1"
+
+    val AP_NORTHEAST_2 = "ap-northeast-2"
+
+    val AP_NORTHEAST_1 = "ap-northeast-1"
+
+    val ME_SOUTH_1 = "me-south-1"
+
+    val SA_EAST_1 = "sa-east-1"
+
+    val AP_EAST_1 = "ap-east-1"
+
+    val CN_NORTH_1 = "cn-north-1"
+
+    val US_GOV_WEST_1 = "us-gov-west-1"
+
+    val AP_SOUTHEAST_1 = "ap-southeast-1"
+
+    val AP_SOUTHEAST_2 = "ap-southeast-2"
+
+    val US_ISO_EAST_1 = "us-iso-east-1"
+
+    val US_EAST_1 = "us-east-1"
+
+    val US_EAST_2 = "us-east-2"
+
+    val CN_NORTHWEST_1 = "cn-northwest-1"
+
+    val US_ISOB_EAST_1 = "us-isob-east-1"
+
+    val AWS_GLOBAL = "aws-global"
+
+    val AWS_CN_GLOBAL = "aws-cn-global"
+
+    val AWS_US_GOV_GLOBAL = "aws-us-gov-global"
+
+    val AWS_ISO_GLOBAL = "aws-iso-global"
+
+    val AWS_ISO_B_GLOBAL = "aws-iso-b-global"
+  
   def fromString(value: String): Either[InvalidSettings, S3Region] = fromRegion(Region.of(value))
 }
 
