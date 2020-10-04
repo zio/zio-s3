@@ -18,7 +18,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
   private val root = ZPath("minio/data")
 
   private val s3 =
-    live(Region.CA_CENTRAL_1.id(), S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
+    live(Region.CA_CENTRAL_1, S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
       .mapError(TestFailure.die(_))
 
   override def spec =

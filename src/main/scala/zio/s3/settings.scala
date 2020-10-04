@@ -32,14 +32,12 @@ object S3Region {
       case r if Region.regions().contains(r) => Right(new S3Region { val region = r })
       case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
     }
-
-  def fromString(value: String): Either[InvalidSettings, S3Region] = fromRegion(Region.of(value))
 }
 
 final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
 
 object S3Settings {
 
-  def from(region: String, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
-    ZIO.fromEither(S3Region.fromString(region)).map(S3Settings(_, credentials))
+  def from(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
+    ZIO.fromEither(S3Region.fromRegion(region)).map(S3Settings(_, credentials))
 }

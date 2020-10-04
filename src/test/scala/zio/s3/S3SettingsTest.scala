@@ -11,13 +11,13 @@ object S3SettingsTest extends DefaultRunnableSpec {
       testM("invalid region") {
         for {
           failure <- S3Settings
-                       .from("invalid", S3Credentials("key", "secret"))
+                       .from(Region.of("invalid"), S3Credentials("key", "secret"))
                        .foldCause(_.failureOption.map(_.message).mkString, _ => "")
         } yield assert(failure)(equalTo("Invalid aws region provided : invalid"))
       },
       testM("valid region") {
         for {
-          success <- S3Settings.from(Region.US_EAST_2.id(), S3Credentials("key", "secret"))
+          success <- S3Settings.from(Region.US_EAST_2, S3Credentials("key", "secret"))
         } yield assert(success.s3Region.region -> success.credentials)(
           equalTo(Region.US_EAST_2             -> S3Credentials("key", "secret"))
         )
