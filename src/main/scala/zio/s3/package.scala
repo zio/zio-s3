@@ -19,6 +19,7 @@ package zio
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.blocking.Blocking
@@ -153,9 +154,12 @@ package object s3 {
   }
 
   def live(region: String, credentials: S3Credentials): Layer[ConnectionError, S3] =
+    live(Region.of(region), credentials)
+
+  def live(region: Region, credentials: S3Credentials): Layer[ConnectionError, S3] =
     live(region, credentials, None)
 
-  def live(region: String, credentials: S3Credentials, uriEndpoint: Option[URI]): Layer[ConnectionError, S3] =
+  def live(region: Region, credentials: S3Credentials, uriEndpoint: Option[URI]): Layer[ConnectionError, S3] =
     ZLayer.fromManaged(Live.connect(region, credentials, uriEndpoint))
 
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(Live.connect(_, None))

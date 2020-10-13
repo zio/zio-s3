@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture
 
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio.interop.reactivestreams._
@@ -216,7 +217,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 object Live {
 
   def connect(
-    region: String,
+    region: Region,
     credentials: S3Credentials,
     uriEndpoint: Option[URI]
   ): Managed[ConnectionError, S3.Service] =
