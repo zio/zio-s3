@@ -29,6 +29,7 @@ import zio.stream.{ Stream, ZStream, ZTransducer }
 
 package object s3 {
   type S3          = Has[S3.Service]
+  type Settings    = Has[S3Settings]
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
   /**
@@ -162,7 +163,10 @@ package object s3 {
   def live(region: Region, credentials: S3Credentials, uriEndpoint: Option[URI]): Layer[ConnectionError, S3] =
     ZLayer.fromManaged(Live.connect(region, credentials, uriEndpoint))
 
-  val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(Live.connect(_, None))
+  def settings[R](region: Region, cred: ZIO[R, InvalidCredentials, S3Credentials]): ZLayer[R, S3Exception, Settings] =
+    ZLayer.fromEffect(cred.flatMap(S3Settings.from(region, _)))
+
+  val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s => Live.connect(s.get, None))
 
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
