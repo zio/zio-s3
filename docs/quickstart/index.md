@@ -41,6 +41,28 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 All available s3 combinators and operations are available in the package object `zio.s3`, you only need to `import zio.s3._`
 
 
+Credentials
+-----------
+
+zio-s3 expose credentials providers from aws https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html
+If credentials cannot be found in one or multiple providers selected the operation will fail with `InvalidCredentials`
+
+```scala
+import zio._
+import zio.blocking._
+import software.amazon.awssdk.regions.Region
+import zio.s3._
+
+// fetch from System properties or Environment variables
+val s3: ZIO[Any, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromSystem <> S3Credentials.fromEnv) >>> live    
+
+// fetch credentials from Instance profile credentials 
+val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromInstanceProfile) >>> live  
+
+// fetch credentials from all available providers 
+val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromAll) >>> live
+```
+
 Test / Stub
 -----------
 

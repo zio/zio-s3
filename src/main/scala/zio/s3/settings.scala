@@ -16,10 +16,66 @@
 
 package zio.s3
 
+import software.amazon.awssdk.auth.credentials._
 import software.amazon.awssdk.regions.Region
-import zio.{ IO, ZIO }
+import zio.blocking.{ Blocking, effectBlocking }
+import zio.{ IO, Managed, ZIO, ZManaged }
 
 final case class S3Credentials(accessKeyId: String, secretAccessKey: String)
+
+object S3Credentials {
+  def apply(c: AwsCredentials): S3Credentials = S3Credentials(c.accessKeyId(), c.secretAccessKey())
+
+  private[this] def load[R](
+    provider: Managed[Throwable, AwsCredentialsProvider]
+  )(f: AwsCredentialsProvider => ZIO[R, Throwable, AwsCredentials]): ZIO[R, InvalidCredentials, S3Credentials] =
+    provider
+      .use(f)
+      .map(S3Credentials(_))
+      .mapError(e => InvalidCredentials(e.getMessage))
+
+  val fromSystem: IO[InvalidCredentials, S3Credentials] =
+    load(ZManaged.succeed(SystemPropertyCredentialsProvider.create()))(p => IO(p.resolveCredentials()))
+
+  val fromEnv: IO[InvalidCredentials, S3Credentials] =
+    load(ZManaged.succeed(EnvironmentVariableCredentialsProvider.create()))(p => IO(p.resolveCredentials()))
+
+  val fromProfile: ZIO[Blocking, InvalidCredentials, S3Credentials] =
+    load(
+      ZManaged.fromAutoCloseable(
+        IO(
+          ProfileCredentialsProvider
+            .builder()
+            .build()
+        )
+      )
+    )(p => effectBlocking(p.resolveCredentials()))
+
+  val fromContainer: ZIO[Blocking, InvalidCredentials, S3Credentials] =
+    load(
+      ZManaged.fromAutoCloseable(
+        IO(
+          ContainerCredentialsProvider
+            .builder()
+            .build()
+        )
+      )
+    )(p => effectBlocking(p.resolveCredentials()))
+
+  val fromInstanceProfile: ZIO[Blocking, InvalidCredentials, S3Credentials] =
+    load(
+      ZManaged.fromAutoCloseable(
+        IO(
+          InstanceProfileCredentialsProvider
+            .builder()
+            .build()
+        )
+      )
+    )(p => effectBlocking(p.resolveCredentials()))
+
+  val fromAll: ZIO[Blocking, InvalidCredentials, S3Credentials] =
+    fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile
+}
 
 sealed trait S3Region {
   val region: Region
