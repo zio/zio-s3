@@ -164,7 +164,7 @@ package object s3 {
     ZLayer.fromManaged(Live.connect(region, credentials, uriEndpoint))
 
   def settings[R](region: Region, cred: ZIO[R, InvalidCredentials, S3Credentials]): ZLayer[R, S3Exception, Settings] =
-    ZLayer.fromEffect(cred.flatMap(S3Settings.from(region, _)))
+    ZLayer.fromEffect(cred.flatMap(S3Settings(region, _)))
 
   val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s => Live.connect(s.get, None))
 

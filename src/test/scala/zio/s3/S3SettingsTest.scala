@@ -8,7 +8,7 @@ import zio.test.TestAspect._
 
 object S3SettingsTest extends DefaultRunnableSpec {
 
-  def setProps(props: (String, String)*): UIO[Any] =
+  def setProps(props: (String, String)*): UIO[Unit] =
     UIO {
       props.foreach {
         case (k, v) =>
@@ -16,7 +16,7 @@ object S3SettingsTest extends DefaultRunnableSpec {
       }
     }
 
-  def unsetProps(keys: String*): UIO[Any] =
+  def unsetProps(keys: String*): UIO[Unit] =
     UIO {
       keys.foreach(System.clearProperty)
     }
@@ -26,32 +26,34 @@ object S3SettingsTest extends DefaultRunnableSpec {
       suite("Regions")(
         testM("invalid region") {
           for {
-            failure <- S3Settings
-                         .from(Region.of("invalid"), S3Credentials("key", "secret"))
+            failure <- S3Settings(Region.of("invalid"), S3Credentials("key", "secret"))
                          .foldCause(_.failureOption.map(_.message).mkString, _ => "")
           } yield assert(failure)(equalTo("Invalid aws region provided : invalid"))
         },
         testM("valid region") {
           for {
-            success <- S3Settings.from(Region.US_EAST_2, S3Credentials("key", "secret"))
+            success <- S3Settings(Region.US_EAST_2, S3Credentials("key", "secret"))
           } yield assert(success.s3Region.region -> success.credentials)(
             equalTo(Region.US_EAST_2             -> S3Credentials("key", "secret"))
           )
         }
       ),
       suite("credentials")(
-        testM("no cred in system properties") {
-          for {
-            failure <- S3Credentials.fromSystem.flip.map(_.message)
-          } yield assert(failure)(isNonEmptyString)
-        },
         testM("cred in system properties") {
           for {
             cred <- S3Credentials.fromSystem
           } yield assert(cred)(equalTo(S3Credentials("k1", "s1")))
-        } @@ around_(
+        } @@ sequential @@ around_(
           setProps(("aws.accessKeyId", "k1"), ("aws.secretAccessKey", "s1")),
           unsetProps("aws.accessKeyId", "aws.secretAccessKey")
+        ),
+        testM("no cred in system properties") {
+          for {
+            failure <- S3Credentials.fromSystem.flip.map(_.message)
+          } yield assert(failure)(isNonEmptyString)
+        } @@ sequential @@ around_(
+          unsetProps("aws.accessKeyId", "aws.secretAccessKey"),
+          UIO.unit
         ),
         testM("no cred in environment properties") {
           for {
