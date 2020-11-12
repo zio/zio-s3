@@ -73,8 +73,13 @@ object S3Credentials {
       )
     )(p => effectBlocking(p.resolveCredentials()))
 
+  val fromWebIdentity: ZIO[Blocking, InvalidCredentials, S3Credentials] =
+    load(
+      ZManaged.effect(WebIdentityTokenFileCredentialsProvider.create())
+    )(p => effectBlocking(p.resolveCredentials()))
+
   val fromAll: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile
+    fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile <> fromWebIdentity
 }
 
 sealed trait S3Region {

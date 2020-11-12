@@ -73,6 +73,11 @@ object S3SettingsTest extends DefaultRunnableSpec {
             failure <- S3Credentials.fromInstanceProfile.flip.map(_.message)
           } yield assert(failure)(isNonEmptyString)
         },
+        testM("no cred in webidentity credentials") {
+          for {
+            failure <- S3Credentials.fromWebIdentity.flip.map(_.message)
+          } yield assert(failure)(isNonEmptyString)
+        },
         testM("no cred when chain all providers") {
           for {
             failure <- S3Credentials.fromAll.flip.map(_.message)
