@@ -43,7 +43,7 @@ object S3SettingsTest extends DefaultRunnableSpec {
           for {
             cred <- S3Credentials.fromSystem
           } yield assert(cred)(equalTo(S3Credentials("k1", "s1")))
-        } @@ sequential @@ around_(
+        } @@ flaky @@ around_(
           setProps(("aws.accessKeyId", "k1"), ("aws.secretAccessKey", "s1")),
           unsetProps("aws.accessKeyId", "aws.secretAccessKey")
         ),
@@ -51,7 +51,7 @@ object S3SettingsTest extends DefaultRunnableSpec {
           for {
             failure <- S3Credentials.fromSystem.flip.map(_.message)
           } yield assert(failure)(isNonEmptyString)
-        } @@ sequential @@ around_(
+        } @@ around_(
           unsetProps("aws.accessKeyId", "aws.secretAccessKey"),
           UIO.unit
         ),
@@ -90,7 +90,7 @@ object S3SettingsTest extends DefaultRunnableSpec {
             failure <- settings(Region.AF_SOUTH_1, S3Credentials.fromSystem).build.useNow.flip.map(_.getMessage)
           } yield assert(failure)(isNonEmptyString)
         }
-      )
+      ) @@ sequential
     )
 
 }
