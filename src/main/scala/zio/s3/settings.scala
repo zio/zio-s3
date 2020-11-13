@@ -85,15 +85,13 @@ object S3Credentials {
     fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile <> fromWebIdentity
 }
 
-sealed trait S3Region {
-  val region: Region
-}
+final case class S3Region private (region: Region)
 
 object S3Region {
 
-  def fromRegion(region: Region): Either[InvalidSettings, S3Region] =
+  def apply(region: Region): Either[InvalidSettings, S3Region] =
     region match {
-      case r if Region.regions().contains(r) => Right(new S3Region { val region = r })
+      case r if Region.regions().contains(r) => Right(new S3Region(r))
       case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
     }
 }
@@ -102,6 +100,6 @@ final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
 
 object S3Settings {
 
-  def from(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
-    ZIO.fromEither(S3Region.fromRegion(region)).map(S3Settings(_, credentials))
+  def apply(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
+    ZIO.fromEither(S3Region(region)).map(S3Settings(_, credentials))
 }
