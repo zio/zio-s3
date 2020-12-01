@@ -39,8 +39,8 @@ lazy val `zio-s3` = project
       "software.amazon.awssdk"  % "s3"                          % awsVersion,
       "software.amazon.awssdk"  % "sts"                         % awsVersion,
       "dev.zio"                %% "zio-test"                    % zioVersion % Test,
-      "dev.zio"                %% "zio-test-sbt"                % zioVersion % Test      
-  ),
+      "dev.zio"                %% "zio-test-sbt"                % zioVersion % Test
+    ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
