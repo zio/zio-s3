@@ -59,6 +59,9 @@ val s3: ZIO[Any, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credent
 // fetch credentials from Instance profile credentials 
 val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromInstanceProfile) >>> live  
 
+// fetch credentials from web identity token credentials with STS. awssdk sts module required to be on classpath
+val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromWebIdentity) >>> live
+
 // fetch credentials from all available providers 
 val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromAll) >>> live
 ```
