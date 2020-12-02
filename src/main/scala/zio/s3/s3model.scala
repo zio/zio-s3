@@ -46,12 +46,20 @@ object S3ObjectListing {
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
       r.name(),
-      Chunk.fromIterable(r.contents().asScala.toList).map(o => S3ObjectSummary(r.name(), o.key())),
+      S3ObjectSummary.fromResponse(r),
       Option(r.nextContinuationToken())
     )
 }
 
-final case class S3ObjectSummary(bucketName: String, key: String)
+final case class S3ObjectSummary(bucketName: String, key: String, lastModified: Instant, size: Long)
+
+object S3ObjectSummary {
+
+  def fromResponse(response: ListObjectsV2Response) =
+    Chunk
+      .fromIterable(response.contents().asScala.toList)
+      .map(obj => S3ObjectSummary(response.name, obj.key, obj.lastModified, obj.size))
+}
 
 /**
  * @param metadata the user-defined metadata without the "x-amz-meta-" prefix

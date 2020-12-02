@@ -19,6 +19,7 @@ package zio
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 
+import software.amazon.awssdk.core.async.SdkPublisher
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -93,10 +94,10 @@ package object s3 {
       def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata]
 
       /**
-       * list all object for a specific bucket
+       * List objects for a specific bucket
        *
        * @param bucketName name of the bucket
-       * @param prefix filter all object key by the prefix
+       * @param prefix limits the response to keys that begin with the specified prefix
        * @param maxKeys max total number of objects
        */
       def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing]
@@ -107,6 +108,14 @@ package object s3 {
        * @param listing listing to use as a start
        */
       def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing]
+
+      /**
+       * List all object for a specific bucket
+       *
+       * @param bucketName name of the bucket
+       * @param prefix limits the response to keys that begin with the specified prefix
+       */
+      def listAllObjects(bucketName: String, prefix: String): S3Stream[S3ObjectSummary]
 
       /**
        * Store data object into a specific bucket
@@ -151,6 +160,13 @@ package object s3 {
        * @tparam T value type to return
        */
       def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T]
+
+      /**
+       * Expose the s3 async client publisher as a ZStream
+       * @param f a call on an s3 async client with the streaming response
+       * @tparam T value type to return
+       */
+      def executePublisher[T](f: S3AsyncClient => SdkPublisher[T]): ZStream[Any, S3Exception, T]
     }
   }
 
@@ -171,21 +187,8 @@ package object s3 {
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
-  /**
-   * List all descendant objects of a bucket
-   * Fetch all objects recursively of all nested directory by traversing all of them
-   *
-   * @param bucketName name of the bucket
-   * @param prefix filter all object identifier which start with this `prefix`
-   */
-  def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
-    ZStream.accessStream[S3](env =>
-      ZStream
-        .fromEffect(env.get.listObjects(bucketName, prefix, 1000))
-        .flatMap(
-          paginate(_).mapConcat(_.objectSummaries)
-        )
-    )
+  def listAllObjects(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
+    ZStream.accessStream(_.get.listAllObjects(bucketName, prefix))
 
   /**
    * List all objects by traversing all nested directories
@@ -204,12 +207,14 @@ package object s3 {
   /**
    * Read an object by lines
    *
-   * @param objectSummary object to read define by a bucketName and object key
+   * @param bucketName the name of the bucket
+   * @param key the object key
+   * @return
    */
-  def streamLines(objectSummary: S3ObjectSummary): S3Stream[String] =
+  def streamLines(bucketName: String, key: String): S3Stream[String] =
     ZStream.accessStream[S3](
       _.get
-        .getObject(objectSummary.bucketName, objectSummary.key)
+        .getObject(bucketName, key)
         .transduce(ZTransducer.utf8Decode)
         .transduce(ZTransducer.splitLines)
     )

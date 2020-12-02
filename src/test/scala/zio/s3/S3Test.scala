@@ -1,16 +1,17 @@
 package zio.s3
 
 import java.net.URI
+import java.time.Instant
 import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
-import zio.nio.file.{ Files => ZFiles }
-import zio.stream.{ ZStream, ZTransducer }
+import zio.nio.core.file.{Path => ZPath}
+import zio.nio.file.{Files => ZFiles}
+import zio.stream.{ZStream, ZTransducer}
 import zio.test.Assertion._
 import zio.test._
-import zio.{ Chunk, ZLayer }
+import zio.{Chunk, ZLayer}
 
 import scala.util.Random
 
@@ -40,9 +41,9 @@ object S3Suite {
 
   def spec(label: String, root: ZPath): Spec[S3 with Blocking, TestFailure[Exception], TestSuccess] =
     suite(label)(
-      testM("listDescendant") {
+      testM("list all objects") {
         for {
-          list <- listObjectsDescendant(bucketName, "").runCollect
+          list <- listAllObjects(bucketName, "").runCollect
         } yield assert(list.map(_.key))(hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
       },
       testM("list buckets") {
@@ -53,12 +54,12 @@ object S3Suite {
       testM("list objects") {
         for {
           succeed <- listObjects_(bucketName)
-        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries)(
+        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries.map(summaryDecreaseTimePrecision))(
           hasSameElements(
             List(
-              S3ObjectSummary(bucketName, "console.log"),
-              S3ObjectSummary(bucketName, "dir1/hello.txt"),
-              S3ObjectSummary(bucketName, "dir1/user.csv")
+              S3ObjectSummary(bucketName, "console.log", Instant.parse("2020-09-09T17:55:40Z"), 33),
+              S3ObjectSummary(bucketName, "dir1/hello.txt", Instant.parse("2020-09-09T17:55:40Z"), 36),
+              S3ObjectSummary(bucketName, "dir1/user.csv", Instant.parse("2020-09-09T17:55:40Z"), 181)
             )
           )
         )
@@ -66,9 +67,15 @@ object S3Suite {
       testM("list objects with prefix") {
         for {
           succeed <- listObjects(bucketName, "console", 10)
-        } yield assert(succeed)(
+        } yield assert(succeed.copy(objectSummaries = succeed.objectSummaries.map(summaryDecreaseTimePrecision)))(
           equalTo(
-            S3ObjectListing(bucketName, Chunk.single(S3ObjectSummary(bucketName, "console.log")), None)
+            S3ObjectListing(
+              bucketName,
+              Chunk.single(
+                S3ObjectSummary(bucketName, "console.log", Instant.parse("2020-09-09T17:55:40Z"), 33)
+              ),
+              None
+            )
           )
         )
       },
@@ -284,13 +291,13 @@ object S3Suite {
       testM("stream lines") {
 
         for {
-          list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
+          list <- streamLines(bucketName, "dir1/user.csv").runCollect
         } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
           assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
       },
       testM("stream lines - invalid key") {
         for {
-          succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
+          succeed <- streamLines(bucketName, "blah").runCollect.fold(_ => false, _ => true)
         } yield assert(succeed)(isFalse)
       },
       testM("put object when the content type is not provided") {
@@ -329,4 +336,7 @@ object S3Suite {
     Random.nextBytes(bytes)
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
+
+  private def summaryDecreaseTimePrecision(objectSummary: S3ObjectSummary): S3ObjectSummary =
+    objectSummary.copy(lastModified = Instant.ofEpochSecond(objectSummary.lastModified.getEpochSecond))
 }

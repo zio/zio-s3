@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
   // list all objects of all buckets
   val l2: ZStream[S3, S3Exception, String] = (for {
      bucket <- ZStream.fromIterableM(listBuckets) 
-     obj <- listObjectsDescendant(bucket.name, "")
+     obj <- listAllObjects(bucket.name, "")
   } yield obj.bucketName + "/" + obj.key).provideLayer(
      live("us-east-1", S3Credentials("accessKeyId", "secretAccessKey"))
   )  

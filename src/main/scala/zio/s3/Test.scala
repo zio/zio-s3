@@ -22,16 +22,17 @@ import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
+import software.amazon.awssdk.core.async.SdkPublisher
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.blocking.Blocking
 import zio.nio.channels.FileChannel
-import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.core.file.{Path => ZPath}
 import zio.nio.file.Files
 import zio.s3.Live.S3ExceptionUtils
 import zio.s3.S3Bucket._
-import zio.stream.{ Stream, ZStream }
+import zio.stream.{Stream, ZStream}
 
 /**
  * Stub Service which is back by a filesystem storage
@@ -93,26 +94,39 @@ object Test {
         prefix: String,
         maxKeys: Long
       ): IO[S3Exception, S3ObjectListing] =
-        Files
-          .find(path / bucketName) { (p, _) =>
-            p.filename.toString().startsWith(prefix)
-          }
-          .filterM(p => Files.readAttributes[PosixFileAttributes](p).map(_.isRegularFile))
-          .map(f => S3ObjectSummary(bucketName, (path / bucketName).relativize(f).toString()))
-          .runCollect
+        listAllObjects(bucketName, prefix).runCollect
           .map {
             case list if list.size > maxKeys =>
               S3ObjectListing(bucketName, list.take(maxKeys.toInt), Some(UUID.randomUUID().toString))
             case list                        => S3ObjectListing(bucketName, list, None)
           }
-          .mapError(S3ExceptionUtils.fromThrowable)
-          .provide(blocking)
 
       override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
         listing.nextContinuationToken match {
           case Some(token) if token.nonEmpty => listObjects(listing.bucketName, "", 100)
           case _                             => IO.fail(S3ExceptionUtils.fromThrowable(new IllegalArgumentException("Empty token is invalid")))
         }
+
+      override def listAllObjects(bucketName: String, prefix: String): ZStream[Any, S3Exception, S3ObjectSummary] =
+        Files
+          .find(path / bucketName) { (p, _) =>
+            p.filename.toString().startsWith(prefix)
+          }
+          .mapM(p => Files.readAttributes[PosixFileAttributes](p).map((_, p)))
+          .filter { case (attrs, _) => attrs.isRegularFile }
+          .bimap(
+            S3ExceptionUtils.fromThrowable,
+            {
+              case (attrs, p) =>
+                S3ObjectSummary(
+                  bucketName,
+                  (path / bucketName).relativize(p).toString,
+                  attrs.lastModifiedTime.toInstant,
+                  attrs.size
+                )
+            }
+          )
+          .provide(blocking)
 
       override def putObject[R](
         bucketName: String,
@@ -175,6 +189,13 @@ object Test {
                )
         } yield ()
       }
+
+      override def executePublisher[T](f: S3AsyncClient => SdkPublisher[T]): ZStream[Any, S3Exception, T] =
+        ZStream.fail(
+          S3ExceptionUtils.fromThrowable(
+            new NotImplementedError("Not implemented error - please don't call executePublisher() in S3 Test mode")
+          )
+        )
     }
   }
 }
