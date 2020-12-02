@@ -16,7 +16,8 @@
 
 package zio.s3
 
-import java.io.{ FileInputStream, FileOutputStream }
+import java.io.FileInputStream
+import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -25,11 +26,12 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.channels.FileChannel
+import zio.nio.core.file.{Path => ZPath}
 import zio.nio.file.Files
 import zio.s3.Live.S3ExceptionUtils
 import zio.s3.S3Bucket._
-import zio.stream.{ Stream, ZSink, ZStream }
+import zio.stream.{Stream, ZStream}
 
 /**
  * Stub Service which is back by a filesystem storage
@@ -112,7 +114,7 @@ object Test {
           case _                             => IO.fail(S3ExceptionUtils.fromThrowable(new IllegalArgumentException("Empty token is invalid")))
         }
 
-      override def putObject[R <: zio.Has[_]: Tag](
+      override def putObject[R](
         bucketName: String,
         key: String,
         contentLength: Long,
@@ -124,11 +126,10 @@ object Test {
             refDb.update(db =>
               db + (bucketName + key -> (options.contentType.getOrElse("application/octet-stream") -> options.metadata))
             )
-
-          _ <- ZManaged
-                 .fromAutoCloseable(Task(new FileOutputStream((path / bucketName / key).toFile)))
-                 .use(os => content.run(ZSink.fromOutputStream(os)).unit)
-                 .provideSomeLayer[R](ZLayer.succeed(blocking.get))
+          _ <- FileChannel
+                 .open(path / bucketName / key, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
+                 .provide(blocking)
+                 .use(channel => content.foreachChunk(channel.writeChunk))
         } yield ()).mapError(S3ExceptionUtils.fromThrowable)
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
@@ -138,7 +139,7 @@ object Test {
           )
         )
 
-      override def multipartUpload[R <: zio.Has[_]: Tag](
+      override def multipartUpload[R](
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
