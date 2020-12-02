@@ -117,7 +117,7 @@ package object s3 {
        * @param content object data
        * @return
        */
-      def putObject[R <: zio.Has[_]: Tag](
+      def putObject[R](
         bucketName: String,
         key: String,
         contentLength: Long,
@@ -136,7 +136,7 @@ package object s3 {
        * @param options the optional configurations of the multipart upload
        * @param parallelism the number of parallel requests to upload chunks
        */
-      def multipartUpload[R <: zio.Has[_]: Tag](
+      def multipartUpload[R](
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
@@ -249,7 +249,7 @@ package object s3 {
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.get.getNextObjects(listing))
 
-  def putObject[R <: Has[_]: Tag](
+  def putObject[R](
     bucketName: String,
     key: String,
     contentLength: Long,
@@ -266,7 +266,7 @@ package object s3 {
    * @param content object data
    * @param options the optional configurations of the multipart upload
    */
-  def multipartUpload_[R <: Has[_]: Tag](
+  def multipartUpload_[R](
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
@@ -276,7 +276,7 @@ package object s3 {
       _.get.multipartUpload(bucketName, key, content, options)(1)
     )
 
-  def multipartUpload[R <: Has[_]: Tag](
+  def multipartUpload[R](
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],

@@ -29,7 +29,7 @@ import zio.interop.reactivestreams._
 import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
-import zio.{ Tag, _ }
+import zio._
 
 import scala.jdk.CollectionConverters._
 
@@ -95,7 +95,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
         ).map(S3ObjectListing.fromResponse)
       }
 
-  override def putObject[R <: zio.Has[_]: Tag](
+  override def putObject[R](
     bucketName: String,
     key: String,
     contentLength: Long,
@@ -127,7 +127,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       )
       .unit
 
-  def multipartUpload[R <: zio.Has[_]: Tag](
+  def multipartUpload[R](
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
