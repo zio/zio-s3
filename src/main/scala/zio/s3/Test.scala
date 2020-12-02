@@ -27,11 +27,11 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.blocking.Blocking
 import zio.nio.channels.FileChannel
-import zio.nio.core.file.{Path => ZPath}
+import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.Files
 import zio.s3.Live.S3ExceptionUtils
 import zio.s3.S3Bucket._
-import zio.stream.{Stream, ZStream}
+import zio.stream.{ Stream, ZStream }
 
 /**
  * Stub Service which is back by a filesystem storage
