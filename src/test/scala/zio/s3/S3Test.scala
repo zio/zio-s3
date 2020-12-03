@@ -55,13 +55,13 @@ object S3Suite {
         for {
           succeed <- listObjects_(bucketName)
         } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(
-          succeed.objectSummaries.map(summaryDecreaseTimePrecision)
+          succeed.objectSummaries.map(noModificationTimeSummary)
         )(
           hasSameElements(
             List(
-              S3ObjectSummary(bucketName, "console.log", Instant.parse("2020-09-09T17:55:40Z"), 33),
-              S3ObjectSummary(bucketName, "dir1/hello.txt", Instant.parse("2020-09-09T17:55:40Z"), 36),
-              S3ObjectSummary(bucketName, "dir1/user.csv", Instant.parse("2020-09-09T17:55:40Z"), 181)
+              S3ObjectSummary(bucketName, "console.log", FakeModificationTime, 33),
+              S3ObjectSummary(bucketName, "dir1/hello.txt", FakeModificationTime, 36),
+              S3ObjectSummary(bucketName, "dir1/user.csv", FakeModificationTime, 181)
             )
           )
         )
@@ -69,12 +69,12 @@ object S3Suite {
       testM("list objects with prefix") {
         for {
           succeed <- listObjects(bucketName, "console", 10)
-        } yield assert(succeed.copy(objectSummaries = succeed.objectSummaries.map(summaryDecreaseTimePrecision)))(
+        } yield assert(succeed.copy(objectSummaries = succeed.objectSummaries.map(noModificationTimeSummary)))(
           equalTo(
             S3ObjectListing(
               bucketName,
               Chunk.single(
-                S3ObjectSummary(bucketName, "console.log", Instant.parse("2020-09-09T17:55:40Z"), 33)
+                S3ObjectSummary(bucketName, "console.log", FakeModificationTime, 33)
               ),
               None
             )
@@ -339,6 +339,8 @@ object S3Suite {
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
 
-  private def summaryDecreaseTimePrecision(objectSummary: S3ObjectSummary): S3ObjectSummary =
-    objectSummary.copy(lastModified = Instant.ofEpochSecond(objectSummary.lastModified.getEpochSecond))
+  final private val FakeModificationTime = Instant.MAX
+
+  private def noModificationTimeSummary(objectSummary: S3ObjectSummary): S3ObjectSummary =
+    objectSummary.copy(lastModified = FakeModificationTime)
 }
