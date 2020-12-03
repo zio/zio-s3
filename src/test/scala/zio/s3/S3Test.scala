@@ -6,12 +6,12 @@ import java.util.UUID
 
 import software.amazon.awssdk.regions.Region
 import zio.blocking.Blocking
-import zio.nio.core.file.{Path => ZPath}
-import zio.nio.file.{Files => ZFiles}
-import zio.stream.{ZStream, ZTransducer}
+import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.file.{ Files => ZFiles }
+import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
-import zio.{Chunk, ZLayer}
+import zio.{ Chunk, ZLayer }
 
 import scala.util.Random
 
@@ -54,7 +54,9 @@ object S3Suite {
       testM("list objects") {
         for {
           succeed <- listObjects_(bucketName)
-        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries.map(summaryDecreaseTimePrecision))(
+        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(
+          succeed.objectSummaries.map(summaryDecreaseTimePrecision)
+        )(
           hasSameElements(
             List(
               S3ObjectSummary(bucketName, "console.log", Instant.parse("2020-09-09T17:55:40Z"), 33),

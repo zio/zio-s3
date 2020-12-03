@@ -20,16 +20,16 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer, SdkPublisher}
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio._
 import zio.interop.reactivestreams._
-import zio.s3.Live.{S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse}
+import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
-import zio.stream.{Stream, ZSink, ZStream}
+import zio.stream.{ Stream, ZSink, ZStream }
 
 import scala.jdk.CollectionConverters._
 
