@@ -110,7 +110,7 @@ object Test {
       override def listAllObjects(bucketName: String, prefix: String): ZStream[Any, S3Exception, S3ObjectSummary] =
         Files
           .find(path / bucketName) { (p, _) =>
-            p.filename.toString().startsWith(prefix)
+            p.toString.startsWith((path / bucketName / prefix).toString)
           }
           .mapM(p => Files.readAttributes[PosixFileAttributes](p).map((_, p)))
           .filter { case (attrs, _) => attrs.isRegularFile }
@@ -136,15 +136,22 @@ object Test {
         options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
         (for {
-          _ <-
+          _       <-
             refDb.update(db =>
               db + (bucketName + key -> (options.contentType.getOrElse("application/octet-stream") -> options.metadata))
             )
-          _ <- FileChannel
-                 .open(path / bucketName / key, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
-                 .provide(blocking)
-                 .use(channel => content.foreachChunk(channel.writeChunk))
-        } yield ()).mapError(S3ExceptionUtils.fromThrowable)
+          filePath = path / bucketName / key
+          _       <- filePath.parent
+                       .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
+                       .getOrElse(ZIO.unit)
+          _       <- FileChannel
+                       .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
+                       .provide(blocking)
+                       .use(channel => content.foreachChunk(channel.writeChunk))
+        } yield ()).mapError { e =>
+          e.printStackTrace()
+          S3ExceptionUtils.fromThrowable(e)
+        }
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
         IO.fail(

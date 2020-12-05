@@ -187,7 +187,7 @@ package object s3 {
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
-  def listAllObjects(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
+  def listAllObjects(bucketName: String, prefix: String = ""): S3Stream[S3ObjectSummary] =
     ZStream.accessStream(_.get.listAllObjects(bucketName, prefix))
 
   /**
@@ -248,7 +248,11 @@ package object s3 {
   def listObjects_(bucketName: String): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.get.listObjects(bucketName, "", 1000))
 
-  def listObjects(bucketName: String, prefix: String, maxKeys: Long): ZIO[S3, S3Exception, S3ObjectListing] =
+  def listObjects(
+    bucketName: String,
+    prefix: String = "",
+    maxKeys: Long = 1000
+  ): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.get.listObjects(bucketName, prefix, maxKeys))
 
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =

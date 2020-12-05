@@ -11,7 +11,7 @@ import zio.nio.file.{ Files => ZFiles }
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
-import zio.{ Chunk, ZLayer }
+import zio.{ Chunk, ZIO, ZLayer }
 
 import scala.util.Random
 
@@ -80,6 +80,19 @@ object S3Suite {
             )
           )
         )
+      },
+      testM("list all objects returns multiple pages") {
+        val data       = ZStream(1.toByte)
+        val dataSize   = 1L
+        val objectKeys = List.fill(1001)(Random.alphanumeric.take(10).mkString)
+
+        for {
+          _              <- ZIO.foreachPar(objectKeys)(key => putObject(bucketName, s"1001obj/$key", dataSize, data))
+          oneObjectsPage <- listObjects(bucketName, "1001obj")
+          allObjects     <- listAllObjects(bucketName, "1001obj").runCollect <*
+                              ZIO.foreach(objectKeys)(key => deleteObject(bucketName, s"1001obj/$key"))
+        } yield assert(oneObjectsPage.objectSummaries)(hasSize(equalTo(1000))) &&
+          assert(allObjects)(hasSize(isGreaterThan(1000)))
       },
       testM("list objects with not match prefix") {
         for {
@@ -329,7 +342,7 @@ object S3Suite {
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
           assert(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v })(equalTo(Map("key1" -> "value1")))
       }
-    )
+    ) @@ TestAspect.sequential
 
   //TODO remove and use generator
   private[this] def randomNEStream = {
