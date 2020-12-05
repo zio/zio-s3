@@ -142,14 +142,18 @@ object Test {
         options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
         (for {
-          _ <-
+          _       <-
             refDb.update(db =>
               db + (bucketName + key -> (options.contentType.getOrElse("application/octet-stream") -> options.metadata))
             )
-          _ <- FileChannel
-                 .open(path / bucketName / key, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
-                 .provide(blocking)
-                 .use(channel => content.foreachChunk(channel.writeChunk))
+          filePath = path / bucketName / key
+          _       <- filePath.parent
+                       .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
+                       .getOrElse(ZIO.unit)
+          _       <- FileChannel
+                       .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
+                       .provide(blocking)
+                       .use(channel => content.foreachChunk(channel.writeChunk))
         } yield ()).orDie
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
