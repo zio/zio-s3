@@ -46,22 +46,24 @@ object S3ObjectListing {
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
       r.name(),
-      Chunk.fromIterable(r.contents().asScala.toList).map(o => S3ObjectSummary(r.name(), o.key())),
+      Chunk
+        .fromIterable(r.contents().asScala.toList)
+        .map(o => S3ObjectSummary(r.name(), o.key(), o.lastModified(), o.size())),
       Option(r.nextContinuationToken())
     )
 }
 
-final case class S3ObjectSummary(bucketName: String, key: String)
+final case class S3ObjectSummary(bucketName: String, key: String, lastModified: Instant, size: Long)
 
 /**
  * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
  * @param contentType the content type of the object (application/json, application/zip, text/plain, ...)
  * @param contentLength the size of the object in bytes
  */
-case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
+final case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
 
 object ObjectMetadata {
 
-  def fromResponse(r: HeadObjectResponse) =
+  def fromResponse(r: HeadObjectResponse): ObjectMetadata =
     ObjectMetadata(r.metadata().asScala.toMap, r.contentType(), r.contentLength())
 }

@@ -108,8 +108,17 @@ object Test {
           .find(path / bucketName) { (p, _) =>
             p.filename.toString().startsWith(prefix)
           }
-          .filterM(p => Files.readAttributes[PosixFileAttributes](p).map(_.isRegularFile))
-          .map(f => S3ObjectSummary(bucketName, (path / bucketName).relativize(f).toString()))
+          .mapM(p => Files.readAttributes[PosixFileAttributes](p).map(a => a -> p))
+          .filter { case (attr, _) => attr.isRegularFile }
+          .map {
+            case (attr, f) =>
+              S3ObjectSummary(
+                bucketName,
+                (path / bucketName).relativize(f).toString(),
+                attr.lastModifiedTime().toInstant,
+                attr.size()
+              )
+          }
           .runCollect
           .map {
             case list if list.size > maxKeys =>
