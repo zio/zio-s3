@@ -38,7 +38,7 @@ package object s3 {
    */
   object S3 {
 
-    trait Service {
+    trait Service { self =>
 
       /**
        * Create a bucket
@@ -144,6 +144,44 @@ package object s3 {
       )(parallelism: Int): ZIO[R, S3Exception, Unit]
 
       /**
+       * Read an object by lines
+       *
+       * @param bucketName name of the bucket
+       * @param key: unique key of the object
+       */
+      def streamLines(bucketName: String, key: String): Stream[S3Exception, String] =
+        self
+          .getObject(bucketName, key)
+          .transduce(ZTransducer.utf8Decode)
+          .transduce(ZTransducer.splitLines)
+
+      /**
+       * List all descendant objects of a bucket
+       * Fetch all objects recursively of all nested directory by traversing all of them
+       *
+       * @param bucketName name of the bucket
+       * @param prefix filter all object identifier which start with this `prefix`
+       */
+      def listObjectsDescendant(bucketName: String, prefix: String): Stream[S3Exception, S3ObjectSummary] =
+        ZStream
+          .fromEffect(self.listObjects(bucketName, prefix, 1000))
+          .flatMap(
+            paginate(_).mapConcat(_.objectSummaries)
+          )
+
+      /**
+       * List all objects by traversing all nested directories
+       *
+       * @param initialListing object listing to start with
+       * @return
+       */
+      def paginate(initialListing: S3ObjectListing): Stream[S3Exception, S3ObjectListing] =
+        ZStream.paginateM(initialListing) {
+          case current @ S3ObjectListing(_, _, None) => ZIO.succeed(current -> None)
+          case current                               => self.getNextObjects(current).map(next => current -> Some(next))
+        }
+
+      /**
        * *
        * expose safely amazon s3 async client
        *
@@ -171,48 +209,14 @@ package object s3 {
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
-  /**
-   * List all descendant objects of a bucket
-   * Fetch all objects recursively of all nested directory by traversing all of them
-   *
-   * @param bucketName name of the bucket
-   * @param prefix filter all object identifier which start with this `prefix`
-   */
   def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
-    ZStream.accessStream[S3](env =>
-      ZStream
-        .fromEffect(env.get.listObjects(bucketName, prefix, 1000))
-        .flatMap(
-          paginate(_).mapConcat(_.objectSummaries)
-        )
-    )
+    ZStream.accessStream[S3](_.get.listObjectsDescendant(bucketName, prefix))
 
-  /**
-   * List all objects by traversing all nested directories
-   *
-   * @param initialListing object listing to start with
-   * @return
-   */
   def paginate(initialListing: S3ObjectListing): S3Stream[S3ObjectListing] =
-    ZStream.accessStream[S3](env =>
-      ZStream.paginateM(initialListing) {
-        case current @ S3ObjectListing(_, _, None) => ZIO.succeed(current -> None)
-        case current                               => env.get.getNextObjects(current).map(next => current -> Some(next))
-      }
-    )
+    ZStream.accessStream[S3](_.get.paginate(initialListing))
 
-  /**
-   * Read an object by lines
-   *
-   * @param objectSummary object to read define by a bucketName and object key
-   */
-  def streamLines(objectSummary: S3ObjectSummary): S3Stream[String] =
-    ZStream.accessStream[S3](
-      _.get
-        .getObject(objectSummary.bucketName, objectSummary.key)
-        .transduce(ZTransducer.utf8Decode)
-        .transduce(ZTransducer.splitLines)
-    )
+  def streamLines(bucketName: String, key: String): S3Stream[String] =
+    ZStream.accessStream[S3](_.get.streamLines(bucketName, key))
 
   def createBucket(bucketName: String): ZIO[S3, S3Exception, Unit] =
     ZIO.accessM(_.get.createBucket(bucketName))

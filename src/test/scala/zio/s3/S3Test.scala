@@ -53,12 +53,14 @@ object S3Suite {
       testM("list objects") {
         for {
           succeed <- listObjects_(bucketName)
-        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(succeed.objectSummaries)(
+        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(
+          succeed.objectSummaries.map(s => s.bucketName -> s.key)
+        )(
           hasSameElements(
             List(
-              S3ObjectSummary(bucketName, "console.log"),
-              S3ObjectSummary(bucketName, "dir1/hello.txt"),
-              S3ObjectSummary(bucketName, "dir1/user.csv")
+              (bucketName, "console.log"),
+              (bucketName, "dir1/hello.txt"),
+              (bucketName, "dir1/user.csv")
             )
           )
         )
@@ -67,9 +69,12 @@ object S3Suite {
         for {
           succeed <- listObjects(bucketName, "console", 10)
         } yield assert(succeed)(
-          equalTo(
-            S3ObjectListing(bucketName, Chunk.single(S3ObjectSummary(bucketName, "console.log")), None)
-          )
+          hasField("bucketName", (l: S3ObjectListing) => l.bucketName, equalTo(bucketName)) &&
+            hasField(
+              "objectSummaries",
+              (l: S3ObjectListing) => l.objectSummaries.map(o => o.bucketName -> o.key),
+              equalTo(Chunk.single((bucketName, "console.log")))
+            )
         )
       },
       testM("list objects with not match prefix") {
@@ -276,13 +281,13 @@ object S3Suite {
       testM("stream lines") {
 
         for {
-          list <- streamLines(S3ObjectSummary(bucketName, "dir1/user.csv")).runCollect
+          list <- streamLines(bucketName, "dir1/user.csv").runCollect
         } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
           assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
       },
       testM("stream lines - invalid key") {
         for {
-          succeed <- streamLines(S3ObjectSummary(bucketName, "blah")).runCollect.fold(_ => false, _ => true)
+          succeed <- streamLines(bucketName, "blah").runCollect.fold(_ => false, _ => true)
         } yield assert(succeed)(isFalse)
       },
       testM("put object when the content type is not provided") {
