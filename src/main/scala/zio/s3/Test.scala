@@ -22,7 +22,6 @@ import java.nio.file.attribute.PosixFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
-import software.amazon.awssdk.core.async.SdkPublisher
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
@@ -196,13 +195,6 @@ object Test {
                )
         } yield ()
       }
-
-      override def executePublisher[T](f: S3AsyncClient => SdkPublisher[T]): ZStream[Any, S3Exception, T] =
-        ZStream.fail(
-          S3ExceptionUtils.fromThrowable(
-            new NotImplementedError("Not implemented error - please don't call executePublisher() in S3 Test mode")
-          )
-        )
     }
   }
 }

@@ -19,7 +19,6 @@ package zio
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 
-import software.amazon.awssdk.core.async.SdkPublisher
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -160,13 +159,6 @@ package object s3 {
        * @tparam T value type to return
        */
       def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T]
-
-      /**
-       * Expose the s3 async client publisher as a ZStream
-       * @param f a call on an s3 async client with the streaming response
-       * @tparam T value type to return
-       */
-      def executePublisher[T](f: S3AsyncClient => SdkPublisher[T]): ZStream[Any, S3Exception, T]
     }
   }
 

@@ -16,10 +16,6 @@
 
 package zio.s3
 
-import java.net.URI
-import java.nio.ByteBuffer
-import java.util.concurrent.CompletableFuture
-
 import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.regions.Region
@@ -31,6 +27,9 @@ import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamRes
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
 
+import java.net.URI
+import java.nio.ByteBuffer
+import java.util.concurrent.CompletableFuture
 import scala.jdk.CollectionConverters._
 
 /**
@@ -96,7 +95,10 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       }
 
   override def listAllObjects(bucketName: String, prefix: String): ZStream[Any, S3Exception, S3ObjectSummary] =
-    executePublisher(_.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix).build()))
+    unsafeClient
+      .listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix).build())
+      .toStream()
+      .refineToOrDie[S3Exception]
       .mapConcat(S3ObjectSummary.fromResponse)
 
   override def putObject[R](
@@ -216,9 +218,6 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   override def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineToOrDie[S3Exception]
-
-  override def executePublisher[T](f: S3AsyncClient => SdkPublisher[T]): ZStream[Any, S3Exception, T] =
-    f(unsafeClient).toStream().refineToOrDie[S3Exception]
 
 }
 
