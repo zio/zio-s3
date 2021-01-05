@@ -39,6 +39,12 @@ object S3SettingsTest extends DefaultRunnableSpec {
         }
       ),
       suite("credentials")(
+        testM("cred with const") {
+          assertM(S3Credentials.const("k", "v"))(equalTo(S3Credentials("k", "v")))
+        },
+        testM("cred with default fallback const") {
+          assertM(S3Credentials.fromEnv <> S3Credentials.const("k", "v"))(equalTo(S3Credentials("k", "v")))
+        },
         testM("cred in system properties") {
           for {
             cred <- S3Credentials.fromSystem
