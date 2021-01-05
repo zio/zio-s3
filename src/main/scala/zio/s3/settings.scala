@@ -19,7 +19,7 @@ package zio.s3
 import software.amazon.awssdk.auth.credentials._
 import software.amazon.awssdk.regions.Region
 import zio.blocking.{ Blocking, effectBlocking }
-import zio.{ IO, Managed, ZIO, ZManaged }
+import zio.{ IO, Managed, UIO, ZIO, ZManaged }
 
 final case class S3Credentials(accessKeyId: String, secretAccessKey: String)
 
@@ -33,6 +33,9 @@ object S3Credentials {
       .use(f)
       .map(S3Credentials(_))
       .mapError(e => InvalidCredentials(e.getMessage))
+
+  def const(accessKeyId: String, secretAccessKey: String): UIO[S3Credentials] =
+    UIO.succeed(S3Credentials(accessKeyId, secretAccessKey))
 
   val fromSystem: IO[InvalidCredentials, S3Credentials] =
     load(ZManaged.succeed(SystemPropertyCredentialsProvider.create()))(p => IO(p.resolveCredentials()))
