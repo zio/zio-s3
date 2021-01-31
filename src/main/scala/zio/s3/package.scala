@@ -96,10 +96,10 @@ package object s3 {
        * list all object for a specific bucket
        *
        * @param bucketName name of the bucket
-       * @param prefix filter all object key by the prefix
-       * @param maxKeys max total number of objects
+       * @param prefix filter all object key by the prefix, default value is an empty string
+       * @param maxKeys max total number of objects, default value is 1000 elements
        */
-      def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing]
+      def listObjects(bucketName: String, prefix: String = "", maxKeys: Long = 1000): IO[S3Exception, S3ObjectListing]
 
       /**
        * Fetch the next object listing from a specific object listing.
@@ -244,10 +244,11 @@ package object s3 {
    *
    * @param bucketName name of the bucket
    */
-  def listObjects_(bucketName: String): ZIO[S3, S3Exception, S3ObjectListing] =
-    ZIO.accessM(_.get.listObjects(bucketName, "", 1000))
-
-  def listObjects(bucketName: String, prefix: String, maxKeys: Long): ZIO[S3, S3Exception, S3ObjectListing] =
+  def listObjects(
+    bucketName: String,
+    prefix: String = "",
+    maxKeys: Long = 1000
+  ): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.get.listObjects(bucketName, prefix, maxKeys))
 
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =
@@ -270,16 +271,6 @@ package object s3 {
    * @param content object data
    * @param options the optional configurations of the multipart upload
    */
-  def multipartUpload_[R](
-    bucketName: String,
-    key: String,
-    content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions()
-  ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](
-      _.get.multipartUpload(bucketName, key, content, options)(1)
-    )
-
   def multipartUpload[R](
     bucketName: String,
     key: String,
