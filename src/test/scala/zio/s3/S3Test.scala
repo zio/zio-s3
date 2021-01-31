@@ -52,7 +52,7 @@ object S3Suite {
       },
       testM("list objects") {
         for {
-          succeed <- listObjects_(bucketName)
+          succeed <- listObjects(bucketName)
         } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(
           succeed.objectSummaries.map(s => s.bucketName -> s.key)
         )(
@@ -215,7 +215,7 @@ object S3Suite {
         val tmpKey             = Random.alphanumeric.take(10).mkString
 
         for {
-          _             <- multipartUpload_(bucketName, tmpKey, data)
+          _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                              ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(contentLength)(equalTo(dataLength.toLong))
@@ -229,7 +229,7 @@ object S3Suite {
       testM("multipart with invalid partSize value 0") {
         val tmpKey        = Random.alphanumeric.take(10).mkString
         val invalidOption = MultipartUploadOptions(partSize = 0)
-        val io            = multipartUpload_(bucketName, tmpKey, ZStream.empty, invalidOption)
+        val io            = multipartUpload(bucketName, tmpKey, ZStream.empty, invalidOption)(1)
         assertM(io.run)(dies(hasMessage(equalTo(s"Invalid part size 0.0 Mb, minimum size is 5 Mb"))))
       },
       testM("multipart object when the content is empty") {
