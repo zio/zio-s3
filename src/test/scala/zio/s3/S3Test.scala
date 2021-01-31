@@ -42,7 +42,7 @@ object S3Suite {
     suite(label)(
       testM("listDescendant") {
         for {
-          list <- listObjectsDescendant(bucketName, "").runCollect
+          list <- listAllObjects(bucketName, "").runCollect
         } yield assert(list.map(_.key))(hasSameElements(List("console.log", "dir1/hello.txt", "dir1/user.csv")))
       },
       testM("list buckets") {

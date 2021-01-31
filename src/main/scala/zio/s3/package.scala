@@ -162,7 +162,7 @@ package object s3 {
        * @param bucketName name of the bucket
        * @param prefix filter all object identifier which start with this `prefix`
        */
-      def listObjectsDescendant(bucketName: String, prefix: String): Stream[S3Exception, S3ObjectSummary] =
+      def listAllObjects(bucketName: String, prefix: String): Stream[S3Exception, S3ObjectSummary] =
         ZStream
           .fromEffect(self.listObjects(bucketName, prefix, 1000))
           .flatMap(
@@ -209,8 +209,8 @@ package object s3 {
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
-  def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
-    ZStream.accessStream[S3](_.get.listObjectsDescendant(bucketName, prefix))
+  def listAllObjects(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
+    ZStream.accessStream[S3](_.get.listAllObjects(bucketName, prefix))
 
   def paginate(initialListing: S3ObjectListing): S3Stream[S3ObjectListing] =
     ZStream.accessStream[S3](_.get.paginate(initialListing))
