@@ -218,22 +218,14 @@ object S3Suite {
       testM("multipart with invalid parallelism value 0") {
         val data   = ZStream.empty
         val tmpKey = Random.alphanumeric.take(10).mkString
-
-        for {
-          failure <- multipartUpload(bucketName, tmpKey, data)(0)
-                       .foldCause(_.failureOption.map(_.getMessage).mkString, _ => "")
-
-        } yield assert(failure)(equalTo(s"parallelism must be > 0. 0 is invalid"))
+        val io     = multipartUpload(bucketName, tmpKey, data)(0)
+        assertM(io.run)(dies(hasMessage(equalTo("parallelism must be > 0. 0 is invalid"))))
       },
       testM("multipart with invalid partSize value 0") {
         val tmpKey        = Random.alphanumeric.take(10).mkString
         val invalidOption = MultipartUploadOptions(partSize = 0)
-
-        for {
-          failure <- multipartUpload_(bucketName, tmpKey, ZStream.empty, invalidOption)
-                       .foldCause(_.failureOption.map(_.getMessage).mkString, _ => "")
-
-        } yield assert(failure)(equalTo(s"Invalid part size 0.0 Mb, minimum size is 5 Mb"))
+        val io            = multipartUpload_(bucketName, tmpKey, ZStream.empty, invalidOption)
+        assertM(io.run)(dies(hasMessage(equalTo(s"Invalid part size 0.0 Mb, minimum size is 5 Mb"))))
       },
       testM("multipart object when the content is empty") {
         val data   = ZStream.empty
