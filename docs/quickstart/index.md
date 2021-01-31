@@ -19,6 +19,7 @@ ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main oper
 
 
 ```scala
+```scala
 import zio.{Chunk, ZManaged}
 import zio.s3._
 import zio.stream.{ZSink, ZStream}
@@ -32,7 +33,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
   // list all objects of all buckets
   val l2: ZStream[S3, S3Exception, String] = (for {
      bucket <- ZStream.fromIterableM(listBuckets) 
-     obj <- listObjectsDescendant(bucket.name, "")
+     obj <- listAllObjects(bucket.name, "")
   } yield obj.bucketName + "/" + obj.key).provideLayer(
      live("us-east-1", S3Credentials("accessKeyId", "secretAccessKey"))
   )  
