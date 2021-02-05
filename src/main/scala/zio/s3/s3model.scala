@@ -46,7 +46,7 @@ final case class S3ObjectListing(
 object S3ObjectListing {
 
   def from(bucketName: String, nextContinuationToken: Option[String]) =
-    S3ObjectListing(bucketName,None, None, Chunk.empty, nextContinuationToken)
+    S3ObjectListing(bucketName, None, None, Chunk.empty, nextContinuationToken)
 
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
@@ -70,6 +70,7 @@ final case class S3ObjectSummary(bucketName: String, key: String, lastModified: 
 final case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
 
 object ObjectMetadata {
+
   def fromResponse(r: HeadObjectResponse): ObjectMetadata =
     ObjectMetadata(r.metadata().asScala.toMap, r.contentType(), r.contentLength())
 }
