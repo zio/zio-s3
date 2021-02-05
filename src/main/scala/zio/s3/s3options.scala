@@ -53,7 +53,7 @@ object UploadOptions {
   def from(metadata: Map[String, String], contentType: String): UploadOptions =
     UploadOptions(metadata, ObjectCannedACL.PRIVATE, Option(contentType))
 
-  def fromContentType(contentType: String) : UploadOptions =
+  def fromContentType(contentType: String): UploadOptions =
     UploadOptions(Map.empty, ObjectCannedACL.PRIVATE, Option(contentType))
 
   def fromMetadata(metadata: Map[String, String]): UploadOptions =

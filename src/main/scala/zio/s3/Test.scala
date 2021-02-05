@@ -107,7 +107,7 @@ object Test {
           .find(path / bucketName) {
             case (p, _) if options.delimiter.nonEmpty =>
               options.prefix.fold(true)((path / bucketName).relativize(p).toString().startsWith)
-            case (p, _) =>
+            case (p, _)                               =>
               options.prefix.fold(true)(p.filename.toString().startsWith)
           }
           .mapM(p => Files.readAttributes[PosixFileAttributes](p).map(a => a -> p))
@@ -123,15 +123,18 @@ object Test {
           }
           .runCollect
           .map(
-            _.sortBy(_.key).mapAccum(options.starAfter) {
-              case (Some(startWith), o) =>
-                if (startWith.startsWith(o.key))
-                  None -> Chunk.empty
-                else
-                  Some(startWith) -> Chunk.empty
-              case (_, o) =>
-                None -> Chunk(o)
-            }._2.flatten
+            _.sortBy(_.key)
+              .mapAccum(options.starAfter) {
+                case (Some(startWith), o) =>
+                  if (startWith.startsWith(o.key))
+                    None            -> Chunk.empty
+                  else
+                    Some(startWith) -> Chunk.empty
+                case (_, o)               =>
+                  None -> Chunk(o)
+              }
+              ._2
+              .flatten
           )
           .map {
             case list if list.size > options.maxKeys =>

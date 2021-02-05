@@ -5,12 +5,12 @@ import java.util.UUID
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import zio.blocking.Blocking
-import zio.nio.core.file.{Path => ZPath}
-import zio.nio.file.{Files => ZFiles}
-import zio.stream.{ZStream, ZTransducer}
+import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.file.{ Files => ZFiles }
+import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
 import zio.test._
-import zio.{Chunk, ZLayer}
+import zio.{ Chunk, ZLayer }
 
 import scala.util.Random
 
@@ -81,21 +81,21 @@ object S3Suite {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.from("blah", 10))
         } yield assert(succeed.bucketName -> succeed.objectSummaries)(
-          equalTo(bucketName -> Chunk.empty)
+          equalTo(bucketName              -> Chunk.empty)
         )
       },
       testM("list objects with delimiter") {
         for {
-          succeed <- listObjects(bucketName, ListObjectOptions(Some("dir1/"), 10,  Some("/"), None))
+          succeed <- listObjects(bucketName, ListObjectOptions(Some("dir1/"), 10, Some("/"), None))
         } yield assert(succeed.bucketName -> succeed.objectSummaries.map(_.key))(
-          equalTo(bucketName -> Chunk("dir1/hello.txt", "dir1/user.csv"))
+          equalTo(bucketName              -> Chunk("dir1/hello.txt", "dir1/user.csv"))
         )
       },
       testM("list objects with startAfter dir1/hello.txt") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.fromStartAfter("dir1/hello.txt"))
         } yield assert(succeed.bucketName -> succeed.objectSummaries.map(_.key).sorted)(
-          equalTo(bucketName -> Chunk("dir1/user.csv"))
+          equalTo(bucketName              -> Chunk("dir1/user.csv"))
         )
       },
       testM("create bucket") {
@@ -274,7 +274,9 @@ object S3Suite {
                               bucketName,
                               tmpKey,
                               data,
-                              MultipartUploadOptions.fromUploadOptions(UploadOptions(metadata, ObjectCannedACL.PRIVATE, Some("application/json")))
+                              MultipartUploadOptions.fromUploadOptions(
+                                UploadOptions(metadata, ObjectCannedACL.PRIVATE, Some("application/json"))
+                              )
                             )(4)
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
         } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&

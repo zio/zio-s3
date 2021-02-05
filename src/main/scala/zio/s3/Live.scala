@@ -80,7 +80,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
 
-  override def listObjects(bucketName: String, options: ListObjectOptions): IO[S3Exception, S3ObjectListing] = {
+  override def listObjects(bucketName: String, options: ListObjectOptions): IO[S3Exception, S3ObjectListing] =
     execute(
       _.listObjectsV2(
         ListObjectsV2Request
@@ -93,7 +93,6 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
           .build()
       )
     ).map(S3ObjectListing.fromResponse)
-  }
 
   override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
     listing.nextContinuationToken
