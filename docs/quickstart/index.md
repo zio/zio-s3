@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
   // list all objects of all buckets
   val l2: ZStream[S3, S3Exception, String] = (for {
      bucket <- ZStream.fromIterableM(listBuckets) 
-     obj <- listAllObjects(bucket.name, "")
+     obj <- listAllObjects(bucket.name)
   } yield obj.bucketName + "/" + obj.key).provideLayer(
      live("us-east-1", S3Credentials("accessKeyId", "secretAccessKey"))
   )  
@@ -107,7 +107,7 @@ val up: ZIO[S3, S3Exception, Unit] = putObject(
   "user.json",
   json.length,
   ZStream.fromChunk(json),
-  UploadOptions(contentType = Some("application/json"))
+  UploadOptions.fromContentType("application/json")
 )
 
 // multipartUpload 
@@ -120,7 +120,7 @@ val proc2: ZIO[S3 with Blocking, S3Exception, Unit] =
     "bucket-1",
     "upload/myfile.zip",
     is,
-    MultipartUploadOptions(UploadOptions(contentType = Some("application/zip")))
+    MultipartUploadOptions.fromUploadOptions(UploadOptions.fromContentType("application/zip"))
   )(4)
 
 // download
