@@ -19,7 +19,6 @@ ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main oper
 
 
 ```scala
-```scala
 import zio.{Chunk, ZManaged}
 import zio.s3._
 import zio.stream.{ZSink, ZStream}

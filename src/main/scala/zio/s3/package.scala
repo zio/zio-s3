@@ -155,8 +155,7 @@ package object s3 {
       def streamLines(bucketName: String, key: String): Stream[S3Exception, String] =
         self
           .getObject(bucketName, key)
-          .transduce(ZTransducer.utf8Decode)
-          .transduce(ZTransducer.splitLines)
+          .transduce(ZTransducer.utf8Decode >>> ZTransducer.splitLines)
 
       /**
        * List all descendant objects of a bucket
