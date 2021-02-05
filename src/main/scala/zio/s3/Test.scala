@@ -101,12 +101,14 @@ object Test {
 
       override def listObjects(
         bucketName: String,
-        prefix: String,
-        maxKeys: Long
+        options: ListObjectOptions
       ): IO[S3Exception, S3ObjectListing] =
         Files
-          .find(path / bucketName) { (p, _) =>
-            p.filename.toString().startsWith(prefix)
+          .find(path / bucketName) {
+            case (p, _) if options.delimiter.nonEmpty =>
+              options.prefix.fold(true)((path / bucketName).relativize(p).toString().startsWith)
+            case (p, _) =>
+              options.prefix.fold(true)(p.filename.toString().startsWith)
           }
           .mapM(p => Files.readAttributes[PosixFileAttributes](p).map(a => a -> p))
           .filter { case (attr, _) => attr.isRegularFile }
@@ -120,17 +122,35 @@ object Test {
               )
           }
           .runCollect
+          .map(
+            _.sortBy(_.key).mapAccum(options.starAfter) {
+              case (Some(startWith), o) =>
+                if (startWith.startsWith(o.key))
+                  None -> Chunk.empty
+                else
+                  Some(startWith) -> Chunk.empty
+              case (_, o) =>
+                None -> Chunk(o)
+            }._2.flatten
+          )
           .map {
-            case list if list.size > maxKeys =>
-              S3ObjectListing(bucketName, list.take(maxKeys.toInt), Some(UUID.randomUUID().toString))
-            case list                        => S3ObjectListing(bucketName, list, None)
+            case list if list.size > options.maxKeys =>
+              S3ObjectListing(
+                bucketName,
+                options.delimiter,
+                options.starAfter,
+                list.take(options.maxKeys.toInt),
+                Some(UUID.randomUUID().toString)
+              )
+            case list                                =>
+              S3ObjectListing(bucketName, options.delimiter, options.starAfter, list, None)
           }
           .orDie
           .provide(blocking)
 
       override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
         listing.nextContinuationToken match {
-          case Some(token) if token.nonEmpty => listObjects(listing.bucketName, "", 100)
+          case Some(token) if token.nonEmpty => listObjects(listing.bucketName, ListObjectOptions.fromMaxKeys(100))
           case _                             => ZIO.dieMessage("Empty token is invalid")
         }
 

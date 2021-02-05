@@ -37,15 +37,22 @@ object S3Bucket {
 
 final case class S3ObjectListing(
   bucketName: String,
+  delimiter: Option[String],
+  starAfter: Option[String],
   objectSummaries: Chunk[S3ObjectSummary],
   nextContinuationToken: Option[String]
 )
 
 object S3ObjectListing {
 
+  def from(bucketName: String, nextContinuationToken: Option[String]) =
+    S3ObjectListing(bucketName,None, None, Chunk.empty, nextContinuationToken)
+
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
       r.name(),
+      Option(r.delimiter()),
+      Option(r.startAfter()),
       Chunk
         .fromIterable(r.contents().asScala.toList)
         .map(o => S3ObjectSummary(r.name(), o.key(), o.lastModified(), o.size())),
@@ -63,7 +70,6 @@ final case class S3ObjectSummary(bucketName: String, key: String, lastModified: 
 final case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
 
 object ObjectMetadata {
-
   def fromResponse(r: HeadObjectResponse): ObjectMetadata =
     ObjectMetadata(r.metadata().asScala.toMap, r.contentType(), r.contentLength())
 }
