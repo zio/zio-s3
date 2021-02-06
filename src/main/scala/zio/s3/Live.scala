@@ -80,10 +80,17 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
 
-  override def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing] =
+  override def listObjects(bucketName: String, options: ListObjectOptions): IO[S3Exception, S3ObjectListing] =
     execute(
       _.listObjectsV2(
-        ListObjectsV2Request.builder().maxKeys(maxKeys.intValue()).bucket(bucketName).prefix(prefix).build()
+        ListObjectsV2Request
+          .builder()
+          .maxKeys(options.maxKeys.intValue())
+          .bucket(bucketName)
+          .delimiter(options.delimiter.orNull)
+          .startAfter(options.starAfter.orNull)
+          .prefix(options.prefix.orNull)
+          .build()
       )
     ).map(S3ObjectListing.fromResponse)
 
@@ -206,6 +213,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineToOrDie[S3Exception]
+
 }
 
 object Live {

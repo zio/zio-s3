@@ -101,27 +101,59 @@ object Test {
 
       override def listObjects(
         bucketName: String,
-        prefix: String,
-        maxKeys: Long
+        options: ListObjectOptions
       ): IO[S3Exception, S3ObjectListing] =
         Files
-          .find(path / bucketName) { (p, _) =>
-            p.filename.toString().startsWith(prefix)
+          .find(path / bucketName) {
+            case (p, _) if options.delimiter.nonEmpty =>
+              options.prefix.fold(true)((path / bucketName).relativize(p).toString().startsWith)
+            case (p, _)                               =>
+              options.prefix.fold(true)(p.filename.toString().startsWith)
           }
-          .filterM(p => Files.readAttributes[PosixFileAttributes](p).map(_.isRegularFile))
-          .map(f => S3ObjectSummary(bucketName, (path / bucketName).relativize(f).toString()))
-          .runCollect
+          .mapM(p => Files.readAttributes[PosixFileAttributes](p).map(a => a -> p))
+          .filter { case (attr, _) => attr.isRegularFile }
           .map {
-            case list if list.size > maxKeys =>
-              S3ObjectListing(bucketName, list.take(maxKeys.toInt), Some(UUID.randomUUID().toString))
-            case list                        => S3ObjectListing(bucketName, list, None)
+            case (attr, f) =>
+              S3ObjectSummary(
+                bucketName,
+                (path / bucketName).relativize(f).toString(),
+                attr.lastModifiedTime().toInstant,
+                attr.size()
+              )
+          }
+          .runCollect
+          .map(
+            _.sortBy(_.key)
+              .mapAccum(options.starAfter) {
+                case (Some(startWith), o) =>
+                  if (startWith.startsWith(o.key))
+                    None            -> Chunk.empty
+                  else
+                    Some(startWith) -> Chunk.empty
+                case (_, o)               =>
+                  None -> Chunk(o)
+              }
+              ._2
+              .flatten
+          )
+          .map {
+            case list if list.size > options.maxKeys =>
+              S3ObjectListing(
+                bucketName,
+                options.delimiter,
+                options.starAfter,
+                list.take(options.maxKeys.toInt),
+                Some(UUID.randomUUID().toString)
+              )
+            case list                                =>
+              S3ObjectListing(bucketName, options.delimiter, options.starAfter, list, None)
           }
           .orDie
           .provide(blocking)
 
       override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
         listing.nextContinuationToken match {
-          case Some(token) if token.nonEmpty => listObjects(listing.bucketName, "", 100)
+          case Some(token) if token.nonEmpty => listObjects(listing.bucketName, ListObjectOptions.fromMaxKeys(100))
           case _                             => ZIO.dieMessage("Empty token is invalid")
         }
 
@@ -133,14 +165,18 @@ object Test {
         options: UploadOptions
       ): ZIO[R, S3Exception, Unit] =
         (for {
-          _ <-
+          _       <-
             refDb.update(db =>
               db + (bucketName + key -> (options.contentType.getOrElse("application/octet-stream") -> options.metadata))
             )
-          _ <- FileChannel
-                 .open(path / bucketName / key, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
-                 .provide(blocking)
-                 .use(channel => content.foreachChunk(channel.writeChunk))
+          filePath = path / bucketName / key
+          _       <- filePath.parent
+                       .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
+                       .getOrElse(ZIO.unit)
+          _       <- FileChannel
+                       .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
+                       .provide(blocking)
+                       .use(channel => content.foreachChunk(channel.writeChunk))
         } yield ()).orDie
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =

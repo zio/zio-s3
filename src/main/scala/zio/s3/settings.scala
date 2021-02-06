@@ -77,7 +77,8 @@ object S3Credentials {
     )(p => effectBlocking(p.resolveCredentials()))
 
   /**
-   * Use of this layer requires the awssdk sts module to be on the classpath
+   * Use of this layer requires the awssdk sts module to be on the classpath,
+   * by default zio-s3 required this library
    */
   val fromWebIdentity: ZIO[Blocking, InvalidCredentials, S3Credentials] =
     load(

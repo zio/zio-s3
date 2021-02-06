@@ -38,7 +38,7 @@ package object s3 {
    */
   object S3 {
 
-    trait Service {
+    trait Service { self =>
 
       /**
        * Create a bucket
@@ -96,10 +96,13 @@ package object s3 {
        * list all object for a specific bucket
        *
        * @param bucketName name of the bucket
-       * @param prefix filter all object key by the prefix
-       * @param maxKeys max total number of objects
+       * @param prefix filter all object key by the prefix, default value is an empty string
+       * @param maxKeys max total number of objects, default value is 1000 elements
        */
-      def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing]
+      def listObjects(bucketName: String): IO[S3Exception, S3ObjectListing] =
+        listObjects(bucketName, ListObjectOptions.default)
+
+      def listObjects(bucketName: String, options: ListObjectOptions): IO[S3Exception, S3ObjectListing]
 
       /**
        * Fetch the next object listing from a specific object listing.
@@ -122,7 +125,7 @@ package object s3 {
         key: String,
         contentLength: Long,
         content: ZStream[R, Throwable, Byte],
-        options: UploadOptions = UploadOptions()
+        options: UploadOptions = UploadOptions.default
       ): ZIO[R, S3Exception, Unit]
 
       /**
@@ -140,8 +143,50 @@ package object s3 {
         bucketName: String,
         key: String,
         content: ZStream[R, Throwable, Byte],
-        options: MultipartUploadOptions = MultipartUploadOptions()
+        options: MultipartUploadOptions = MultipartUploadOptions.default
       )(parallelism: Int): ZIO[R, S3Exception, Unit]
+
+      /**
+       * Read an object by lines
+       *
+       * @param bucketName name of the bucket
+       * @param key: unique key of the object
+       */
+      def streamLines(bucketName: String, key: String): Stream[S3Exception, String] =
+        self
+          .getObject(bucketName, key)
+          .transduce(ZTransducer.utf8Decode >>> ZTransducer.splitLines)
+
+      /**
+       * List all descendant objects of a bucket
+       * Fetch all objects recursively of all nested directory by traversing all of them
+       *
+       * @param bucketName name of the bucket
+       * @param prefix filter all object identifier which start with this `prefix`
+       *
+       * MaxKeys have a default value to 1000 elements
+       */
+      def listAllObjects(bucketName: String): Stream[S3Exception, S3ObjectSummary] =
+        listAllObjects(bucketName, ListObjectOptions.default)
+
+      def listAllObjects(bucketName: String, options: ListObjectOptions): Stream[S3Exception, S3ObjectSummary] =
+        ZStream
+          .fromEffect(self.listObjects(bucketName, options))
+          .flatMap(
+            paginate(_).mapConcat(_.objectSummaries)
+          )
+
+      /**
+       * List all objects by traversing all nested directories
+       *
+       * @param initialListing object listing to start with
+       * @return
+       */
+      def paginate(initialListing: S3ObjectListing): Stream[S3Exception, S3ObjectListing] =
+        ZStream.paginateM(initialListing) {
+          case current @ S3ObjectListing(_, _, _, _, None) => ZIO.succeed(current -> None)
+          case current                                     => self.getNextObjects(current).map(next => current -> Some(next))
+        }
 
       /**
        * *
@@ -171,48 +216,17 @@ package object s3 {
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
-  /**
-   * List all descendant objects of a bucket
-   * Fetch all objects recursively of all nested directory by traversing all of them
-   *
-   * @param bucketName name of the bucket
-   * @param prefix filter all object identifier which start with this `prefix`
-   */
-  def listObjectsDescendant(bucketName: String, prefix: String): S3Stream[S3ObjectSummary] =
-    ZStream.accessStream[S3](env =>
-      ZStream
-        .fromEffect(env.get.listObjects(bucketName, prefix, 1000))
-        .flatMap(
-          paginate(_).mapConcat(_.objectSummaries)
-        )
-    )
+  def listAllObjects(bucketName: String): S3Stream[S3ObjectSummary] =
+    ZStream.accessStream[S3](_.get.listAllObjects(bucketName))
 
-  /**
-   * List all objects by traversing all nested directories
-   *
-   * @param initialListing object listing to start with
-   * @return
-   */
+  def listAllObjects(bucketName: String, options: ListObjectOptions): S3Stream[S3ObjectSummary] =
+    ZStream.accessStream[S3](_.get.listAllObjects(bucketName, options))
+
   def paginate(initialListing: S3ObjectListing): S3Stream[S3ObjectListing] =
-    ZStream.accessStream[S3](env =>
-      ZStream.paginateM(initialListing) {
-        case current @ S3ObjectListing(_, _, None) => ZIO.succeed(current -> None)
-        case current                               => env.get.getNextObjects(current).map(next => current -> Some(next))
-      }
-    )
+    ZStream.accessStream[S3](_.get.paginate(initialListing))
 
-  /**
-   * Read an object by lines
-   *
-   * @param objectSummary object to read define by a bucketName and object key
-   */
-  def streamLines(objectSummary: S3ObjectSummary): S3Stream[String] =
-    ZStream.accessStream[S3](
-      _.get
-        .getObject(objectSummary.bucketName, objectSummary.key)
-        .transduce(ZTransducer.utf8Decode)
-        .transduce(ZTransducer.splitLines)
-    )
+  def streamLines(bucketName: String, key: String): S3Stream[String] =
+    ZStream.accessStream[S3](_.get.streamLines(bucketName, key))
 
   def createBucket(bucketName: String): ZIO[S3, S3Exception, Unit] =
     ZIO.accessM(_.get.createBucket(bucketName))
@@ -240,11 +254,11 @@ package object s3 {
    *
    * @param bucketName name of the bucket
    */
-  def listObjects_(bucketName: String): ZIO[S3, S3Exception, S3ObjectListing] =
-    ZIO.accessM(_.get.listObjects(bucketName, "", 1000))
+  def listObjects(bucketName: String): ZIO[S3, S3Exception, S3ObjectListing] =
+    ZIO.accessM(_.get.listObjects(bucketName))
 
-  def listObjects(bucketName: String, prefix: String, maxKeys: Long): ZIO[S3, S3Exception, S3ObjectListing] =
-    ZIO.accessM(_.get.listObjects(bucketName, prefix, maxKeys))
+  def listObjects(bucketName: String, options: ListObjectOptions): ZIO[S3, S3Exception, S3ObjectListing] =
+    ZIO.accessM(_.get.listObjects(bucketName, options))
 
   def getNextObjects(listing: S3ObjectListing): ZIO[S3, S3Exception, S3ObjectListing] =
     ZIO.accessM(_.get.getNextObjects(listing))
@@ -254,7 +268,7 @@ package object s3 {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions()
+    options: UploadOptions = UploadOptions.default
   ): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](_.get.putObject(bucketName, key, contentLength, content, options))
 
@@ -266,21 +280,11 @@ package object s3 {
    * @param content object data
    * @param options the optional configurations of the multipart upload
    */
-  def multipartUpload_[R](
-    bucketName: String,
-    key: String,
-    content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions()
-  ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.accessM[S3 with R](
-      _.get.multipartUpload(bucketName, key, content, options)(1)
-    )
-
   def multipartUpload[R](
     bucketName: String,
     key: String,
     content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions = MultipartUploadOptions()
+    options: MultipartUploadOptions = MultipartUploadOptions.default
   )(parallelism: Int): ZIO[S3 with R, S3Exception, Unit] =
     ZIO.accessM[S3 with R](
       _.get.multipartUpload(bucketName, key, content, options)(parallelism)
