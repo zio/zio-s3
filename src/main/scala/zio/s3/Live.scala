@@ -26,7 +26,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio.interop.reactivestreams._
-import zio.s3.Live.{ S3ExceptionUtils, StreamAsyncResponseTransformer, StreamResponse }
+import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
 import zio._
@@ -69,7 +69,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       )
       .flatMap(identity)
       .flattenChunks
-      .mapError(S3ExceptionUtils.fromThrowable)
+      .refineOrDie {
+        case e: S3Exception => e
+      }
 
   override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
     execute(_.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build()))
@@ -78,10 +80,17 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
   override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
     execute(_.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build())).unit
 
-  override def listObjects(bucketName: String, prefix: String, maxKeys: Long): IO[S3Exception, S3ObjectListing] =
+  override def listObjects(bucketName: String, options: ListObjectOptions): IO[S3Exception, S3ObjectListing] =
     execute(
       _.listObjectsV2(
-        ListObjectsV2Request.builder().maxKeys(maxKeys.intValue()).bucket(bucketName).prefix(prefix).build()
+        ListObjectsV2Request
+          .builder()
+          .maxKeys(options.maxKeys.intValue())
+          .bucket(bucketName)
+          .delimiter(options.delimiter.orNull)
+          .startAfter(options.starAfter.orNull)
+          .prefix(options.prefix.orNull)
+          .build()
       )
     ).map(S3ObjectListing.fromResponse)
 
@@ -134,23 +143,13 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     options: MultipartUploadOptions
   )(parallelism: Int): ZIO[R, S3Exception, Unit] =
     for {
-      _        <- ZIO.cond(
-                    parallelism > 0,
-                    (),
-                    S3ExceptionUtils.fromThrowable(
-                      new IllegalArgumentException(s"parallelism must be > 0. $parallelism is invalid")
-                    )
-                  )
-
-      _        <- ZIO.cond(
-                    options.partSize >= PartSize.Min,
-                    (),
-                    S3ExceptionUtils.fromThrowable(
-                      new IllegalArgumentException(
-                        s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
-                      )
-                    )
-                  )
+      _        <- ZIO.dieMessage(s"parallelism must be > 0. $parallelism is invalid").unless(parallelism > 0)
+      _        <-
+        ZIO
+          .dieMessage(
+            s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+          )
+          .unless(options.partSize >= PartSize.Min)
 
       uploadId <- execute(
                     _.createMultipartUpload {
@@ -195,7 +194,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                         ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
                     }
                     .runCollect
-                    .mapError(S3ExceptionUtils.fromThrowable)
+                    .refineOrDie {
+                      case e: S3Exception => e
+                    }
 
       _        <- execute(
                     _.completeMultipartUpload(
@@ -212,6 +213,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineToOrDie[S3Exception]
+
 }
 
 object Live {
@@ -243,12 +245,6 @@ object Live {
       )
       .map(new Live(_))
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
-
-  object S3ExceptionUtils {
-
-    private[s3] def fromThrowable(error: Throwable): S3Exception =
-      S3Exception.builder().message(error.getMessage).cause(error.getCause).build().asInstanceOf[S3Exception]
-  }
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
 
