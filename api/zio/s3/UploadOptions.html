@@ -118,11 +118,19 @@
                         <a class="class" href="InvalidSettings.html" title=""></a>
                         <a href="InvalidSettings.html" title="">InvalidSettings</a>
                       </li><li class="current-entities indented2">
+                        <a class="object" href="ListObjectOptions$.html" title=""></a>
+                        <a class="class" href="ListObjectOptions.html" title="The options of the listing object inside a bucket."></a>
+                        <a href="ListObjectOptions.html" title="The options of the listing object inside a bucket.">ListObjectOptions</a>
+                      </li><li class="current-entities indented2">
                         <a class="object" href="Live$.html" title=""></a>
                         <a class="class" href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage"></a>
                         <a href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage">Live</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="MaxKeys$.html" title=""></a>
+                        <a href="MaxKeys$.html" title="">MaxKeys</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MultipartUploadOptions$.html" title=""></a>
                         <a class="class" href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads"></a>
                         <a href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads">MultipartUploadOptions</a>
                       </li><li class="current-entities indented2">
@@ -155,7 +163,7 @@
                         <a href="S3ObjectSummary.html" title="">S3ObjectSummary</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Region$.html" title=""></a>
-                        <a class="trait" href="S3Region.html" title=""></a>
+                        <a class="class" href="S3Region.html" title=""></a>
                         <a href="S3Region.html" title="">S3Region</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Settings$.html" title=""></a>
@@ -166,7 +174,7 @@
                         <a class="object" href="Test$.html" title="Stub Service which is back by a filesystem storage"></a>
                         <a href="Test$.html" title="Stub Service which is back by a filesystem storage">Test</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="UploadOptions$.html" title=""></a>
                         <a class="class" href="" title="The options of the multipart upload and the put object request."></a>
                         <a href="" title="The options of the multipart upload and the put object request.">UploadOptions</a>
                       </li>
@@ -176,23 +184,25 @@
           <div id="content">
             <body class="class type">
       <div id="definition">
-        <div class="big-circle class">c</div>
+        <a href="UploadOptions$.html" title="See companion object"><div class="big-circle class-companion-object">c</div></a>
         <p id="owner"><a href="../index.html" class="extype" name="zio">zio</a>.<a href="index.html" class="extype" name="zio.s3">s3</a></p>
-        <h1>UploadOptions<span class="permalink">
+        <h1><a href="UploadOptions$.html" title="See companion object">UploadOptions</a><span class="permalink">
       <a href="../../zio/s3/UploadOptions.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"></span></h3>
+        <h3><span class="morelinks"><div>
+            Companion <a href="UploadOptions$.html" title="See companion object">object UploadOptions</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map.empty</span></span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span> = <span class="symbol">ObjectCannedACL.PRIVATE</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -260,7 +270,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map.empty</span></span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span> = <span class="symbol">ObjectCannedACL.PRIVATE</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span>
+        <span class="name">UploadOptions</span><span class="params">(<span name="metadata">metadata: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="cannedAcl">cannedAcl: <span class="extype" name="software.amazon.awssdk.services.s3.model.ObjectCannedACL">ObjectCannedACL</span></span>, <span name="contentType">contentType: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">metadata</dt><dd class="cmt"><p>the user-defined metadata without the &quot;x-amz-meta-&quot; prefix</p></dd><dt class="param">cannedAcl</dt><dd class="cmt"><p>a canned acl, defaults to &quot;private&quot;</p></dd><dt class="param">contentType</dt><dd class="cmt"><p>the content type of the object (application/json, application/zip, text/plain, ...)</p></dd></dl></div>

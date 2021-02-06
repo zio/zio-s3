@@ -80,7 +80,7 @@
   <span class="hljs-comment">// list all objects of all buckets</span>
   <span class="hljs-keyword">val</span> l2: <span class="hljs-type">ZStream</span>[<span class="hljs-type">S3</span>, <span class="hljs-type">S3Exception</span>, <span class="hljs-type">String</span>] = (<span class="hljs-keyword">for</span> {
      bucket &lt;- <span class="hljs-type">ZStream</span>.fromIterableM(listBuckets) 
-     obj &lt;- listObjectsDescendant(bucket.name, <span class="hljs-string">""</span>)
+     obj &lt;- listAllObjects(bucket.name)
   } <span class="hljs-keyword">yield</span> obj.bucketName + <span class="hljs-string">"/"</span> + obj.key).provideLayer(
      live(<span class="hljs-string">"us-east-1"</span>, <span class="hljs-type">S3Credentials</span>(<span class="hljs-string">"accessKeyId"</span>, <span class="hljs-string">"secretAccessKey"</span>))
   )  
@@ -99,6 +99,9 @@ If credentials cannot be found in one or multiple providers selected the operati
 
 <span class="hljs-comment">// fetch credentials from Instance profile credentials </span>
 <span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromInstanceProfile) &gt;&gt;&gt; live  
+
+<span class="hljs-comment">// fetch credentials from web identity token credentials with STS. awssdk sts module required to be on classpath</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromWebIdentity) &gt;&gt;&gt; live
 
 <span class="hljs-comment">// fetch credentials from all available providers </span>
 <span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromAll) &gt;&gt;&gt; live
@@ -134,7 +137,7 @@ listBuckets.provideLayer(stubS3)
   <span class="hljs-string">"user.json"</span>,
   json.length,
   <span class="hljs-type">ZStream</span>.fromChunk(json),
-  <span class="hljs-type">UploadOptions</span>(contentType = <span class="hljs-type">Some</span>(<span class="hljs-string">"application/json"</span>))
+  <span class="hljs-type">UploadOptions</span>.fromContentType(<span class="hljs-string">"application/json"</span>)
 )
 
 <span class="hljs-comment">// multipartUpload </span>
@@ -147,7 +150,7 @@ listBuckets.provideLayer(stubS3)
     <span class="hljs-string">"bucket-1"</span>,
     <span class="hljs-string">"upload/myfile.zip"</span>,
     is,
-    <span class="hljs-type">MultipartUploadOptions</span>(<span class="hljs-type">UploadOptions</span>(contentType = <span class="hljs-type">Some</span>(<span class="hljs-string">"application/zip"</span>)))
+    <span class="hljs-type">MultipartUploadOptions</span>.fromUploadOptions(<span class="hljs-type">UploadOptions</span>.fromContentType(<span class="hljs-string">"application/zip"</span>))
   )(<span class="hljs-number">4</span>)
 
 <span class="hljs-comment">// download</span>
@@ -164,4 +167,4 @@ listBuckets.provideLayer(stubS3)
  
 <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">execute</span></span>[<span class="hljs-type">T</span>](f: <span class="hljs-type">S3AsyncClient</span> =&gt; <span class="hljs-type">CompletableFuture</span>[<span class="hljs-type">T</span>]) 
 </code></pre>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-next button" href="/zio-s3/docs/quickstart/quickstart_environment"><span>Next</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#setup">Setup</a></li><li><a href="#how-to-use-it-">How to use it ?</a></li><li><a href="#credentials">Credentials</a></li><li><a href="#test--stub">Test / Stub</a></li><li><a href="#examples">Examples</a></li><li><a href="#support-any-commands-">Support any commands ?</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/zio-s3/" class="nav-home"><img src="/zio-s3/img/sidebar_brand2x.png" alt="ZIO s3"/></a><div><h5>GitHub</h5><a class="github-button" href="https://github.com/zio/zio-s3" data-icon="octicon-star" data-count-href="/zio/zio-s3/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div><div><h5>Chat with us on Discord</h5><a href="https://discord.gg/2ccFBr4"><img src="/zio-s3//img/discord.png" width="120" alt="discord"/></a></div><div><h5>Additional resources</h5><a href="/zio-s3/api/index.html">Scaladoc of zio-s3</a></div></section><section class="copyright">Copyright © 2020 ZIO Maintainers</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-next button" href="/zio-s3/docs/quickstart/quickstart_environment"><span>Next</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#setup">Setup</a></li><li><a href="#how-to-use-it-">How to use it ?</a></li><li><a href="#credentials">Credentials</a></li><li><a href="#test--stub">Test / Stub</a></li><li><a href="#examples">Examples</a></li><li><a href="#support-any-commands-">Support any commands ?</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/zio-s3/" class="nav-home"><img src="/zio-s3/img/sidebar_brand2x.png" alt="ZIO s3"/></a><div><h5>GitHub</h5><a class="github-button" href="https://github.com/zio/zio-s3" data-icon="octicon-star" data-count-href="/zio/zio-s3/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div><div><h5>Chat with us on Discord</h5><a href="https://discord.gg/2ccFBr4"><img src="/zio-s3//img/discord.png" width="120" alt="discord"/></a></div><div><h5>Additional resources</h5><a href="/zio-s3/api/index.html">Scaladoc of zio-s3</a></div></section><section class="copyright">Copyright © 2021 ZIO Maintainers</section></footer></div></body></html>

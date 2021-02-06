@@ -118,11 +118,19 @@
                         <a class="class" href="InvalidSettings.html" title=""></a>
                         <a href="InvalidSettings.html" title="">InvalidSettings</a>
                       </li><li class="current-entities indented2">
+                        <a class="object" href="ListObjectOptions$.html" title=""></a>
+                        <a class="class" href="ListObjectOptions.html" title="The options of the listing object inside a bucket."></a>
+                        <a href="ListObjectOptions.html" title="The options of the listing object inside a bucket.">ListObjectOptions</a>
+                      </li><li class="current-entities indented2">
                         <a class="object" href="Live$.html" title=""></a>
                         <a class="class" href="" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage"></a>
                         <a href="" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage">Live</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="MaxKeys$.html" title=""></a>
+                        <a href="MaxKeys$.html" title="">MaxKeys</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MultipartUploadOptions$.html" title=""></a>
                         <a class="class" href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads"></a>
                         <a href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads">MultipartUploadOptions</a>
                       </li><li class="current-entities indented2">
@@ -155,7 +163,7 @@
                         <a href="S3ObjectSummary.html" title="">S3ObjectSummary</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Region$.html" title=""></a>
-                        <a class="trait" href="S3Region.html" title=""></a>
+                        <a class="class" href="S3Region.html" title=""></a>
                         <a href="S3Region.html" title="">S3Region</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Settings$.html" title=""></a>
@@ -166,7 +174,7 @@
                         <a class="object" href="Test$.html" title="Stub Service which is back by a filesystem storage"></a>
                         <a href="Test$.html" title="Stub Service which is back by a filesystem storage">Test</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="UploadOptions$.html" title=""></a>
                         <a class="class" href="UploadOptions.html" title="The options of the multipart upload and the put object request."></a>
                         <a href="UploadOptions.html" title="The options of the multipart upload and the put object request.">UploadOptions</a>
                       </li>
@@ -616,6 +624,42 @@ This operation is useful if you're only interested in an object's metadata.</p><
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="zio.s3.S3.Service#listAllObjects" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="listAllObjects(bucketName:String,options:zio.s3.ListObjectOptions):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectSummary]"></a><a id="listAllObjects(String,ListObjectOptions):Stream[S3Exception,S3ObjectSummary]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/Live.html#listAllObjects(bucketName:String,options:zio.s3.ListObjectOptions):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectSummary]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">listAllObjects</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="options">options: <a href="ListObjectOptions.html" class="extype" name="zio.s3.ListObjectOptions">ListObjectOptions</a></span>)</span><span class="result">: <span class="extype" name="zio.stream.Stream">Stream</span>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
+    </li><li name="zio.s3.S3.Service#listAllObjects" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="listAllObjects(bucketName:String):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectSummary]"></a><a id="listAllObjects(String):Stream[S3Exception,S3ObjectSummary]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/Live.html#listAllObjects(bucketName:String):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectSummary]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">listAllObjects</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="zio.stream.Stream">Stream</span>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">List all descendant objects of a bucket
+Fetch all objects recursively of all nested directory by traversing all of them
+</p><div class="fullcomment"><div class="comment cmt"><p>List all descendant objects of a bucket
+Fetch all objects recursively of all nested directory by traversing all of them
+</p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
     </li><li name="zio.s3.Live#listBuckets" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="listBuckets:zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3Bucket.S3BucketListing]"></a><a id="listBuckets:IO[S3Exception,S3BucketListing]"></a>
       <span class="permalink">
@@ -635,9 +679,9 @@ This operation is useful if you're only interested in an object's metadata.</p><
 </p><div class="fullcomment"><div class="comment cmt"><p>List all available buckets
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="zio.s3.Live">Live</a> → <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
     </li><li name="zio.s3.Live#listObjects" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="listObjects(bucketName:String,prefix:String,maxKeys:Long):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]"></a><a id="listObjects(String,String,Long):IO[S3Exception,S3ObjectListing]"></a>
+      <a id="listObjects(bucketName:String,options:zio.s3.ListObjectOptions):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]"></a><a id="listObjects(String,ListObjectOptions):IO[S3Exception,S3ObjectListing]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/Live.html#listObjects(bucketName:String,prefix:String,maxKeys:Long):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]" title="Permalink">
+      <a href="../../zio/s3/Live.html#listObjects(bucketName:String,options:zio.s3.ListObjectOptions):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -646,16 +690,32 @@ This operation is useful if you're only interested in an object's metadata.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">listObjects</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="maxKeys">maxKeys: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <a href="../index.html#IO[+E,+A]=zio.ZIO[Any,E,A]" class="extmbr" name="zio.IO">IO</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectListing.html" class="extype" name="zio.s3.S3ObjectListing">S3ObjectListing</a>]</span>
+        <span class="name">listObjects</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="options">options: <a href="ListObjectOptions.html" class="extype" name="zio.s3.ListObjectOptions">ListObjectOptions</a></span>)</span><span class="result">: <a href="../index.html#IO[+E,+A]=zio.ZIO[Any,E,A]" class="extmbr" name="zio.IO">IO</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectListing.html" class="extype" name="zio.s3.S3ObjectListing">S3ObjectListing</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="zio.s3.Live">Live</a> → <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
+    </li><li name="zio.s3.S3.Service#listObjects" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="listObjects(bucketName:String):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]"></a><a id="listObjects(String):IO[S3Exception,S3ObjectListing]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/Live.html#listObjects(bucketName:String):zio.IO[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">listObjects</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="../index.html#IO[+E,+A]=zio.ZIO[Any,E,A]" class="extmbr" name="zio.IO">IO</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectListing.html" class="extype" name="zio.s3.S3ObjectListing">S3ObjectListing</a>]</span>
       </span>
       
       <p class="shortcomment cmt">list all object for a specific bucket
 </p><div class="fullcomment"><div class="comment cmt"><p>list all object for a specific bucket
-</p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd><dt class="param">prefix</dt><dd class="cmt"><p>filter all object key by the prefix</p></dd><dt class="param">maxKeys</dt><dd class="cmt"><p>max total number of objects</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="zio.s3.Live">Live</a> → <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
     </li><li name="zio.s3.Live#multipartUpload" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="multipartUpload[R&lt;:zio.Has[_]](bucketName:String,key:String,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.MultipartUploadOptions)(parallelism:Int)(implicitevidence$2:zio.Tag[R]):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]"></a><a id="multipartUpload[R&lt;:Has[_]](String,String,ZStream[R,Throwable,Byte],MultipartUploadOptions)(Int)(zio.Tag[R]):ZIO[R,S3Exception,Unit]"></a>
+      <a id="multipartUpload[R](bucketName:String,key:String,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.MultipartUploadOptions)(parallelism:Int):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]"></a><a id="multipartUpload[R](String,String,ZStream[R,Throwable,Byte],MultipartUploadOptions)(Int):ZIO[R,S3Exception,Unit]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/Live.html#multipartUpload[R&lt;:zio.Has[_]](bucketName:String,key:String,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.MultipartUploadOptions)(parallelism:Int)(implicitevidence$2:zio.Tag[R]):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]" title="Permalink">
+      <a href="../../zio/s3/Live.html#multipartUpload[R](bucketName:String,key:String,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.MultipartUploadOptions)(parallelism:Int):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -664,7 +724,7 @@ This operation is useful if you're only interested in an object's metadata.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">multipartUpload</span><span class="tparams">[<span name="R">R &lt;: <span class="extype" name="zio.Has">Has</span>[_]</span>]</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="content">content: <span class="extype" name="zio.stream.ZStream">ZStream</span>[<span class="extype" name="zio.s3.Live.multipartUpload.R">R</span>, <span class="extype" name="scala.Throwable">Throwable</span>, <span class="extype" name="scala.Byte">Byte</span>]</span>, <span name="options">options: <a href="MultipartUploadOptions.html" class="extype" name="zio.s3.MultipartUploadOptions">MultipartUploadOptions</a></span>)</span><span class="params">(<span name="parallelism">parallelism: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../index.html#Tag[A]=izumi.reflect.Tag[A]" class="extmbr" name="zio.Tag">zio.Tag</a>[<span class="extype" name="zio.s3.Live.multipartUpload.R">R</span>]</span>)</span><span class="result">: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.Live.multipartUpload.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="scala.Unit">Unit</span>]</span>
+        <span class="name">multipartUpload</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="content">content: <span class="extype" name="zio.stream.ZStream">ZStream</span>[<span class="extype" name="zio.s3.Live.multipartUpload.R">R</span>, <span class="extype" name="scala.Throwable">Throwable</span>, <span class="extype" name="scala.Byte">Byte</span>]</span>, <span name="options">options: <a href="MultipartUploadOptions.html" class="extype" name="zio.s3.MultipartUploadOptions">MultipartUploadOptions</a></span>)</span><span class="params">(<span name="parallelism">parallelism: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.Live.multipartUpload.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="scala.Unit">Unit</span>]</span>
       </span>
       
       <p class="shortcomment cmt">*</p><div class="fullcomment"><div class="comment cmt"><p>*</p><p>Store data object into a specific bucket, minimun size of the data is 5 Mb to use multipartt upload (restriction from amazon API)
@@ -723,10 +783,10 @@ This operation is useful if you're only interested in an object's metadata.</p><
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.Live#putObject" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="putObject[R&lt;:zio.Has[_]](bucketName:String,key:String,contentLength:Long,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.UploadOptions)(implicitevidence$1:zio.Tag[R]):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]"></a><a id="putObject[R&lt;:Has[_]](String,String,Long,ZStream[R,Throwable,Byte],UploadOptions)(zio.Tag[R]):ZIO[R,S3Exception,Unit]"></a>
+    </li><li name="zio.s3.S3.Service#paginate" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="paginate(initialListing:zio.s3.S3ObjectListing):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]"></a><a id="paginate(S3ObjectListing):Stream[S3Exception,S3ObjectListing]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/Live.html#putObject[R&lt;:zio.Has[_]](bucketName:String,key:String,contentLength:Long,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.UploadOptions)(implicitevidence$1:zio.Tag[R]):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]" title="Permalink">
+      <a href="../../zio/s3/Live.html#paginate(initialListing:zio.s3.S3ObjectListing):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.S3ObjectListing]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -735,12 +795,48 @@ This operation is useful if you're only interested in an object's metadata.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">putObject</span><span class="tparams">[<span name="R">R &lt;: <span class="extype" name="zio.Has">Has</span>[_]</span>]</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="contentLength">contentLength: <span class="extype" name="scala.Long">Long</span></span>, <span name="content">content: <span class="extype" name="zio.stream.ZStream">ZStream</span>[<span class="extype" name="zio.s3.Live.putObject.R">R</span>, <span class="extype" name="scala.Throwable">Throwable</span>, <span class="extype" name="scala.Byte">Byte</span>]</span>, <span name="options">options: <a href="UploadOptions.html" class="extype" name="zio.s3.UploadOptions">UploadOptions</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../index.html#Tag[A]=izumi.reflect.Tag[A]" class="extmbr" name="zio.Tag">zio.Tag</a>[<span class="extype" name="zio.s3.Live.putObject.R">R</span>]</span>)</span><span class="result">: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.Live.putObject.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="scala.Unit">Unit</span>]</span>
+        <span class="name">paginate</span><span class="params">(<span name="initialListing">initialListing: <a href="S3ObjectListing.html" class="extype" name="zio.s3.S3ObjectListing">S3ObjectListing</a></span>)</span><span class="result">: <span class="extype" name="zio.stream.Stream">Stream</span>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="S3ObjectListing.html" class="extype" name="zio.s3.S3ObjectListing">S3ObjectListing</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">List all objects by traversing all nested directories
+</p><div class="fullcomment"><div class="comment cmt"><p>List all objects by traversing all nested directories
+</p></div><dl class="paramcmts block"><dt class="param">initialListing</dt><dd class="cmt"><p>object listing to start with</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
+    </li><li name="zio.s3.Live#putObject" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="putObject[R](bucketName:String,key:String,contentLength:Long,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.UploadOptions):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]"></a><a id="putObject[R](String,String,Long,ZStream[R,Throwable,Byte],UploadOptions):ZIO[R,S3Exception,Unit]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/Live.html#putObject[R](bucketName:String,key:String,contentLength:Long,content:zio.stream.ZStream[R,Throwable,Byte],options:zio.s3.UploadOptions):zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,Unit]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">putObject</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="contentLength">contentLength: <span class="extype" name="scala.Long">Long</span></span>, <span name="content">content: <span class="extype" name="zio.stream.ZStream">ZStream</span>[<span class="extype" name="zio.s3.Live.putObject.R">R</span>, <span class="extype" name="scala.Throwable">Throwable</span>, <span class="extype" name="scala.Byte">Byte</span>]</span>, <span name="options">options: <a href="UploadOptions.html" class="extype" name="zio.s3.UploadOptions">UploadOptions</a></span>)</span><span class="result">: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.Live.putObject.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="scala.Unit">Unit</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Store data object into a specific bucket
 </p><div class="fullcomment"><div class="comment cmt"><p>Store data object into a specific bucket
 </p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd><dt class="param">key</dt><dd class="cmt"><p>unique object identifier</p></dd><dt class="param">contentLength</dt><dd class="cmt"><p>length of the data in bytes</p></dd><dt class="param">content</dt><dd class="cmt"><p>object data</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="zio.s3.Live">Live</a> → <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
+    </li><li name="zio.s3.S3.Service#streamLines" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="streamLines(bucketName:String,key:String):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,String]"></a><a id="streamLines(String,String):Stream[S3Exception,String]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/Live.html#streamLines(bucketName:String,key:String):zio.stream.Stream[software.amazon.awssdk.services.s3.model.S3Exception,String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">streamLines</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="zio.stream.Stream">Stream</span>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Read an object by lines
+</p><div class="fullcomment"><div class="comment cmt"><p>Read an object by lines
+</p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

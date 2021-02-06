@@ -118,11 +118,19 @@
                         <a class="class" href="InvalidSettings.html" title=""></a>
                         <a href="InvalidSettings.html" title="">InvalidSettings</a>
                       </li><li class="current-entities indented2">
+                        <a class="object" href="ListObjectOptions$.html" title=""></a>
+                        <a class="class" href="ListObjectOptions.html" title="The options of the listing object inside a bucket."></a>
+                        <a href="ListObjectOptions.html" title="The options of the listing object inside a bucket.">ListObjectOptions</a>
+                      </li><li class="current-entities indented2">
                         <a class="object" href="Live$.html" title=""></a>
                         <a class="class" href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage"></a>
                         <a href="Live.html" title="Service use to wrap the unsafe amazon s3 client and access safely to s3 storage">Live</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="MaxKeys$.html" title=""></a>
+                        <a href="MaxKeys$.html" title="">MaxKeys</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MultipartUploadOptions$.html" title=""></a>
                         <a class="class" href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads"></a>
                         <a href="MultipartUploadOptions.html" title="The upload options that are specific to multipart uploads">MultipartUploadOptions</a>
                       </li><li class="current-entities indented2">
@@ -155,7 +163,7 @@
                         <a href="S3ObjectSummary.html" title="">S3ObjectSummary</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="" title=""></a>
-                        <a class="trait" href="S3Region.html" title=""></a>
+                        <a class="class" href="S3Region.html" title=""></a>
                         <a href="S3Region.html" title="">S3Region</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3Settings$.html" title=""></a>
@@ -166,7 +174,7 @@
                         <a class="object" href="Test$.html" title="Stub Service which is back by a filesystem storage"></a>
                         <a href="Test$.html" title="Stub Service which is back by a filesystem storage">Test</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="UploadOptions$.html" title=""></a>
                         <a class="class" href="UploadOptions.html" title="The options of the multipart upload and the put object request."></a>
                         <a href="UploadOptions.html" title="The options of the multipart upload and the put object request.">UploadOptions</a>
                       </li>
@@ -176,15 +184,15 @@
           <div id="content">
             <body class="object value">
       <div id="definition">
-        <a href="S3Region.html" title="See companion trait"><div class="big-circle object-companion-trait">o</div></a>
+        <a href="S3Region.html" title="See companion class"><div class="big-circle object-companion-class">o</div></a>
         <p id="owner"><a href="../index.html" class="extype" name="zio">zio</a>.<a href="index.html" class="extype" name="zio.s3">s3</a></p>
-        <h1><a href="S3Region.html" title="See companion trait">S3Region</a><span class="permalink">
+        <h1><a href="S3Region.html" title="See companion class">S3Region</a><span class="permalink">
       <a href="../../zio/s3/S3Region$.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
         <h3><span class="morelinks"><div>
-            Companion <a href="S3Region.html" title="See companion trait">trait S3Region</a>
+            Companion <a href="S3Region.html" title="See companion class">class S3Region</a>
           </div></span></h3>
       </div>
 
@@ -194,7 +202,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">S3Region</span>
+        <span class="name">S3Region</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -203,7 +211,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -229,7 +237,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="zio.s3.S3Region"><span>S3Region</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="zio.s3.S3Region"><span>S3Region</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -398,10 +406,10 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.S3Region#fromRegion" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="fromRegion(region:software.amazon.awssdk.regions.Region):Either[zio.s3.InvalidSettings,zio.s3.S3Region]"></a><a id="fromRegion(Region):Either[InvalidSettings,S3Region]"></a>
+    </li><li name="zio.s3.S3Region#from" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="from(region:software.amazon.awssdk.regions.Region):Either[zio.s3.InvalidSettings,zio.s3.S3Region]"></a><a id="from(Region):Either[InvalidSettings,S3Region]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3Region$.html#fromRegion(region:software.amazon.awssdk.regions.Region):Either[zio.s3.InvalidSettings,zio.s3.S3Region]" title="Permalink">
+      <a href="../../zio/s3/S3Region$.html#from(region:software.amazon.awssdk.regions.Region):Either[zio.s3.InvalidSettings,zio.s3.S3Region]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -410,7 +418,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">fromRegion</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>)</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="InvalidSettings.html" class="extype" name="zio.s3.InvalidSettings">InvalidSettings</a>, <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a>]</span>
+        <span class="name">from</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>)</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="InvalidSettings.html" class="extype" name="zio.s3.InvalidSettings">InvalidSettings</a>, <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a>]</span>
       </span>
       
       
@@ -632,7 +640,11 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
