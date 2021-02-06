@@ -3,7 +3,7 @@ package zio.s3
 import software.amazon.awssdk.regions.Region
 import zio.UIO
 import zio.test.Assertion._
-import zio.test.{ testM, _ }
+import zio.test._
 import zio.test.TestAspect._
 
 object S3SettingsTest extends DefaultRunnableSpec {

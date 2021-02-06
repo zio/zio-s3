@@ -10,7 +10,6 @@ inThisBuild(
     ),
     Test / fork := true,
     parallelExecution in Test := false,
-    publishMavenStyle := true,
     pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
     pgpPublicRing := file("/tmp/public.asc"),
     pgpSecretRing := file("/tmp/secret.asc"),
@@ -23,7 +22,7 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "1.0.3"
+val zioVersion = "1.0.4-2"
 val awsVersion = "2.15.36"
 
 lazy val `zio-s3` = project
