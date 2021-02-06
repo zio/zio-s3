@@ -89,21 +89,25 @@ object S3Credentials {
     fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile <> fromWebIdentity
 }
 
-final case class S3Region private (region: Region)
+final case class S3Region(region: Region)
 
-object S3Region {
+object S3Region { self =>
 
-  def apply(region: Region): Either[InvalidSettings, S3Region] =
+  // need to declare an default constructor to make inaccessible default constructor of case class
+  private def apply(region: Region): Either[InvalidSettings, S3Region] =
     region match {
       case r if Region.regions().contains(r) => Right(new S3Region(r))
       case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
     }
+
+  def from(region: Region): Either[InvalidSettings, S3Region] =
+    self.apply(region)
 }
 
 final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
 
 object S3Settings {
 
-  def apply(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
-    ZIO.fromEither(S3Region(region)).map(S3Settings(_, credentials))
+  def from(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
+    ZIO.fromEither(S3Region.from(region)).map(S3Settings(_, credentials))
 }

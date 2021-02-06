@@ -223,7 +223,9 @@ object Live {
     credentials: S3Credentials,
     uriEndpoint: Option[URI]
   ): Managed[ConnectionError, S3.Service] =
-    S3Settings(region, credentials).toManaged_
+    S3Settings
+      .from(region, credentials)
+      .toManaged_
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
       .flatMap(connect(_, uriEndpoint))
 
