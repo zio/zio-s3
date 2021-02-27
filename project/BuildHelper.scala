@@ -12,7 +12,7 @@ object BuildHelper {
       incOptions ~= (_.withLogRecompileOnMacro(false))
     )
 
-  final private val Scala212 = "2.12.11"
+  final private val Scala212 = "2.12.13"
   final private val Scala213 = "2.13.1"
 
   final private val CommonOpts =
