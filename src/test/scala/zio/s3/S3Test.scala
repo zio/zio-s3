@@ -309,10 +309,10 @@ object S3Suite {
         val tmpKey           = Random.alphanumeric.take(10).mkString
 
         for {
-          _           <- putObject(bucketName, tmpKey, dataSize.toLong, data)
-          contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
-                           ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentType)(equalTo("application/octet-stream"))
+          _             <- putObject(bucketName, tmpKey, dataSize.toLong, data)
+          contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
+                             ZFiles.delete(root / bucketName / tmpKey)
+        } yield assert(dataSize.toLong)(equalTo(contentLength))
       },
       testM("put object when there is a content type and metadata") {
         val _metadata        = Map("key1" -> "value1")
