@@ -102,6 +102,7 @@ object S3Region { self =>
 
   def from(region: Region): Either[InvalidSettings, S3Region] =
     self.apply(region)
+
 }
 
 final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
