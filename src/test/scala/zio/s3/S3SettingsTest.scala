@@ -37,6 +37,9 @@ object S3SettingsTest extends DefaultRunnableSpec {
           } yield assert(success.s3Region.region -> success.credentials)(
             equalTo(Region.US_EAST_2             -> S3Credentials("key", "secret"))
           )
+        },
+        test("unsafe Region") {
+          assert(S3Region.unsafeFromString("blah").region)(equalTo(Region.of("blah")))
         }
       ),
       suite("credentials")(
