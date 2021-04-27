@@ -102,6 +102,14 @@ object S3Region { self =>
 
   def from(region: Region): Either[InvalidSettings, S3Region] =
     self.apply(region)
+
+  /**
+   * Only use for supporting other region for different s3 compatible storage provider such as OVH
+   * Your S3 region might be invalid and will result into runtime error.
+   * @param s unsafe region
+   */
+  def unsafeFromString(r: String): S3Region =
+    new S3Region(Region.of(r))
 }
 
 final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
