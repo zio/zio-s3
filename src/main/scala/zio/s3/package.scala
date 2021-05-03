@@ -19,6 +19,7 @@ package zio
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -212,6 +213,12 @@ package object s3 {
     ZLayer.fromEffect(cred.flatMap(S3Settings.from(region, _)))
 
   val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s => Live.connect(s.get, None))
+
+  def live(region: String, credentialsProvider: AwsCredentialsProvider): Layer[ConnectionError, S3] =
+    live(Region.of(region), credentialsProvider)
+
+  def live(region: Region, credentialsProvider: AwsCredentialsProvider): Layer[ConnectionError, S3] =
+    ZLayer.fromManaged(Live.connect(region, credentialsProvider, None))
 
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))

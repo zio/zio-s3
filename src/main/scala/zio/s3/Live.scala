@@ -20,7 +20,11 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.auth.credentials.{
+  AwsBasicCredentials,
+  AwsCredentialsProvider,
+  StaticCredentialsProvider
+}
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -232,17 +236,26 @@ object Live {
       .flatMap(connect(_, uriEndpoint))
 
   def connect(settings: S3Settings, uriEndpoint: Option[URI]): Managed[ConnectionError, S3.Service] =
+    connect(
+      settings.s3Region.region,
+      StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(settings.credentials.accessKeyId, settings.credentials.secretAccessKey)
+      ),
+      uriEndpoint
+    )
+
+  def connect(
+    region: Region,
+    credentialsProvider: AwsCredentialsProvider,
+    uriEndpoint: Option[URI]
+  ): Managed[ConnectionError, S3.Service] =
     ZManaged
       .fromAutoCloseable(
         Task {
           val builder = S3AsyncClient
             .builder()
-            .credentialsProvider(
-              StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(settings.credentials.accessKeyId, settings.credentials.secretAccessKey)
-              )
-            )
-            .region(settings.s3Region.region)
+            .credentialsProvider(credentialsProvider)
+            .region(region)
           uriEndpoint.foreach(builder.endpointOverride)
           builder.build()
         }
