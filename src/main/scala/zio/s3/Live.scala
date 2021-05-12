@@ -101,7 +101,14 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
         ZIO.succeed(listing.copy(nextContinuationToken = None, objectSummaries = Chunk.empty))
       ) { token =>
         execute(
-          _.listObjectsV2(ListObjectsV2Request.builder().bucket(listing.bucketName).continuationToken(token).build())
+          _.listObjectsV2(
+            ListObjectsV2Request
+              .builder()
+              .bucket(listing.bucketName)
+              .continuationToken(token)
+              .prefix(listing.prefix.orNull)
+              .build()
+          )
         ).map(S3ObjectListing.fromResponse)
       }
 

@@ -40,13 +40,14 @@ final case class S3ObjectListing(
   delimiter: Option[String],
   starAfter: Option[String],
   objectSummaries: Chunk[S3ObjectSummary],
-  nextContinuationToken: Option[String]
+  nextContinuationToken: Option[String],
+  prefix: Option[String]
 )
 
 object S3ObjectListing {
 
   def from(bucketName: String, nextContinuationToken: Option[String]) =
-    S3ObjectListing(bucketName, None, None, Chunk.empty, nextContinuationToken)
+    S3ObjectListing(bucketName, None, None, Chunk.empty, nextContinuationToken, None)
 
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =
     S3ObjectListing(
@@ -56,8 +57,10 @@ object S3ObjectListing {
       Chunk
         .fromIterable(r.contents().asScala.toList)
         .map(o => S3ObjectSummary(r.name(), o.key(), o.lastModified(), o.size())),
-      Option(r.nextContinuationToken())
+      Option(r.nextContinuationToken()),
+      Option(r.prefix()).collect { case x if x.nonEmpty => x }
     )
+
 }
 
 final case class S3ObjectSummary(bucketName: String, key: String, lastModified: Instant, size: Long)
