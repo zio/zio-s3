@@ -1,5 +1,7 @@
 package zio.s3
 
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+
 import java.net.URI
 import java.util.UUID
 import software.amazon.awssdk.regions.Region
@@ -18,8 +20,12 @@ object S3LiveSpec extends DefaultRunnableSpec {
   private val root = ZPath("minio/data")
 
   private val s3 =
-    live(Region.CA_CENTRAL_1, S3Credentials("TESTKEY", "TESTSECRET"), Some(URI.create("http://localhost:9000")))
-      .mapError(TestFailure.die(_))
+    live(
+      Region.CA_CENTRAL_1,
+      AwsBasicCredentials.create("TESTKEY", "TESTSECRET"),
+      Some(URI.create("http://localhost:9000"))
+    )
+      .mapError(TestFailure.die)
 
   override def spec =
     S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
