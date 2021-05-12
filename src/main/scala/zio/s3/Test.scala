@@ -143,10 +143,11 @@ object Test {
                 options.delimiter,
                 options.starAfter,
                 list.take(options.maxKeys.toInt),
-                Some(UUID.randomUUID().toString)
+                Some(UUID.randomUUID().toString),
+                None
               )
             case list                                =>
-              S3ObjectListing(bucketName, options.delimiter, options.starAfter, list, None)
+              S3ObjectListing(bucketName, options.delimiter, options.starAfter, list, None, None)
           }
           .orDie
           .provide(blocking)

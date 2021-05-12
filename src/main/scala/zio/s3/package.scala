@@ -184,8 +184,8 @@ package object s3 {
        */
       def paginate(initialListing: S3ObjectListing): Stream[S3Exception, S3ObjectListing] =
         ZStream.paginateM(initialListing) {
-          case current @ S3ObjectListing(_, _, _, _, None) => ZIO.succeed(current -> None)
-          case current                                     => self.getNextObjects(current).map(next => current -> Some(next))
+          case current @ S3ObjectListing(_, _, _, _, None, _) => ZIO.succeed(current -> None)
+          case current                                        => self.getNextObjects(current).map(next => current -> Some(next))
         }
 
       /**
