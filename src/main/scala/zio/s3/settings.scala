@@ -19,74 +19,79 @@ package zio.s3
 import software.amazon.awssdk.auth.credentials._
 import software.amazon.awssdk.regions.Region
 import zio.blocking.{ Blocking, effectBlocking }
-import zio.{ IO, Managed, UIO, ZIO, ZManaged }
+import zio.{ IO, Managed, UManaged, ZIO, ZManaged }
 
-final case class S3Credentials(accessKeyId: String, secretAccessKey: String)
+object CredentialsProviders {
 
-object S3Credentials {
-  def apply(c: AwsCredentials): S3Credentials = S3Credentials(c.accessKeyId(), c.secretAccessKey())
+  def const(accessKeyId: String, secretAccessKey: String): UManaged[AwsCredentialsProvider] =
+    ZManaged.succeedNow[AwsCredentialsProvider](() => AwsBasicCredentials.create(accessKeyId, secretAccessKey))
 
-  private[this] def load[R](
-    provider: Managed[Throwable, AwsCredentialsProvider]
-  )(f: AwsCredentialsProvider => ZIO[R, Throwable, AwsCredentials]): ZIO[R, InvalidCredentials, S3Credentials] =
-    provider
-      .use(f)
-      .map(S3Credentials(_))
-      .mapError(e => InvalidCredentials(e.getMessage))
+  val system: Managed[InvalidCredentials, SystemPropertyCredentialsProvider] =
+    ZManaged
+      .succeed(SystemPropertyCredentialsProvider.create())
+      .tapM(c => ZIO(c.resolveCredentials()))
+      .mapError(err => InvalidCredentials(err.getMessage))
 
-  def const(accessKeyId: String, secretAccessKey: String): UIO[S3Credentials] =
-    UIO.succeed(S3Credentials(accessKeyId, secretAccessKey))
-
-  val fromSystem: IO[InvalidCredentials, S3Credentials] =
-    load(ZManaged.succeed(SystemPropertyCredentialsProvider.create()))(p => IO(p.resolveCredentials()))
-
-  val fromEnv: IO[InvalidCredentials, S3Credentials] =
-    load(ZManaged.succeed(EnvironmentVariableCredentialsProvider.create()))(p => IO(p.resolveCredentials()))
-
-  val fromProfile: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    load(
-      ZManaged.fromAutoCloseable(
-        IO(
-          ProfileCredentialsProvider
-            .builder()
-            .build()
-        )
+  val env: Managed[InvalidCredentials, EnvironmentVariableCredentialsProvider] =
+    ZManaged
+      .succeed(EnvironmentVariableCredentialsProvider.create())
+      .tapM(c =>
+        ZIO
+          .effect(c.resolveCredentials())
+          .mapError(err => InvalidCredentials(err.getMessage))
       )
-    )(p => effectBlocking(p.resolveCredentials()))
 
-  val fromContainer: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    load(
-      ZManaged.fromAutoCloseable(
-        IO(
+  val profile: ZManaged[Blocking, InvalidCredentials, ProfileCredentialsProvider] =
+    ZManaged
+      .fromAutoCloseable(IO.succeed(ProfileCredentialsProvider.create()))
+      .tapM(c =>
+        effectBlocking(c.resolveCredentials())
+          .mapError(err => InvalidCredentials(err.getMessage))
+      )
+
+  val container: ZManaged[Blocking, InvalidCredentials, ContainerCredentialsProvider] =
+    ZManaged
+      .fromAutoCloseable(
+        IO.succeed(
           ContainerCredentialsProvider
             .builder()
             .build()
         )
       )
-    )(p => effectBlocking(p.resolveCredentials()))
+      .tapM(c => effectBlocking(c.resolveCredentials()))
+      .mapError(err => InvalidCredentials(err.getMessage))
 
-  val fromInstanceProfile: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    load(
-      ZManaged.fromAutoCloseable(
-        IO(
+  val instanceProfile: ZManaged[Blocking, InvalidCredentials, InstanceProfileCredentialsProvider] =
+    ZManaged
+      .fromAutoCloseable(
+        IO.succeed(
           InstanceProfileCredentialsProvider
-            .builder()
-            .build()
+            .create()
         )
       )
-    )(p => effectBlocking(p.resolveCredentials()))
+      .tapM(c => effectBlocking(c.resolveCredentials()))
+      .mapError(err => InvalidCredentials(err.getMessage))
 
   /**
    * Use of this layer requires the awssdk sts module to be on the classpath,
    * by default zio-s3 required this library
    */
-  val fromWebIdentity: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    load(
-      ZManaged.effect(WebIdentityTokenFileCredentialsProvider.create())
-    )(p => effectBlocking(p.resolveCredentials()))
+  val webIdentity: ZManaged[Blocking, InvalidCredentials, WebIdentityTokenFileCredentialsProvider] =
+    ZManaged
+      .succeed(
+        WebIdentityTokenFileCredentialsProvider
+          .create()
+      )
+      .tapM(c => effectBlocking(c.resolveCredentials()))
+      .mapError(err => InvalidCredentials(err.getMessage))
 
-  val fromAll: ZIO[Blocking, InvalidCredentials, S3Credentials] =
-    fromSystem <> fromEnv <> fromProfile <> fromContainer <> fromInstanceProfile <> fromWebIdentity
+  /**
+   * Use default chaining strategy to fetch credentials
+   */
+  val default: ZManaged[Blocking, InvalidCredentials, AwsCredentialsProvider] =
+    ZManaged.fromAutoCloseable(
+      IO.succeed(DefaultCredentialsProvider.create())
+    )
 }
 
 final case class S3Region(region: Region)
@@ -112,10 +117,10 @@ object S3Region { self =>
     new S3Region(Region.of(r))
 }
 
-final case class S3Settings(s3Region: S3Region, credentials: S3Credentials)
+final case class S3Settings(s3Region: S3Region, credentials: AwsCredentials)
 
 object S3Settings {
 
-  def from(region: Region, credentials: S3Credentials): IO[InvalidSettings, S3Settings] =
+  def from(region: Region, credentials: AwsCredentials): IO[InvalidSettings, S3Settings] =
     ZIO.fromEither(S3Region.from(region)).map(S3Settings(_, credentials))
 }

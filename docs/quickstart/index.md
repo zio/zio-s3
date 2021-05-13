@@ -19,6 +19,7 @@ ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main oper
 
 
 ```scala
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import zio.{Chunk, ZManaged}
 import zio.s3._
 import zio.stream.{ZSink, ZStream}
@@ -26,7 +27,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 
   // list all buckets available  
   listBuckets.provideLayer(
-     live("us-east-1", S3Credentials("accessKeyId", "secretAccessKey"))
+     live("us-east-1", AwsBasicCredentials.create("accessKeyId", "secretAccessKey"))
   )
   
   // list all objects of all buckets
@@ -34,7 +35,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
      bucket <- ZStream.fromIterableM(listBuckets) 
      obj <- listAllObjects(bucket.name)
   } yield obj.bucketName + "/" + obj.key).provideLayer(
-     live("us-east-1", S3Credentials("accessKeyId", "secretAccessKey"))
+     live("us-east-1", AwsBasicCredentials.create("accessKeyId", "secretAccessKey"))
   )  
 ```
 
@@ -48,22 +49,36 @@ zio-s3 expose credentials providers from aws https://docs.aws.amazon.com/sdk-for
 If credentials cannot be found in one or multiple providers selected the operation will fail with `InvalidCredentials`
 
 ```scala
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import zio._
 import zio.blocking._
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.s3._
 
-// fetch from System properties or Environment variables
-val s3: ZIO[Any, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromSystem <> S3Credentials.fromEnv) >>> live    
+// build S3 Layer from basic credentials
+val s3: Layer[S3Exception, S3] =
+  live(Region.AF_SOUTH_1, AwsBasicCredentials.create("key", "secret"))
 
-// fetch credentials from Instance profile credentials 
-val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromInstanceProfile) >>> live  
+// build S3 Layer from System properties or Environment variables
+val s3: Layer[S3Exception, S3] =
+  liveM(Region.AF_SOUTH_1, CredentialsProviders.system <> S3Credentials.env)
 
-// fetch credentials from web identity token credentials with STS. awssdk sts module required to be on classpath
-val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromWebIdentity) >>> live
+// build S3 Layer  from Instance profile credentials
+val s3: Layer[S3Exception, S3] =
+  liveM(Region.AF_SOUTH_1, CredentialsProviders.instanceProfile)
 
-// fetch credentials from all available providers 
-val s3: ZIO[Blocking, InvalidCredentials, S3] = settings(Region.AF_SOUTH_1, S3Credentials.fromAll) >>> live
+// build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath
+val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, CredentialsProviders.webIdentity)
+
+// build S3 Layer from default available credentials providers
+val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, CredentialsProviders.default)
+
+// use custom logic to fetch aws credentials
+val zcredentials: ZIO[R, S3Exception, AwsCredentials] = ??? // specific implementation to fetch credentials
+val s3: ZLayer[Any, S3Exception, S3] = settings(Region.AF_SOUTH_1, zcredentials) >>> live
+
+
 ```
 
 Test / Stub
