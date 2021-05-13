@@ -107,6 +107,10 @@
                         <a href="ConnectionError.html" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="CredentialsProviders$.html" title=""></a>
+                        <a href="CredentialsProviders$.html" title="">CredentialsProviders</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="class" href="InvalidCredentials.html" title=""></a>
                         <a href="InvalidCredentials.html" title="">InvalidCredentials</a>
                       </li><li class="current-entities indented2">
@@ -149,10 +153,6 @@
                         <a class="object" href="S3Bucket$.html" title=""></a>
                         <a class="class" href="S3Bucket.html" title=""></a>
                         <a href="S3Bucket.html" title="">S3Bucket</a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="S3Credentials$.html" title=""></a>
-                        <a class="class" href="S3Credentials.html" title=""></a>
-                        <a href="S3Credentials.html" title="">S3Credentials</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3ObjectListing$.html" title=""></a>
                         <a class="class" href="" title=""></a>
@@ -202,7 +202,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="prefix">prefix: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -258,9 +258,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="zio.s3.S3ObjectListing#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(bucketName:String,delimiter:Option[String],starAfter:Option[String],objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing"></a><a id="&lt;init&gt;:S3ObjectListing"></a>
+      <a id="&lt;init&gt;(bucketName:String,delimiter:Option[String],starAfter:Option[String],objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String],prefix:Option[String]):zio.s3.S3ObjectListing"></a><a id="&lt;init&gt;:S3ObjectListing"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3ObjectListing.html#&lt;init&gt;(bucketName:String,delimiter:Option[String],starAfter:Option[String],objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String]):zio.s3.S3ObjectListing" title="Permalink">
+      <a href="../../zio/s3/S3ObjectListing.html#&lt;init&gt;(bucketName:String,delimiter:Option[String],starAfter:Option[String],objectSummaries:zio.Chunk[zio.s3.S3ObjectSummary],nextContinuationToken:Option[String],prefix:Option[String]):zio.s3.S3ObjectListing" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -269,7 +269,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
+        <span class="name">S3ObjectListing</span><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="prefix">prefix: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
       </span>
       
       
@@ -559,6 +559,22 @@
       </span>
       <span class="symbol">
         <span class="name">objectSummaries</span><span class="result">: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>
+      </span>
+      
+      
+    </li><li name="zio.s3.S3ObjectListing#prefix" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="prefix:Option[String]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/S3ObjectListing.html#prefix:Option[String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">prefix</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       

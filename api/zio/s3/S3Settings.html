@@ -107,6 +107,10 @@
                         <a href="ConnectionError.html" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="CredentialsProviders$.html" title=""></a>
+                        <a href="CredentialsProviders$.html" title="">CredentialsProviders</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="class" href="InvalidCredentials.html" title=""></a>
                         <a href="InvalidCredentials.html" title="">InvalidCredentials</a>
                       </li><li class="current-entities indented2">
@@ -149,10 +153,6 @@
                         <a class="object" href="S3Bucket$.html" title=""></a>
                         <a class="class" href="S3Bucket.html" title=""></a>
                         <a href="S3Bucket.html" title="">S3Bucket</a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="S3Credentials$.html" title=""></a>
-                        <a class="class" href="S3Credentials.html" title=""></a>
-                        <a href="S3Credentials.html" title="">S3Credentials</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3ObjectListing$.html" title=""></a>
                         <a class="class" href="S3ObjectListing.html" title=""></a>
@@ -202,7 +202,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">S3Settings</span><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">S3Settings</span><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -258,9 +258,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="zio.s3.S3Settings#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(s3Region:zio.s3.S3Region,credentials:zio.s3.S3Credentials):zio.s3.S3Settings"></a><a id="&lt;init&gt;:S3Settings"></a>
+      <a id="&lt;init&gt;(s3Region:zio.s3.S3Region,credentials:software.amazon.awssdk.auth.credentials.AwsCredentials):zio.s3.S3Settings"></a><a id="&lt;init&gt;:S3Settings"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3Settings.html#&lt;init&gt;(s3Region:zio.s3.S3Region,credentials:zio.s3.S3Credentials):zio.s3.S3Settings" title="Permalink">
+      <a href="../../zio/s3/S3Settings.html#&lt;init&gt;(s3Region:zio.s3.S3Region,credentials:software.amazon.awssdk.auth.credentials.AwsCredentials):zio.s3.S3Settings" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -269,7 +269,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">S3Settings</span><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>)</span>
+        <span class="name">S3Settings</span><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span></span>)</span>
       </span>
       
       
@@ -372,9 +372,9 @@
               
         </dd></dl></div>
     </li><li name="zio.s3.S3Settings#credentials" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="credentials:zio.s3.S3Credentials"></a><a id="credentials:S3Credentials"></a>
+      <a id="credentials:software.amazon.awssdk.auth.credentials.AwsCredentials"></a><a id="credentials:AwsCredentials"></a>
       <span class="permalink">
-      <a href="../../zio/s3/S3Settings.html#credentials:zio.s3.S3Credentials" title="Permalink">
+      <a href="../../zio/s3/S3Settings.html#credentials:software.amazon.awssdk.auth.credentials.AwsCredentials" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -383,7 +383,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">credentials</span><span class="result">: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>
+        <span class="name">credentials</span><span class="result">: <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span></span>
       </span>
       
       

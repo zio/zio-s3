@@ -107,6 +107,10 @@
                         <a href="ConnectionError.html" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="CredentialsProviders$.html" title=""></a>
+                        <a href="CredentialsProviders$.html" title="">CredentialsProviders</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="class" href="InvalidCredentials.html" title=""></a>
                         <a href="InvalidCredentials.html" title="">InvalidCredentials</a>
                       </li><li class="current-entities indented2">
@@ -149,10 +153,6 @@
                         <a class="object" href="S3Bucket$.html" title=""></a>
                         <a class="class" href="S3Bucket.html" title=""></a>
                         <a href="S3Bucket.html" title="">S3Bucket</a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="S3Credentials$.html" title=""></a>
-                        <a class="class" href="S3Credentials.html" title=""></a>
-                        <a href="S3Credentials.html" title="">S3Credentials</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3ObjectListing$.html" title=""></a>
                         <a class="class" href="S3ObjectListing.html" title=""></a>
@@ -421,22 +421,6 @@
       </span>
       
       
-    </li><li name="zio.s3.S3Credentials" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="S3CredentialsextendsProductwithSerializable"></a><a id="S3Credentials:S3Credentials"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/S3Credentials.html" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a title="" href="S3Credentials.html"><span class="name">S3Credentials</span></a><span class="params">(<span name="accessKeyId">accessKeyId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="secretAccessKey">secretAccessKey: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      
-      
     </li><li name="zio.s3.S3ObjectListing" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="S3ObjectListingextendsProductwithSerializable"></a><a id="S3ObjectListing:S3ObjectListing"></a>
       <span class="permalink">
@@ -449,7 +433,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a title="" href="S3ObjectListing.html"><span class="name">S3ObjectListing</span></a><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a title="" href="S3ObjectListing.html"><span class="name">S3ObjectListing</span></a><span class="params">(<span name="bucketName">bucketName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="delimiter">delimiter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="starAfter">starAfter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="objectSummaries">objectSummaries: <span class="extype" name="zio.Chunk">Chunk</span>[<a href="S3ObjectSummary.html" class="extype" name="zio.s3.S3ObjectSummary">S3ObjectSummary</a>]</span>, <span name="nextContinuationToken">nextContinuationToken: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="prefix">prefix: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       
@@ -497,7 +481,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a title="" href="S3Settings.html"><span class="name">S3Settings</span></a><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a title="" href="S3Settings.html"><span class="name">S3Settings</span></a><span class="params">(<span name="s3Region">s3Region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="credentials">credentials: <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       
@@ -769,9 +753,9 @@
 </p><div class="fullcomment"><div class="comment cmt"><p>Same as listObjects with default values for an empty prefix and sets the maximum number of object max to <code>1000</code>
 </p></div><dl class="paramcmts block"><dt class="param">bucketName</dt><dd class="cmt"><p>name of the bucket</p></dd></dl></div>
     </li><li name="zio.s3#live" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="live(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials,uriEndpoint:Option[java.net.URI]):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]"></a><a id="live(Region,S3Credentials,Option[URI]):Layer[ConnectionError,S3]"></a>
+      <a id="live(region:software.amazon.awssdk.regions.Region,credentials:software.amazon.awssdk.auth.credentials.AwsCredentials,uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]"></a><a id="live(Region,AwsCredentials,Option[URI]):Layer[S3Exception,S3]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/index.html#live(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials,uriEndpoint:Option[java.net.URI]):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]" title="Permalink">
+      <a href="../../zio/s3/index.html#live(region:software.amazon.awssdk.regions.Region,credentials:software.amazon.awssdk.auth.credentials.AwsCredentials,uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -780,39 +764,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">live</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>]</span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
-      </span>
-      
-      
-    </li><li name="zio.s3#live" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="live(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]"></a><a id="live(Region,S3Credentials):Layer[ConnectionError,S3]"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/index.html#live(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">live</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
-      </span>
-      
-      
-    </li><li name="zio.s3#live" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="live(region:String,credentials:zio.s3.S3Credentials):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]"></a><a id="live(String,S3Credentials):Layer[ConnectionError,S3]"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/index.html#live(region:String,credentials:zio.s3.S3Credentials):zio.Layer[zio.s3.ConnectionError,zio.s3.package.S3]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">live</span><span class="params">(<span name="region">region: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
+        <span class="name">live</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="credentials">credentials: <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span></span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
       </span>
       
       
@@ -829,6 +781,22 @@
       </span>
       <span class="symbol">
         <span class="name">live</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<a href="#Settings=zio.Has[zio.s3.S3Settings]" class="extmbr" name="zio.s3.Settings">Settings</a>, <a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
+      </span>
+      
+      
+    </li><li name="zio.s3#liveM" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="liveM(region:software.amazon.awssdk.regions.Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]"></a><a id="liveM(Region,TaskManaged[AwsCredentialsProvider],Option[URI]):Layer[S3Exception,S3]"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/index.html#liveM(region:software.amazon.awssdk.regions.Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">liveM</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="provider">provider: <a href="../index.html#TaskManaged[+A]=zio.ZManaged[Any,Throwable,A]" class="extmbr" name="zio.TaskManaged">TaskManaged</a>[<span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentialsProvider">AwsCredentialsProvider</span>]</span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
       </span>
       
       
@@ -883,9 +851,9 @@
       
       
     </li><li name="zio.s3#settings" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="settings[R](region:software.amazon.awssdk.regions.Region,cred:zio.ZIO[R,zio.s3.InvalidCredentials,zio.s3.S3Credentials]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.Settings]"></a><a id="settings[R](Region,ZIO[R,InvalidCredentials,S3Credentials]):ZLayer[R,S3Exception,Settings]"></a>
+      <a id="settings[R](region:software.amazon.awssdk.regions.Region,cred:zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,software.amazon.awssdk.auth.credentials.AwsCredentials]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.Settings]"></a><a id="settings[R](Region,ZIO[R,S3Exception,AwsCredentials]):ZLayer[R,S3Exception,Settings]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/index.html#settings[R](region:software.amazon.awssdk.regions.Region,cred:zio.ZIO[R,zio.s3.InvalidCredentials,zio.s3.S3Credentials]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.Settings]" title="Permalink">
+      <a href="../../zio/s3/index.html#settings[R](region:software.amazon.awssdk.regions.Region,cred:zio.ZIO[R,software.amazon.awssdk.services.s3.model.S3Exception,software.amazon.awssdk.auth.credentials.AwsCredentials]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.Settings]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -894,7 +862,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">settings</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="cred">cred: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.settings.R">R</span>, <a href="InvalidCredentials.html" class="extype" name="zio.s3.InvalidCredentials">InvalidCredentials</a>, <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a>]</span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.s3.settings.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#Settings=zio.Has[zio.s3.S3Settings]" class="extmbr" name="zio.s3.Settings">Settings</a>]</span>
+        <span class="name">settings</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="cred">cred: <span class="extype" name="zio.ZIO">ZIO</span>[<span class="extype" name="zio.s3.settings.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentials">AwsCredentials</span>]</span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.s3.settings.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#Settings=zio.Has[zio.s3.S3Settings]" class="extmbr" name="zio.s3.Settings">Settings</a>]</span>
       </span>
       
       
@@ -927,6 +895,22 @@
       </span>
       <span class="symbol">
         <span class="name">stub</span><span class="params">(<span name="path">path: <span class="extype" name="zio.nio.core.file.Path">Path</span></span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.blocking.Blocking">Blocking</span>, <span class="extype" name="scala.Any">Any</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
+      </span>
+      
+      
+    </li><li name="zio.s3.CredentialsProviders" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CredentialsProviders"></a><a id="CredentialsProviders:CredentialsProviders"></a>
+      <span class="permalink">
+      <a href="../../zio/s3/CredentialsProviders$.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CredentialsProviders$.html"><span class="name">CredentialsProviders</span></a>
       </span>
       
       
@@ -1057,22 +1041,6 @@ All operations are async since we are relying on the amazon async client
       </span>
       <span class="symbol">
         <a title="" href="S3Bucket$.html"><span class="name">S3Bucket</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      
-      
-    </li><li name="zio.s3.S3Credentials" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="S3Credentials"></a><a id="S3Credentials:S3Credentials"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/S3Credentials$.html" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a title="" href="S3Credentials$.html"><span class="name">S3Credentials</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       

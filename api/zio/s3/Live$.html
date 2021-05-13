@@ -107,6 +107,10 @@
                         <a href="ConnectionError.html" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="object" href="CredentialsProviders$.html" title=""></a>
+                        <a href="CredentialsProviders$.html" title="">CredentialsProviders</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="class" href="InvalidCredentials.html" title=""></a>
                         <a href="InvalidCredentials.html" title="">InvalidCredentials</a>
                       </li><li class="current-entities indented2">
@@ -149,10 +153,6 @@
                         <a class="object" href="S3Bucket$.html" title=""></a>
                         <a class="class" href="S3Bucket.html" title=""></a>
                         <a href="S3Bucket.html" title="">S3Bucket</a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="S3Credentials$.html" title=""></a>
-                        <a class="class" href="S3Credentials.html" title=""></a>
-                        <a href="S3Credentials.html" title="">S3Credentials</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="S3ObjectListing$.html" title=""></a>
                         <a class="class" href="S3ObjectListing.html" title=""></a>
@@ -372,9 +372,9 @@
               
         </dd></dl></div>
     </li><li name="zio.s3.Live#connect" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="connect(settings:zio.s3.S3Settings,uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]"></a><a id="connect(S3Settings,Option[URI]):Managed[ConnectionError,Service]"></a>
+      <a id="connect[R](region:zio.s3.S3Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]"></a><a id="connect[R](S3Region,TaskManaged[AwsCredentialsProvider],Option[URI]):Managed[ConnectionError,Service]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/Live$.html#connect(settings:zio.s3.S3Settings,uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]" title="Permalink">
+      <a href="../../zio/s3/Live$.html#connect[R](region:zio.s3.S3Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -383,23 +383,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">connect</span><span class="params">(<span name="settings">settings: <a href="S3Settings.html" class="extype" name="zio.s3.S3Settings">S3Settings</a></span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>]</span>)</span><span class="result">: <a href="../index.html#Managed[+E,+A]=zio.ZManaged[Any,E,A]" class="extmbr" name="zio.Managed">Managed</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a>]</span>
-      </span>
-      
-      
-    </li><li name="zio.s3.Live#connect" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="connect(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials,uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]"></a><a id="connect(Region,S3Credentials,Option[URI]):Managed[ConnectionError,Service]"></a>
-      <span class="permalink">
-      <a href="../../zio/s3/Live$.html#connect(region:software.amazon.awssdk.regions.Region,credentials:zio.s3.S3Credentials,uriEndpoint:Option[java.net.URI]):zio.Managed[zio.s3.ConnectionError,zio.s3.S3.Service]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">connect</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="credentials">credentials: <a href="S3Credentials.html" class="extype" name="zio.s3.S3Credentials">S3Credentials</a></span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>]</span>)</span><span class="result">: <a href="../index.html#Managed[+E,+A]=zio.ZManaged[Any,E,A]" class="extmbr" name="zio.Managed">Managed</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a>]</span>
+        <span class="name">connect</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="region">region: <a href="S3Region.html" class="extype" name="zio.s3.S3Region">S3Region</a></span>, <span name="provider">provider: <a href="../index.html#TaskManaged[+A]=zio.ZManaged[Any,Throwable,A]" class="extmbr" name="zio.TaskManaged">TaskManaged</a>[<span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentialsProvider">AwsCredentialsProvider</span>]</span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>]</span>)</span><span class="result">: <a href="../index.html#Managed[+E,+A]=zio.ZManaged[Any,E,A]" class="extmbr" name="zio.Managed">Managed</a>[<a href="ConnectionError.html" class="extype" name="zio.s3.ConnectionError">ConnectionError</a>, <a href="package$$S3$$Service.html" class="extype" name="zio.s3.S3.Service">Service</a>]</span>
       </span>
       
       

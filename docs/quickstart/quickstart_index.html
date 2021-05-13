@@ -67,14 +67,15 @@
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="how-to-use-it-"></a><a href="#how-to-use-it-" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How to use it ?</h2>
 <p>ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main operations of the s3 java client.</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> zio.{<span class="hljs-type">Chunk</span>, <span class="hljs-type">ZManaged</span>}
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> software.amazon.awssdk.auth.credentials.<span class="hljs-type">AwsBasicCredentials</span>
+<span class="hljs-keyword">import</span> zio.{<span class="hljs-type">Chunk</span>, <span class="hljs-type">ZManaged</span>}
 <span class="hljs-keyword">import</span> zio.s3._
 <span class="hljs-keyword">import</span> zio.stream.{<span class="hljs-type">ZSink</span>, <span class="hljs-type">ZStream</span>}
 <span class="hljs-keyword">import</span> software.amazon.awssdk.services.s3.model.<span class="hljs-type">S3Exception</span>
 
   <span class="hljs-comment">// list all buckets available  </span>
   listBuckets.provideLayer(
-     live(<span class="hljs-string">"us-east-1"</span>, <span class="hljs-type">S3Credentials</span>(<span class="hljs-string">"accessKeyId"</span>, <span class="hljs-string">"secretAccessKey"</span>))
+     live(<span class="hljs-string">"us-east-1"</span>, <span class="hljs-type">AwsBasicCredentials</span>.create(<span class="hljs-string">"accessKeyId"</span>, <span class="hljs-string">"secretAccessKey"</span>))
   )
   
   <span class="hljs-comment">// list all objects of all buckets</span>
@@ -82,29 +83,43 @@
      bucket &lt;- <span class="hljs-type">ZStream</span>.fromIterableM(listBuckets) 
      obj &lt;- listAllObjects(bucket.name)
   } <span class="hljs-keyword">yield</span> obj.bucketName + <span class="hljs-string">"/"</span> + obj.key).provideLayer(
-     live(<span class="hljs-string">"us-east-1"</span>, <span class="hljs-type">S3Credentials</span>(<span class="hljs-string">"accessKeyId"</span>, <span class="hljs-string">"secretAccessKey"</span>))
+     live(<span class="hljs-string">"us-east-1"</span>, <span class="hljs-type">AwsBasicCredentials</span>.create(<span class="hljs-string">"accessKeyId"</span>, <span class="hljs-string">"secretAccessKey"</span>))
   )  
 </code></pre>
 <p>All available s3 combinators and operations are available in the package object <code>zio.s3</code>, you only need to <code>import zio.s3._</code></p>
 <h2><a class="anchor" aria-hidden="true" id="credentials"></a><a href="#credentials" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Credentials</h2>
 <p>zio-s3 expose credentials providers from aws <a href="https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html">https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html</a>
 If credentials cannot be found in one or multiple providers selected the operation will fail with <code>InvalidCredentials</code></p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> zio._
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> software.amazon.awssdk.auth.credentials.<span class="hljs-type">AwsBasicCredentials</span>
+<span class="hljs-keyword">import</span> zio._
 <span class="hljs-keyword">import</span> zio.blocking._
 <span class="hljs-keyword">import</span> software.amazon.awssdk.regions.<span class="hljs-type">Region</span>
+<span class="hljs-keyword">import</span> software.amazon.awssdk.services.s3.model.<span class="hljs-type">S3Exception</span>
 <span class="hljs-keyword">import</span> zio.s3._
 
-<span class="hljs-comment">// fetch from System properties or Environment variables</span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Any</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromSystem &lt;&gt; <span class="hljs-type">S3Credentials</span>.fromEnv) &gt;&gt;&gt; live    
+<span class="hljs-comment">// build S3 Layer from basic credentials</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
+  live(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">AwsBasicCredentials</span>.create(<span class="hljs-string">"key"</span>, <span class="hljs-string">"secret"</span>))
 
-<span class="hljs-comment">// fetch credentials from Instance profile credentials </span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromInstanceProfile) &gt;&gt;&gt; live  
+<span class="hljs-comment">// build S3 Layer from System properties or Environment variables</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
+  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.system &lt;&gt; <span class="hljs-type">S3Credentials</span>.env)
 
-<span class="hljs-comment">// fetch credentials from web identity token credentials with STS. awssdk sts module required to be on classpath</span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromWebIdentity) &gt;&gt;&gt; live
+<span class="hljs-comment">// build S3 Layer  from Instance profile credentials</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
+  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.instanceProfile)
 
-<span class="hljs-comment">// fetch credentials from all available providers </span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZIO</span>[<span class="hljs-type">Blocking</span>, <span class="hljs-type">InvalidCredentials</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">S3Credentials</span>.fromAll) &gt;&gt;&gt; live
+<span class="hljs-comment">// build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.webIdentity)
+
+<span class="hljs-comment">// build S3 Layer from default available credentials providers</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.<span class="hljs-keyword">default</span>)
+
+<span class="hljs-comment">// use custom logic to fetch aws credentials</span>
+<span class="hljs-keyword">val</span> zcredentials: <span class="hljs-type">ZIO</span>[<span class="hljs-type">R</span>, <span class="hljs-type">S3Exception</span>, <span class="hljs-type">AwsCredentials</span>] = ??? <span class="hljs-comment">// specific implementation to fetch credentials</span>
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">ZLayer</span>[<span class="hljs-type">Any</span>, <span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = settings(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, zcredentials) &gt;&gt;&gt; live
+
+
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="test--stub"></a><a href="#test--stub" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Test / Stub</h2>
 <p>a stub implementation of s3 storage is provided for testing purpose and use internally a filesystem to simulate s3 storage</p>
