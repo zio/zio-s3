@@ -16,9 +16,10 @@
 
 package zio
 
+import software.amazon.awssdk.auth.credentials.{ AwsCredentials, AwsCredentialsProvider }
+
 import java.net.URI
 import java.util.concurrent.CompletableFuture
-
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -184,8 +185,8 @@ package object s3 {
        */
       def paginate(initialListing: S3ObjectListing): Stream[S3Exception, S3ObjectListing] =
         ZStream.paginateM(initialListing) {
-          case current @ S3ObjectListing(_, _, _, _, None) => ZIO.succeed(current -> None)
-          case current                                     => self.getNextObjects(current).map(next => current -> Some(next))
+          case current @ S3ObjectListing(_, _, _, _, None, _) => ZIO.succeed(current -> None)
+          case current                                        => self.getNextObjects(current).map(next => current -> Some(next))
         }
 
       /**
@@ -199,19 +200,30 @@ package object s3 {
     }
   }
 
-  def live(region: String, credentials: S3Credentials): Layer[ConnectionError, S3] =
-    live(Region.of(region), credentials)
+  def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None): Layer[S3Exception, S3] =
+    liveM(region, CredentialsProviders.const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
 
-  def live(region: Region, credentials: S3Credentials): Layer[ConnectionError, S3] =
-    live(region, credentials, None)
+  def liveM(
+    region: Region,
+    provider: TaskManaged[AwsCredentialsProvider],
+    uriEndpoint: Option[URI] = None
+  ): Layer[S3Exception, S3] =
+    ZLayer.fromManaged(
+      ZManaged
+        .fromEffect(ZIO.fromEither(S3Region.from(region)))
+        .flatMap(Live.connect(_, provider, uriEndpoint))
+    )
 
-  def live(region: Region, credentials: S3Credentials, uriEndpoint: Option[URI]): Layer[ConnectionError, S3] =
-    ZLayer.fromManaged(Live.connect(region, credentials, uriEndpoint))
-
-  def settings[R](region: Region, cred: ZIO[R, InvalidCredentials, S3Credentials]): ZLayer[R, S3Exception, Settings] =
+  def settings[R](region: Region, cred: ZIO[R, S3Exception, AwsCredentials]): ZLayer[R, S3Exception, Settings] =
     ZLayer.fromEffect(cred.flatMap(S3Settings.from(region, _)))
 
-  val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s => Live.connect(s.get, None))
+  val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s =>
+    Live.connect(
+      s.get.s3Region,
+      CredentialsProviders.const(s.get.credentials.accessKeyId, s.get.credentials.secretAccessKey),
+      None
+    )
+  )
 
   def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
     ZLayer.fromFunction(Test.connect(path))

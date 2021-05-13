@@ -1,6 +1,7 @@
 # ZIO-S3
 An S3 client for ZIO
 
+[![Project stage][Stage]][Stage-Page]
 [![CircleCI][Badge-Circle]][Link-Circle]
 [![Release][Badge-SonatypeReleases]][Link-SonatypeReleases]
 [![Snapshots][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots]
@@ -19,3 +20,6 @@ Please find more details in the [website](https://zio.github.io/zio-s3/)
 
 [Badge-SonatypeSnapshots]: https://img.shields.io/nexus/s/https/oss.sonatype.org/dev.zio/zio-s3_2.12.svg "Sonatype Snapshots"
 [Link-SonatypeSnapshots]: https://oss.sonatype.org/content/repositories/snapshots/dev/zio/zio-s3_2.12/ "Sonatype Snapshots"
+
+[Stage]: https://img.shields.io/badge/Project%20Stage-Production%20Ready-brightgreen.svg
+[Stage-Page]: https://github.com/zio/zio/wiki/Project-Stages

@@ -22,8 +22,8 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "1.0.4-2"
-val awsVersion = "2.15.36"
+val zioVersion = "1.0.6"
+val awsVersion = "2.16.61"
 
 lazy val `zio-s3` = project
   .in(file("."))
@@ -33,8 +33,8 @@ lazy val `zio-s3` = project
       "dev.zio"                %% "zio"                         % zioVersion,
       "dev.zio"                %% "zio-streams"                 % zioVersion,
       "dev.zio"                %% "zio-nio"                     % "1.0.0-RC10",
-      "dev.zio"                %% "zio-interop-reactivestreams" % "1.3.0.7-2",
-      "org.scala-lang.modules" %% "scala-collection-compat"     % "2.4.1",
+      "dev.zio"                %% "zio-interop-reactivestreams" % "1.3.4",
+      "org.scala-lang.modules" %% "scala-collection-compat"     % "2.4.3",
       "software.amazon.awssdk"  % "s3"                          % awsVersion,
       "software.amazon.awssdk"  % "sts"                         % awsVersion,
       "dev.zio"                %% "zio-test"                    % zioVersion % Test,

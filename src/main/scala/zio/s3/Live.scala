@@ -16,21 +16,19 @@
 
 package zio.s3
 
-import java.net.URI
-import java.nio.ByteBuffer
-import java.util.concurrent.CompletableFuture
-
-import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, StaticCredentialsProvider }
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
+import zio._
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
-import zio._
 
+import java.net.URI
+import java.nio.ByteBuffer
+import java.util.concurrent.CompletableFuture
 import scala.jdk.CollectionConverters._
 
 /**
@@ -69,6 +67,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       )
       .flatMap(identity)
       .flattenChunks
+      .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
       .refineOrDie {
         case e: S3Exception => e
       }
@@ -100,7 +99,14 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
         ZIO.succeed(listing.copy(nextContinuationToken = None, objectSummaries = Chunk.empty))
       ) { token =>
         execute(
-          _.listObjectsV2(ListObjectsV2Request.builder().bucket(listing.bucketName).continuationToken(token).build())
+          _.listObjectsV2(
+            ListObjectsV2Request
+              .builder()
+              .bucket(listing.bucketName)
+              .continuationToken(token)
+              .prefix(listing.prefix.orNull)
+              .build()
+          )
         ).map(S3ObjectListing.fromResponse)
       }
 
@@ -194,6 +200,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                         ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
                     }
                     .runCollect
+                    .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
                     .refineOrDie {
                       case e: S3Exception => e
                     }
@@ -218,34 +225,26 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
 object Live {
 
-  def connect(
-    region: Region,
-    credentials: S3Credentials,
+  def connect[R](
+    region: S3Region,
+    provider: TaskManaged[AwsCredentialsProvider],
     uriEndpoint: Option[URI]
   ): Managed[ConnectionError, S3.Service] =
-    S3Settings
-      .from(region, credentials)
-      .toManaged_
-      .mapError(e => ConnectionError(e.getMessage, e.getCause))
-      .flatMap(connect(_, uriEndpoint))
-
-  def connect(settings: S3Settings, uriEndpoint: Option[URI]): Managed[ConnectionError, S3.Service] =
-    ZManaged
-      .fromAutoCloseable(
-        Task {
-          val builder = S3AsyncClient
-            .builder()
-            .credentialsProvider(
-              StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(settings.credentials.accessKeyId, settings.credentials.secretAccessKey)
-              )
-            )
-            .region(settings.s3Region.region)
-          uriEndpoint.foreach(builder.endpointOverride)
-          builder.build()
-        }
-      )
-      .map(new Live(_))
+    (for {
+      credentials <- provider
+      s           <- ZManaged
+                       .fromAutoCloseable(
+                         Task {
+                           val builder = S3AsyncClient
+                             .builder()
+                             .credentialsProvider(credentials)
+                             .region(region.region)
+                           uriEndpoint.foreach(builder.endpointOverride)
+                           builder.build()
+                         }
+                       )
+                       .map(new Live(_))
+    } yield s)
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
