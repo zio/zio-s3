@@ -227,9 +227,9 @@ object Live {
 
   def connect[R](
     region: S3Region,
-    provider: TaskManaged[AwsCredentialsProvider],
+    provider: RManaged[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI]
-  ): Managed[ConnectionError, S3.Service] =
+  ): ZManaged[R, ConnectionError, S3.Service] =
     (for {
       credentials <- provider
       s           <- ZManaged

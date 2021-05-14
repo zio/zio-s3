@@ -203,11 +203,11 @@ package object s3 {
   def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None): Layer[S3Exception, S3] =
     liveM(region, CredentialsProviders.const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
 
-  def liveM(
+  def liveM[R](
     region: Region,
-    provider: TaskManaged[AwsCredentialsProvider],
+    provider: RManaged[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI] = None
-  ): Layer[S3Exception, S3] =
+  ): ZLayer[R, S3Exception, S3] =
     ZLayer.fromManaged(
       ZManaged
         .fromEffect(ZIO.fromEither(S3Region.from(region)))
