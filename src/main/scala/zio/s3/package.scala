@@ -225,7 +225,7 @@ package object s3 {
     )
   )
 
-  def stub(path: ZPath): ZLayer[Blocking, Any, S3] =
+  def stub(path: ZPath): ZLayer[Blocking, Nothing, S3] =
     ZLayer.fromFunction(Test.connect(path))
 
   def listAllObjects(bucketName: String): S3Stream[S3ObjectSummary] =
