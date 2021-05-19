@@ -34,8 +34,7 @@ object S3LiveSpec extends DefaultRunnableSpec {
 object S3TestSpec extends DefaultRunnableSpec {
   private val root = ZPath("test-data")
 
-  private val s3: ZLayer[Blocking, TestFailure[Any], S3] =
-    zio.s3.stub(root).mapError(TestFailure.fail)
+  private val s3: ZLayer[Blocking, Nothing, S3] = zio.s3.stub(root)
 
   override def spec =
     S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(Blocking.live >>> s3)
