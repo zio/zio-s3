@@ -9,7 +9,7 @@ inThisBuild(
       Developer("regis-leray", "Regis Leray", "regis.leray@gmail.com", url("https://github.com/regis-leray"))
     ),
     Test / fork := true,
-    parallelExecution in Test := false,
+    (Test / parallelExecution) := false,
     pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
     pgpPublicRing := file("/tmp/public.asc"),
     pgpSecretRing := file("/tmp/secret.asc"),
@@ -46,18 +46,18 @@ lazy val `zio-s3` = project
 lazy val docs = project
   .in(file("zio-s3-docs"))
   .settings(
-    skip.in(publish) := true,
+    skip / publish := true,
     moduleName := "zio-s3-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % zioVersion
     ),
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(`zio-s3`),
-    target in (ScalaUnidoc, unidoc) := (baseDirectory in LocalRootProject).value / "website" / "static" / "api",
-    cleanFiles += (target in (ScalaUnidoc, unidoc)).value,
-    docusaurusCreateSite := docusaurusCreateSite.dependsOn(unidoc in Compile).value,
-    docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(unidoc in Compile).value
+    (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(`zio-s3`),
+    ScalaUnidoc / unidoc / target := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
+    cleanFiles += (ScalaUnidoc / unidoc / target).value,
+    docusaurusCreateSite := docusaurusCreateSite.dependsOn(Compile / unidoc).value,
+    docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(Compile / unidoc).value
   )
   .dependsOn(`zio-s3`)
   .enablePlugins(MdocPlugin, DocusaurusPlugin, ScalaUnidocPlugin)

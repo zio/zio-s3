@@ -12,7 +12,7 @@ object S3LayerSpec extends DefaultRunnableSpec {
       testM("using ZManaged[R, E, A] in liveM compiles") {
         assertM(
           typeCheck(
-            """liveM(Region.CA_CENTRAL_1, CredentialsProviders.default, Some(URI.create("http://localhost:9000")))"""
+            """liveM(Region.CA_CENTRAL_1, providers.default, Some(URI.create("http://localhost:9000")))"""
           )
         )(isRight)
       }

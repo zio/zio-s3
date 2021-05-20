@@ -26,6 +26,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.s3.S3Bucket.S3BucketListing
+import zio.s3.providers.const
 import zio.stream.{ Stream, ZStream, ZTransducer }
 
 package object s3 {
@@ -201,7 +202,7 @@ package object s3 {
   }
 
   def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None): Layer[S3Exception, S3] =
-    liveM(region, CredentialsProviders.const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
+    liveM(region, const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
 
   def liveM[R](
     region: Region,
@@ -220,7 +221,7 @@ package object s3 {
   val live: ZLayer[Settings, ConnectionError, S3] = ZLayer.fromFunctionManaged(s =>
     Live.connect(
       s.get.s3Region,
-      CredentialsProviders.const(s.get.credentials.accessKeyId, s.get.credentials.secretAccessKey),
+      const(s.get.credentials.accessKeyId, s.get.credentials.secretAccessKey),
       None
     )
   )
