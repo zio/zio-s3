@@ -55,6 +55,7 @@ import zio.blocking._
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.s3._
+import zio.s3.providers._
 
 // build S3 Layer from basic credentials
 val s3: Layer[S3Exception, S3] =
@@ -62,17 +63,17 @@ val s3: Layer[S3Exception, S3] =
 
 // build S3 Layer from System properties or Environment variables
 val s3: Layer[S3Exception, S3] =
-  liveM(Region.AF_SOUTH_1, CredentialsProviders.system <> S3Credentials.env)
+  liveM(Region.AF_SOUTH_1, system <> env)
 
 // build S3 Layer  from Instance profile credentials
 val s3: Layer[S3Exception, S3] =
-  liveM(Region.AF_SOUTH_1, CredentialsProviders.instanceProfile)
+  liveM(Region.AF_SOUTH_1, instanceProfile)
 
 // build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath
-val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, CredentialsProviders.webIdentity)
+val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, webIdentity)
 
 // build S3 Layer from default available credentials providers
-val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, CredentialsProviders.default)
+val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, default)
 
 // use custom logic to fetch aws credentials
 val zcredentials: ZIO[R, S3Exception, AwsCredentials] = ??? // specific implementation to fetch credentials
