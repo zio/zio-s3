@@ -785,9 +785,9 @@
       
       
     </li><li name="zio.s3#liveM" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="liveM(region:software.amazon.awssdk.regions.Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]"></a><a id="liveM(Region,TaskManaged[AwsCredentialsProvider],Option[URI]):Layer[S3Exception,S3]"></a>
+      <a id="liveM[R](region:software.amazon.awssdk.regions.Region,provider:zio.RManaged[R,software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]"></a><a id="liveM[R](Region,RManaged[R,AwsCredentialsProvider],Option[URI]):ZLayer[R,S3Exception,S3]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/index.html#liveM(region:software.amazon.awssdk.regions.Region,provider:zio.TaskManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.Layer[software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]" title="Permalink">
+      <a href="../../zio/s3/index.html#liveM[R](region:software.amazon.awssdk.regions.Region,provider:zio.RManaged[R,software.amazon.awssdk.auth.credentials.AwsCredentialsProvider],uriEndpoint:Option[java.net.URI]):zio.ZLayer[R,software.amazon.awssdk.services.s3.model.S3Exception,zio.s3.package.S3]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -796,7 +796,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">liveM</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="provider">provider: <a href="../index.html#TaskManaged[+A]=zio.ZManaged[Any,Throwable,A]" class="extmbr" name="zio.TaskManaged">TaskManaged</a>[<span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentialsProvider">AwsCredentialsProvider</span>]</span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <a href="../index.html#Layer[+E,+ROut]=zio.ZLayer[Any,E,ROut]" class="extmbr" name="zio.Layer">Layer</a>[<span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
+        <span class="name">liveM</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="region">region: <span class="extype" name="software.amazon.awssdk.regions.Region">Region</span></span>, <span name="provider">provider: <a href="../index.html#RManaged[-R,+A]=zio.ZManaged[R,Throwable,A]" class="extmbr" name="zio.RManaged">RManaged</a>[<span class="extype" name="zio.s3.liveM.R">R</span>, <span class="extype" name="software.amazon.awssdk.auth.credentials.AwsCredentialsProvider">AwsCredentialsProvider</span>]</span>, <span name="uriEndpoint">uriEndpoint: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="java.net.URI">URI</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.s3.liveM.R">R</span>, <span class="extype" name="software.amazon.awssdk.services.s3.model.S3Exception">S3Exception</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
       </span>
       
       
@@ -883,9 +883,9 @@
       
       
     </li><li name="zio.s3#stub" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="stub(path:zio.nio.core.file.Path):zio.ZLayer[zio.blocking.Blocking,Any,zio.s3.package.S3]"></a><a id="stub(Path):ZLayer[Blocking,Any,S3]"></a>
+      <a id="stub(path:zio.nio.core.file.Path):zio.ZLayer[zio.blocking.Blocking,Nothing,zio.s3.package.S3]"></a><a id="stub(Path):ZLayer[Blocking,Nothing,S3]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/index.html#stub(path:zio.nio.core.file.Path):zio.ZLayer[zio.blocking.Blocking,Any,zio.s3.package.S3]" title="Permalink">
+      <a href="../../zio/s3/index.html#stub(path:zio.nio.core.file.Path):zio.ZLayer[zio.blocking.Blocking,Nothing,zio.s3.package.S3]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -894,7 +894,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">stub</span><span class="params">(<span name="path">path: <span class="extype" name="zio.nio.core.file.Path">Path</span></span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.blocking.Blocking">Blocking</span>, <span class="extype" name="scala.Any">Any</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
+        <span class="name">stub</span><span class="params">(<span name="path">path: <span class="extype" name="zio.nio.core.file.Path">Path</span></span>)</span><span class="result">: <span class="extype" name="zio.ZLayer">ZLayer</span>[<span class="extype" name="zio.blocking.Blocking">Blocking</span>, <span class="extype" name="scala.Nothing">Nothing</span>, <a href="#S3=zio.Has[zio.s3.package.S3.Service]" class="extmbr" name="zio.s3.S3">S3</a>]</span>
       </span>
       
       
