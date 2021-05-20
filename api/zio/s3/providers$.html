@@ -107,10 +107,6 @@
                         <a href="ConnectionError.html" title="">ConnectionError</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="object" href="" title=""></a>
-                        <a href="" title="">CredentialsProviders</a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
                         <a class="class" href="InvalidCredentials.html" title=""></a>
                         <a href="InvalidCredentials.html" title="">InvalidCredentials</a>
                       </li><li class="current-entities indented2">
@@ -177,6 +173,10 @@
                         <a class="object" href="UploadOptions$.html" title=""></a>
                         <a class="class" href="UploadOptions.html" title="The options of the multipart upload and the put object request."></a>
                         <a href="UploadOptions.html" title="The options of the multipart upload and the put object request.">UploadOptions</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="" title=""></a>
+                        <a href="" title="">providers</a>
                       </li>
               </ul>
             </div>
@@ -186,8 +186,8 @@
       <div id="definition">
         <div class="big-circle object">o</div>
         <p id="owner"><a href="../index.html" class="extype" name="zio">zio</a>.<a href="index.html" class="extype" name="zio.s3">s3</a></p>
-        <h1>CredentialsProviders<span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html" title="Permalink">
+        <h1>providers<span class="permalink">
+      <a href="../../zio/s3/providers$.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
@@ -200,7 +200,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">CredentialsProviders</span>
+        <span class="name">providers</span>
       </span>
       </h4>
 
@@ -235,7 +235,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="zio.s3.CredentialsProviders"><span>CredentialsProviders</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="zio.s3.providers"><span>providers</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -265,7 +265,7 @@
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -281,7 +281,7 @@
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html###():Int" title="Permalink">
+      <a href="../../zio/s3/providers$.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -297,7 +297,7 @@
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -313,7 +313,7 @@
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../zio/s3/providers$.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -329,7 +329,7 @@
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#clone():Object" title="Permalink">
+      <a href="../../zio/s3/providers$.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -350,10 +350,10 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.CredentialsProviders#const" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#const" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="const(accessKeyId:String,secretAccessKey:String):zio.UManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]"></a><a id="const(String,String):UManaged[AwsCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#const(accessKeyId:String,secretAccessKey:String):zio.UManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#const(accessKeyId:String,secretAccessKey:String):zio.UManaged[software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -366,10 +366,10 @@
       </span>
       
       
-    </li><li name="zio.s3.CredentialsProviders#container" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#container" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="container:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider]"></a><a id="container:ZManaged[Blocking,InvalidCredentials,ContainerCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#container:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#container:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -382,10 +382,10 @@
       </span>
       
       
-    </li><li name="zio.s3.CredentialsProviders#default" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#default" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="default:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]"></a><a id="default:ZManaged[Blocking,InvalidCredentials,AwsCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#default:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#default:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.AwsCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -399,10 +399,10 @@
       
       <p class="shortcomment cmt">Use default chaining strategy to fetch credentials
 </p>
-    </li><li name="zio.s3.CredentialsProviders#env" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#env" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="env:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider]"></a><a id="env:Managed[InvalidCredentials,EnvironmentVariableCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#env:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#env:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -418,7 +418,7 @@
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -434,7 +434,7 @@
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -450,7 +450,7 @@
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#finalize():Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -472,7 +472,7 @@
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#getClass():Class[_]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -491,7 +491,7 @@
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#hashCode():Int" title="Permalink">
+      <a href="../../zio/s3/providers$.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -507,10 +507,10 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.CredentialsProviders#instanceProfile" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#instanceProfile" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="instanceProfile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider]"></a><a id="instanceProfile:ZManaged[Blocking,InvalidCredentials,InstanceProfileCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#instanceProfile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#instanceProfile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -526,7 +526,7 @@
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -542,7 +542,7 @@
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../zio/s3/providers$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -558,7 +558,7 @@
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#notify():Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -577,7 +577,7 @@
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#notifyAll():Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -593,10 +593,10 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.CredentialsProviders#profile" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#profile" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="profile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider]"></a><a id="profile:ZManaged[Blocking,InvalidCredentials,ProfileCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#profile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#profile:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -612,7 +612,7 @@
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../zio/s3/providers$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -625,10 +625,10 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="zio.s3.CredentialsProviders#system" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#system" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="system:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider]"></a><a id="system:Managed[InvalidCredentials,SystemPropertyCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#system:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#system:zio.Managed[zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -644,7 +644,7 @@
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#toString():String" title="Permalink">
+      <a href="../../zio/s3/providers$.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -660,7 +660,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#wait():Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -682,7 +682,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -704,7 +704,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../zio/s3/providers$.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -725,10 +725,10 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="zio.s3.CredentialsProviders#webIdentity" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="zio.s3.providers#webIdentity" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="webIdentity:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider]"></a><a id="webIdentity:ZManaged[Blocking,InvalidCredentials,WebIdentityTokenFileCredentialsProvider]"></a>
       <span class="permalink">
-      <a href="../../zio/s3/CredentialsProviders$.html#webIdentity:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider]" title="Permalink">
+      <a href="../../zio/s3/providers$.html#webIdentity:zio.ZManaged[zio.blocking.Blocking,zio.s3.InvalidCredentials,software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>

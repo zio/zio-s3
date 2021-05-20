@@ -96,6 +96,7 @@ If credentials cannot be found in one or multiple providers selected the operati
 <span class="hljs-keyword">import</span> software.amazon.awssdk.regions.<span class="hljs-type">Region</span>
 <span class="hljs-keyword">import</span> software.amazon.awssdk.services.s3.model.<span class="hljs-type">S3Exception</span>
 <span class="hljs-keyword">import</span> zio.s3._
+<span class="hljs-keyword">import</span> zio.s3.providers._
 
 <span class="hljs-comment">// build S3 Layer from basic credentials</span>
 <span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
@@ -103,17 +104,17 @@ If credentials cannot be found in one or multiple providers selected the operati
 
 <span class="hljs-comment">// build S3 Layer from System properties or Environment variables</span>
 <span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
-  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.system &lt;&gt; <span class="hljs-type">S3Credentials</span>.env)
+  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, system &lt;&gt; env)
 
 <span class="hljs-comment">// build S3 Layer  from Instance profile credentials</span>
 <span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] =
-  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.instanceProfile)
+  liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, instanceProfile)
 
 <span class="hljs-comment">// build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath</span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.webIdentity)
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, webIdentity)
 
 <span class="hljs-comment">// build S3 Layer from default available credentials providers</span>
-<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-type">CredentialsProviders</span>.<span class="hljs-keyword">default</span>)
+<span class="hljs-keyword">val</span> s3: <span class="hljs-type">Layer</span>[<span class="hljs-type">S3Exception</span>, <span class="hljs-type">S3</span>] = liveM(<span class="hljs-type">Region</span>.<span class="hljs-type">AF_SOUTH_1</span>, <span class="hljs-keyword">default</span>)
 
 <span class="hljs-comment">// use custom logic to fetch aws credentials</span>
 <span class="hljs-keyword">val</span> zcredentials: <span class="hljs-type">ZIO</span>[<span class="hljs-type">R</span>, <span class="hljs-type">S3Exception</span>, <span class="hljs-type">AwsCredentials</span>] = ??? <span class="hljs-comment">// specific implementation to fetch credentials</span>
