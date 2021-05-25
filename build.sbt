@@ -27,19 +27,27 @@ val awsVersion = "2.16.61"
 
 lazy val `zio-s3` = project
   .in(file("."))
+  .enablePlugins(BuildInfoPlugin)
+  .settings(buildInfoSettings("zio.s3"))
   .settings(stdSettings("zio-s3"))
+  .settings(dottySettings)
   .settings(
     libraryDependencies ++= Seq(
-      "dev.zio"                %% "zio"                         % zioVersion,
-      "dev.zio"                %% "zio-streams"                 % zioVersion,
-      "dev.zio"                %% "zio-nio"                     % "1.0.0-RC11",
-      "dev.zio"                %% "zio-interop-reactivestreams" % "1.3.5",
-      "org.scala-lang.modules" %% "scala-collection-compat"     % "2.4.4",
-      "software.amazon.awssdk"  % "s3"                          % awsVersion,
-      "software.amazon.awssdk"  % "sts"                         % awsVersion,
-      "dev.zio"                %% "zio-test"                    % zioVersion % Test,
-      "dev.zio"                %% "zio-test-sbt"                % zioVersion % Test
+      "dev.zio"               %% "zio"                         % zioVersion,
+      "dev.zio"               %% "zio-streams"                 % zioVersion,
+      "dev.zio"               %% "zio-nio"                     % "1.0.0-RC11",
+      "dev.zio"               %% "zio-interop-reactivestreams" % "1.3.5",
+      "software.amazon.awssdk" % "s3"                          % awsVersion,
+      "software.amazon.awssdk" % "sts"                         % awsVersion,
+      "dev.zio"               %% "zio-test"                    % zioVersion % Test,
+      "dev.zio"               %% "zio-test-sbt"                % zioVersion % Test
     ),
+    libraryDependencies ++= {
+      if (scalaVersion.value == ScalaDotty)
+        Seq()
+      else
+        Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4")
+    },
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
