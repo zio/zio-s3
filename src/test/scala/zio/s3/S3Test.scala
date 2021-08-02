@@ -5,7 +5,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import java.net.URI
 import java.util.UUID
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL
+import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio.blocking.Blocking
 import zio.nio.core.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
@@ -38,6 +38,20 @@ object S3TestSpec extends DefaultRunnableSpec {
 
   override def spec =
     S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(Blocking.live >>> s3)
+}
+
+object InvalidS3LayerTestSpec extends DefaultRunnableSpec {
+
+  private val s3: ZLayer[Blocking, S3Exception, S3] =
+    zio.s3.liveM(Region.EU_CENTRAL_1, providers.default)
+
+  override def spec =
+    suite("InvalidS3LayerTest") {
+      testM("listBuckets") {
+        assertM(listBuckets.provideCustomLayer(s3).either)(isLeft(isSubtype[S3Exception](anything)))
+      }
+    }
+
 }
 
 object S3Suite {
