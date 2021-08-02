@@ -18,7 +18,7 @@ package zio.s3
 
 import java.io.FileInputStream
 import java.nio.file.StandardOpenOption
-import java.nio.file.attribute.PosixFileAttributes
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
@@ -67,10 +67,10 @@ object Test {
       override val listBuckets: IO[S3Exception, S3BucketListing] =
         Files
           .list(path)
-          .filterM(p => Files.readAttributes[PosixFileAttributes](p).map(_.isDirectory))
+          .filterM(p => Files.readAttributes[BasicFileAttributes](p).map(_.isDirectory))
           .mapM { p =>
             Files
-              .readAttributes[PosixFileAttributes](p)
+              .readAttributes[BasicFileAttributes](p)
               .map(attr => S3Bucket(p.filename.toString, attr.creationTime().toInstant))
           }
           .runCollect
@@ -94,7 +94,7 @@ object Test {
           (contentType, metadata) <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
 
           file <- Files
-                    .readAttributes[PosixFileAttributes](path / bucketName / key)
+                    .readAttributes[BasicFileAttributes](path / bucketName / key)
                     .map(p => ObjectMetadata(metadata, contentType, p.size()))
                     .provide(blocking)
         } yield file).orDie
@@ -110,7 +110,7 @@ object Test {
             case (p, _)                               =>
               options.prefix.fold(true)(p.filename.toString().startsWith)
           }
-          .mapM(p => Files.readAttributes[PosixFileAttributes](p).map(a => a -> p))
+          .mapM(p => Files.readAttributes[BasicFileAttributes](p).map(a => a -> p))
           .filter { case (attr, _) => attr.isRegularFile }
           .map {
             case (attr, f) =>
