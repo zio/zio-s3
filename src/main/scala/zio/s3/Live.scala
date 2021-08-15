@@ -18,6 +18,7 @@ package zio.s3
 
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
+import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model._
 import zio._
@@ -219,8 +220,10 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     } yield ()
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
-    ZIO.fromCompletionStage(f(unsafeClient)).refineToOrDie[S3Exception]
-
+    ZIO.fromCompletionStage(f(unsafeClient)).refineOrDie {
+      case s3: S3Exception   => s3
+      case sdk: SdkException => SdkError(sdk)
+    }
 }
 
 object Live {
