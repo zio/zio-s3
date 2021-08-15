@@ -20,7 +20,7 @@ import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.services.s3.model.S3Exception
 
 final case class SdkError(error: SdkException)
-  extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error))
+    extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error))
 
 final case class InvalidCredentials(message: String) extends S3Exception(S3Exception.builder().message(message))
 

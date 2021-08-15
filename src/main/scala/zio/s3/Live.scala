@@ -221,7 +221,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineOrDie {
-      case s3: S3Exception => s3
+      case s3: S3Exception   => s3
       case sdk: SdkException => SdkError(sdk)
     }
 }
