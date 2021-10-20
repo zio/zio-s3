@@ -119,12 +119,13 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
     options: UploadOptions
   ): ZIO[R, S3Exception, Unit] =
     content
-      .mapChunks(Chunk.single)
       .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
       .refineOrDie {
         case e: S3Exception => e
       }
-      .mapM { chunk =>
+      .mapChunks(c => Chunk(ByteBuffer.wrap(c.toArray)))
+      .toPublisher
+      .flatMap { publisher =>
         execute(
           _.putObject(
             {
@@ -139,11 +140,10 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                 .fold(builder)(builder.contentType)
                 .build()
             },
-            AsyncRequestBody.fromBytes(chunk.toArray)
+            AsyncRequestBody.fromPublisher(publisher)
           )
         )
       }
-      .runCollect
       .unit
 
   def multipartUpload[R](
