@@ -9,7 +9,7 @@ import scalafix.sbt.ScalafixPlugin.autoImport._
 
 object BuildHelper {
   val Scala212   = "2.12.15"
-  val Scala213   = "2.13.5"
+  val Scala213   = "2.13.7"
   val ScalaDotty = "3.0.1"
 
   private val stdOptions = Seq(
