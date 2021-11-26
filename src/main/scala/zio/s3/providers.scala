@@ -35,8 +35,11 @@ object providers {
       )
 
   val profile: ZManaged[Blocking, InvalidCredentials, ProfileCredentialsProvider] =
+    profile(None)
+
+  def profile(name: Option[String]): ZManaged[Blocking, InvalidCredentials, ProfileCredentialsProvider] =
     ZManaged
-      .fromAutoCloseable(IO.succeed(ProfileCredentialsProvider.create()))
+      .fromAutoCloseable(IO.succeed(ProfileCredentialsProvider.create(name.orNull)))
       .tapM(c =>
         effectBlocking(c.resolveCredentials())
           .mapError(err => InvalidCredentials(err.getMessage))
