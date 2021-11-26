@@ -61,6 +61,11 @@ object S3ProvidersTest extends DefaultRunnableSpec {
           failure <- profile.useNow.flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
+      testM("no cred in named profile") {
+        for {
+          failure <- profile(Some("name")).useNow.flip.map(_.getMessage)
+        } yield assert(failure)(isNonEmptyString)
+      },
       testM("no cred in container") {
         for {
           failure <- container.useNow.flip.map(_.getMessage)
