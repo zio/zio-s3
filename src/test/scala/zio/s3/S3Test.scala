@@ -7,7 +7,7 @@ import java.util.UUID
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._

@@ -24,7 +24,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.blocking.Blocking
-import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.file.{ Path => ZPath }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.s3.providers.const
 import zio.stream.{ Stream, ZStream, ZTransducer }
