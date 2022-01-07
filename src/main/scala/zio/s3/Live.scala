@@ -19,7 +19,7 @@ package zio.s3
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.core.exception.SdkException
-import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder }
 import software.amazon.awssdk.services.s3.model._
 import zio._
 import zio.interop.reactivestreams._
@@ -236,21 +236,23 @@ object Live {
     provider: RManaged[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI]
   ): ZManaged[R, ConnectionError, S3.Service] =
-    (for {
-      credentials <- provider
-      s           <- ZManaged
-                       .fromAutoCloseable(
-                         Task {
-                           val builder = S3AsyncClient
-                             .builder()
-                             .credentialsProvider(credentials)
-                             .region(region.region)
-                           uriEndpoint.foreach(builder.endpointOverride)
-                           builder.build()
-                         }
-                       )
-                       .map(new Live(_))
-    } yield s)
+    for {
+      credentials <- provider.mapError(e => ConnectionError(e.getMessage, e.getCause))
+      builder     <- ZManaged.succeed {
+                       val builder = S3AsyncClient
+                         .builder()
+                         .credentialsProvider(credentials)
+                         .region(region.region)
+                       uriEndpoint.foreach(builder.endpointOverride)
+                       builder
+                     }
+      service     <- connect(builder)
+    } yield service
+
+  def connect[R](builder: S3AsyncClientBuilder): ZManaged[R, ConnectionError, S3.Service] =
+    ZManaged
+      .fromAutoCloseable(Task(builder.build()))
+      .map(new Live(_))
       .mapError(e => ConnectionError(e.getMessage, e.getCause))
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
