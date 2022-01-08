@@ -10,7 +10,7 @@ import scalafix.sbt.ScalafixPlugin.autoImport._
 object BuildHelper {
   val Scala212   = "2.12.15"
   val Scala213   = "2.13.5"
-  val ScalaDotty = "3.0.2"
+  val ScalaDotty = "3.1.0"
 
   private val stdOptions = Seq(
     "-deprecation",
@@ -117,9 +117,9 @@ object BuildHelper {
       crossScalaVersions := Seq(Scala212, Scala213),
       ThisBuild / scalaVersion := Scala213,
       scalacOptions := stdOptions ++ extraOptions(scalaVersion.value, optimize = !isSnapshot.value),
-      semanticdbEnabled := !(scalaVersion.value == ScalaDotty), // enable SemanticDB
+      semanticdbEnabled := scalaVersion.value != ScalaDotty, // enable SemanticDB
       semanticdbOptions += "-P:semanticdb:synthetics:on",
-      semanticdbVersion := scalafixSemanticdb.revision,         // use Scalafix compatible version
+      semanticdbVersion := scalafixSemanticdb.revision,      // use Scalafix compatible version
       ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
       ThisBuild / scalafixDependencies ++= List(
         "com.github.liancheng" %% "organize-imports" % "0.4.3",

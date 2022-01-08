@@ -21,16 +21,16 @@ import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
-
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.blocking.Blocking
-import zio.nio.channels.FileChannel
-import zio.nio.core.file.{ Path => ZPath }
+import zio.nio.channels.{ AsynchronousFileChannel }
+import zio.nio.file.{ Path => ZPath }
 import zio.nio.file.Files
 import zio.s3.S3Bucket._
 import zio.stream.{ Stream, ZStream }
+
 import java.io.FileNotFoundException
 
 /**
@@ -174,10 +174,14 @@ object Test {
           _       <- filePath.parent
                        .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
                        .getOrElse(ZIO.unit)
-          _       <- FileChannel
+
+          _       <- AsynchronousFileChannel
                        .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
-                       .provide(blocking)
-                       .use(channel => content.foreachChunk(channel.writeChunk))
+                       .use(channel =>
+                         content
+                           .mapChunks(Chunk.succeed)
+                           .foldM(0L) { case (pos, c) => channel.writeChunk(c, pos).map(_ => pos + c.length) }
+                       )
         } yield ()).orDie
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
