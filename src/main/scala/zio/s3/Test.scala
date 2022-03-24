@@ -175,13 +175,14 @@ object Test {
                        .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
                        .getOrElse(ZIO.unit)
 
-          _       <- AsynchronousFileChannel
-                       .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)
-                       .use(channel =>
-                         content
-                           .mapChunks(Chunk.succeed)
-                           .foldM(0L) { case (pos, c) => channel.writeChunk(c, pos).map(_ => pos + c.length) }
-                       )
+          _       <-
+            AsynchronousFileChannel
+              .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
+              .use(channel =>
+                content
+                  .mapChunks(Chunk.succeed)
+                  .foldM(0L) { case (pos, c) => channel.writeChunk(c, pos).map(_ => pos + c.length) }
+              )
         } yield ()).orDie
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
