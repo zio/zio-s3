@@ -20,19 +20,15 @@ import software.amazon.awssdk.auth.credentials._
 import software.amazon.awssdk.regions.Region
 import zio.{ IO, ZIO }
 
-final case class S3Region(region: Region)
+sealed abstract class S3Region(val region: Region)
 
 object S3Region { self =>
 
-  // need to declare an default constructor to make inaccessible default constructor of case class
-  private def apply(region: Region): Either[InvalidSettings, S3Region] =
+  def from(region: Region): Either[InvalidSettings, S3Region] =
     region match {
-      case r if Region.regions().contains(r) => Right(new S3Region(r))
+      case r if Region.regions().contains(r) => Right(new S3Region(r) {})
       case r                                 => Left(InvalidSettings(s"Invalid aws region provided : ${r.id}"))
     }
-
-  def from(region: Region): Either[InvalidSettings, S3Region] =
-    self.apply(region)
 
   /**
    * Only use for supporting other region for different s3 compatible storage provider such as OVH
@@ -40,7 +36,7 @@ object S3Region { self =>
    * @param s unsafe region
    */
   def unsafeFromString(r: String): S3Region =
-    new S3Region(Region.of(r))
+    new S3Region(Region.of(r)) {}
 }
 
 final case class S3Settings(s3Region: S3Region, credentials: AwsCredentials)
