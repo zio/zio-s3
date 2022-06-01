@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
       matrix:
         java: ['adopt@1.8']
-        scala: ['2.11.12', '2.12.15', '2.13.8']
+        scala: ['2.12.15', '2.13.8', '3.1.2']
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3.0.2
@@ -63,12 +63,8 @@ jobs:
       - name: Start containers
         run: |
             docker-compose -f "docker-compose.yml" up -d --build
-      - name: Test 2.x
-        if: ${{ !startsWith(matrix.scala, '3.') }}
+      - name: Test
         run: ./sbt ++${{ matrix.scala }}! test
-#      - name: Test 3.x
-#        if: ${{ startsWith(matrix.scala, '3.') }}
-#        run: ./sbt ++${{ matrix.scala }}! testDotty
 
   testJvms:
     runs-on: ubuntu-20.04
