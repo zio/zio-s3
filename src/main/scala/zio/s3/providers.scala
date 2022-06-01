@@ -2,6 +2,7 @@ package zio.s3
 
 import software.amazon.awssdk.auth.credentials.{
   AwsBasicCredentials,
+  AwsCredentials,
   AwsCredentialsProvider,
   ContainerCredentialsProvider,
   DefaultCredentialsProvider,
@@ -17,7 +18,9 @@ import zio.{ IO, Managed, UManaged, ZIO, ZManaged }
 object providers {
 
   def const(accessKeyId: String, secretAccessKey: String): UManaged[AwsCredentialsProvider] =
-    ZManaged.succeedNow[AwsCredentialsProvider](() => AwsBasicCredentials.create(accessKeyId, secretAccessKey))
+    ZManaged.succeedNow[AwsCredentialsProvider](new AwsCredentialsProvider {
+      override def resolveCredentials(): AwsCredentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+    })
 
   val system: Managed[InvalidCredentials, SystemPropertyCredentialsProvider] =
     ZManaged
