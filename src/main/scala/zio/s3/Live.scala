@@ -37,7 +37,7 @@ import scala.jdk.CollectionConverters._
  *
  * @param unsafeClient: Amazon Async S3 Client
  */
-final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
+final class Live(unsafeClient: S3AsyncClient) extends S3 {
 
   override def createBucket(bucketName: String): IO[S3Exception, Unit] =
     execute(_.createBucket(CreateBucketRequest.builder().bucket(bucketName).build())).unit
@@ -47,9 +47,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   override def isBucketExists(bucketName: String): IO[S3Exception, Boolean] =
     execute(_.headBucket(HeadBucketRequest.builder().bucket(bucketName).build()))
-      .map(_ => true)
+      .as(true)
       .catchSome {
-        case _: NoSuchBucketException => Task.succeed(false)
+        case _: NoSuchBucketException => ZIO.succeed(false)
       }
 
   override val listBuckets: IO[S3Exception, S3BucketListing] =
@@ -58,7 +58,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
 
   override def getObject(bucketName: String, key: String): Stream[S3Exception, Byte] =
     ZStream
-      .fromEffect(
+      .fromZIO(
         execute(
           _.getObject[StreamResponse](
             GetObjectRequest.builder().bucket(bucketName).key(key).build(),
@@ -176,9 +176,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                   ).map(_.uploadId())
 
       parts    <- ZStream
-                    .managed(
+                    .scoped[R](
                       content
-                        .chunkN(options.partSize)
+                        .rechunk(options.partSize)
                         .mapChunks(Chunk.single)
                         .peel(ZSink.head[Chunk[Byte]])
                     )
@@ -187,7 +187,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
                       case (None, _)          => ZStream(Chunk.empty)
                     }
                     .zipWithIndex
-                    .mapMPar(parallelism) {
+                    .mapZIOPar(parallelism) {
                       case (chunk, partNumber) =>
                         execute(
                           _.uploadPart(
@@ -233,12 +233,12 @@ object Live {
 
   def connect[R](
     region: S3Region,
-    provider: RManaged[R, AwsCredentialsProvider],
+    provider: RIO[R with Scope, AwsCredentialsProvider],
     uriEndpoint: Option[URI]
-  ): ZManaged[R, ConnectionError, S3.Service] =
+  ): ZIO[R with Scope, ConnectionError, S3] =
     for {
       credentials <- provider.mapError(e => ConnectionError(e.getMessage, e.getCause))
-      builder     <- ZManaged.succeed {
+      builder     <- ZIO.succeed {
                        val builder = S3AsyncClient
                          .builder()
                          .credentialsProvider(credentials)
@@ -249,11 +249,10 @@ object Live {
       service     <- connect(builder)
     } yield service
 
-  def connect[R](builder: S3AsyncClientBuilder): ZManaged[R, ConnectionError, S3.Service] =
-    ZManaged
-      .fromAutoCloseable(Task(builder.build()))
-      .map(new Live(_))
-      .mapError(e => ConnectionError(e.getMessage, e.getCause))
+  def connect[R](builder: S3AsyncClientBuilder): ZIO[R with Scope, ConnectionError, S3] =
+    ZIO
+      .fromAutoCloseable(ZIO.attempt(builder.build()))
+      .mapBoth(e => ConnectionError(e.getMessage, e.getCause), new Live(_))
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
 
@@ -264,7 +263,7 @@ object Live {
     override def onResponse(response: GetObjectResponse): Unit = ()
 
     override def onStream(publisher: SdkPublisher[ByteBuffer]): Unit = {
-      cf.complete(publisher.toStream().map(Chunk.fromByteBuffer))
+      cf.complete(publisher.toZIOStream().map(Chunk.fromByteBuffer))
       ()
     }
 

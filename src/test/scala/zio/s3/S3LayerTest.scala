@@ -5,16 +5,14 @@ import software.amazon.awssdk.regions.Region
 import zio.test.Assertion._
 import zio.test._
 
-object S3LayerSpec extends DefaultRunnableSpec {
+object S3LayerTest extends ZIOSpecDefault {
 
-  override def spec =
+  override def spec: Spec[Any, Nothing] =
     suite("S3LayerSpec")(
-      testM("using ZManaged[R, E, A] in liveM compiles") {
-        assertM(
-          typeCheck(
-            """liveM(Region.CA_CENTRAL_1, providers.default, Some(URI.create("http://localhost:9000")))"""
-          )
-        )(isRight)
+      test("using ZIO[R with Scope, E, A] in liveZIO compiles") {
+        typeCheck(
+          """liveZIO(Region.CA_CENTRAL_1, providers.default, Some(URI.create("http://localhost:9000")))"""
+        ).map(assert(_)(isRight))
       }
     )
 }

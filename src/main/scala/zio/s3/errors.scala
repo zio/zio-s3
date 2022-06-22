@@ -19,6 +19,8 @@ package zio.s3
 import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.services.s3.model.S3Exception
 
+import java.nio.charset.CharacterCodingException
+
 final case class SdkError(error: SdkException)
     extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error))
 
@@ -30,3 +32,6 @@ final case class ConnectionError(message: String, cause: Throwable)
     extends S3Exception(S3Exception.builder().message(message))
 
 final case class InvalidPartSize(message: String, size: Int) extends S3Exception(S3Exception.builder().message(message))
+
+final case class DecodingException(cause: CharacterCodingException)
+    extends S3Exception(S3Exception.builder().cause(cause))

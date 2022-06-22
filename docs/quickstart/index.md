@@ -20,7 +20,7 @@ ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main oper
 
 ```scala
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import zio.{Chunk, ZManaged}
+import zio.Chunk
 import zio.s3._
 import zio.stream.{ZSink, ZStream}
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception
   
   // list all objects of all buckets
   val l2: ZStream[S3, S3Exception, String] = (for {
-     bucket <- ZStream.fromIterableM(listBuckets) 
+     bucket <- ZStream.fromIterableZIO(listBuckets) 
      obj <- listAllObjects(bucket.name)
   } yield obj.bucketName + "/" + obj.key).provideLayer(
      live("us-east-1", AwsBasicCredentials.create("accessKeyId", "secretAccessKey"))
@@ -51,7 +51,6 @@ If credentials cannot be found in one or multiple providers selected the operati
 ```scala
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import zio._
-import zio.blocking._
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.s3._
@@ -63,17 +62,17 @@ val s3: Layer[S3Exception, S3] =
 
 // build S3 Layer from System properties or Environment variables
 val s3: Layer[S3Exception, S3] =
-  liveM(Region.AF_SOUTH_1, system <> env)
+  liveZIO(Region.AF_SOUTH_1, system <> env)
 
 // build S3 Layer  from Instance profile credentials
 val s3: Layer[S3Exception, S3] =
-  liveM(Region.AF_SOUTH_1, instanceProfile)
+  liveZIO(Region.AF_SOUTH_1, instanceProfile)
 
 // build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath
-val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, webIdentity)
+val s3: Layer[S3Exception, S3] = liveZIO(Region.AF_SOUTH_1, webIdentity)
 
 // build S3 Layer from default available credentials providers
-val s3: Layer[S3Exception, S3] = liveM(Region.AF_SOUTH_1, default)
+val s3: Layer[S3Exception, S3] = liveZIO(Region.AF_SOUTH_1, default)
 
 // use custom logic to fetch aws credentials
 val zcredentials: ZIO[R, S3Exception, AwsCredentials] = ??? // specific implementation to fetch credentials
@@ -90,20 +89,16 @@ a stub implementation of s3 storage is provided for testing purpose and use inte
 ```scala
 import zio.nio.core.file.{Path => ZPath}
 import zio.s3._
-import zio.blocking.Blocking
 
-// required to provide a Blocking context
-val stub: ZLayer[Blocking, Any, S3] = stub(ZPath("/tmp/s3-data")) 
-
-// use a Blocking context to build s3 Layer
-val stubS3: ZLayer[Any, Any, S3] = Blocking.live >>> stub(ZPath("/tmp/s3-data"))
+// build s3 Layer
+val stubS3: ZLayer[Any, Nothing, S3] = stub(ZPath("/tmp/s3-data"))
 
 // list all buckets available by using S3 Stub Layer 
 // will list all directories of `/tmp/s3-data`
 listBuckets.provideLayer(stubS3) 
 ```
 
-More informations here how to use [ZLayer https://zio.dev/docs/howto/howto_use_layers](https://zio.dev/docs/howto/howto_use_layers)
+More information here on how to use [ZLayer https://zio.dev/docs/howto/howto_use_layers](https://zio.dev/docs/howto/howto_use_layers)
 
 
 Examples
@@ -112,7 +107,6 @@ Examples
 ```scala
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
-import zio.blocking.Blocking
 import zio.stream.{ ZSink, ZStream }
 import zio.s3._
 
@@ -131,7 +125,7 @@ import java.io.FileInputStream
 import java.nio.file.Paths
 
 val is = ZStream.fromInputStream(new FileInputStream(Paths.get("/my/path/to/myfile.zip").toFile))
-val proc2: ZIO[S3 with Blocking, S3Exception, Unit] =
+val proc2: ZIO[S3, S3Exception, Unit] =
   multipartUpload(
     "bucket-1",
     "upload/myfile.zip",
@@ -143,7 +137,7 @@ val proc2: ZIO[S3 with Blocking, S3Exception, Unit] =
 import java.io.OutputStream
 
 val os: OutputStream = ???
-val proc3: ZIO[Blocking with S3, Exception, Long] = getObject("bucket-1", "upload/myfile.zip").run(ZSink.fromOutputStream(os))
+val proc3: ZIO[S3, Exception, Long] = getObject("bucket-1", "upload/myfile.zip").run(ZSink.fromOutputStream(os))
 ```
 
 Support any commands ?

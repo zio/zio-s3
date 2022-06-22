@@ -46,7 +46,7 @@ final case class S3ObjectListing(
 
 object S3ObjectListing {
 
-  def from(bucketName: String, nextContinuationToken: Option[String]) =
+  def from(bucketName: String, nextContinuationToken: Option[String]): S3ObjectListing =
     S3ObjectListing(bucketName, None, None, Chunk.empty, nextContinuationToken, None)
 
   def fromResponse(r: ListObjectsV2Response): S3ObjectListing =

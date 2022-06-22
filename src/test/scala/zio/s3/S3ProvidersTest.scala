@@ -6,12 +6,12 @@ import zio.s3.providers._
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
-import zio.{ UIO, ZIO }
+import zio.{ Scope, UIO, ZIO }
 
-object S3ProvidersTest extends DefaultRunnableSpec {
+object S3ProvidersTest extends ZIOSpecDefault {
 
   def setProps(props: (String, String)*): UIO[Unit] =
-    UIO {
+    ZIO.succeed {
       props.foreach {
         case (k, v) =>
           System.setProperty(k, v)
@@ -19,79 +19,83 @@ object S3ProvidersTest extends DefaultRunnableSpec {
     }
 
   def unsetProps(keys: String*): UIO[Unit] =
-    UIO {
+    ZIO.succeed {
       keys.foreach(System.clearProperty)
     }
 
-  def spec =
+  def spec: Spec[TestEnvironment with Scope, Any] =
     suite("Providers")(
-      testM("cred with const") {
-        assertM(const("k", "v").useNow.map(_.resolveCredentials()))(
-          equalTo(AwsBasicCredentials.create("k", "v"))
-        )
+      test("cred with const") {
+        ZIO
+          .scoped(const("k", "v").map(_.resolveCredentials()))
+          .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
-      testM("cred with default fallback const") {
-        assertM(
-          (env <> const("k", "v")).useNow.map(_.resolveCredentials())
-        )(equalTo(AwsBasicCredentials.create("k", "v")))
+      test("cred with default fallback const") {
+        ZIO
+          .scoped((env <> const("k", "v")).map(_.resolveCredentials()))
+          .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
-      testM("cred in system properties") {
+      test("cred in system properties") {
         for {
-          cred <- system.use(p => ZIO(p.resolveCredentials()))
-        } yield assert(cred)(equalTo(AwsBasicCredentials.create("k1", "s1")))
-      } @@ flaky @@ around_(
+          cred <- ZIO.scoped(system.flatMap(p => ZIO.attempt(p.resolveCredentials())))
+        } yield assertTrue(cred == AwsBasicCredentials.create("k1", "s1"))
+      } @@ flaky @@ around(
         setProps(("aws.accessKeyId", "k1"), ("aws.secretAccessKey", "s1")),
         unsetProps("aws.accessKeyId", "aws.secretAccessKey")
       ),
-      testM("no cred in system properties") {
+      test("no cred in system properties") {
         for {
-          failure <- system.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(system).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
-      } @@ around_(
+      } @@ around(
         unsetProps("aws.accessKeyId", "aws.secretAccessKey"),
-        UIO.unit
+        ZIO.unit
       ),
-      testM("no cred in environment properties") {
+      test("no cred in environment properties") {
         for {
-          failure <- env.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(env).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("no cred in profile") {
+      test("no cred in profile") {
         for {
-          failure <- profile.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(profile).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("no cred in named profile") {
+      test("no cred in named profile") {
         for {
-          failure <- profile(Some("name")).useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(profile(Some("name"))).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("no cred in container") {
+      test("no cred in container") {
         for {
-          failure <- container.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(container).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("no cred in instance profile credentials") {
+      test("no cred in instance profile credentials") {
         for {
-          failure <- instanceProfile.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(instanceProfile).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("no cred in webidentity credentials") {
+      test("no cred in webidentity credentials") {
         for {
-          failure <- webIdentity.useNow.flip.map(_.getMessage)
+          failure <- ZIO.scoped(webIdentity).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
-      testM("settings from invalid creds") {
+      test("settings from invalid creds") {
         for {
-          failure <- settings(
-                       Region.AF_SOUTH_1,
-                       system.useNow.map(_.resolveCredentials())
-                     ).build.useNow.flip
+          failure <- ZIO
+                       .scoped(
+                         settings(
+                           Region.AF_SOUTH_1,
+                           ZIO.scoped(system).map(_.resolveCredentials())
+                         ).build
+                       )
+                       .flip
         } yield assert(failure.getMessage)(isNonEmptyString)
       },
-      testM("no cred when chain all providers") {
+      test("no cred when chain all providers") {
         for {
-          failure <- default.use(c => ZIO.effect(c.resolveCredentials())).flip.map(_.getMessage)
+          failure <- ZIO.scoped(default.flatMap(c => ZIO.attempt(c.resolveCredentials()))).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       }
     ) @@ sequential

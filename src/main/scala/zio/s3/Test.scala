@@ -24,8 +24,7 @@ import java.util.concurrent.CompletableFuture
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
-import zio.blocking.Blocking
-import zio.nio.channels.{ AsynchronousFileChannel }
+import zio.nio.channels.AsynchronousFileChannel
 import zio.nio.file.{ Path => ZPath }
 import zio.nio.file.Files
 import zio.s3.S3Bucket._
@@ -47,56 +46,53 @@ object Test {
       .build()
       .asInstanceOf[S3Exception]
 
-  def connect(path: ZPath): Blocking => S3.Service = { blocking =>
+  def connect(path: ZPath): S3 = {
     type ContentType = String
     type Metadata    = Map[String, String]
 
-    new S3.Service {
+    new S3 {
       private val refDb: Ref[Map[String, (ContentType, Metadata)]] =
         Ref.unsafeMake(Map.empty[String, (ContentType, Metadata)])
 
       override def createBucket(bucketName: String): IO[S3Exception, Unit] =
-        Files.createDirectory(path / bucketName).orDie.provide(blocking)
+        Files.createDirectory(path / bucketName).orDie
 
       override def deleteBucket(bucketName: String): IO[S3Exception, Unit] =
-        Files.delete(path / bucketName).orDie.provide(blocking)
+        Files.delete(path / bucketName).orDie
 
       override def isBucketExists(bucketName: String): IO[S3Exception, Boolean] =
-        Files.exists(path / bucketName).provide(blocking)
+        Files.exists(path / bucketName)
 
       override val listBuckets: IO[S3Exception, S3BucketListing] =
         Files
           .list(path)
-          .filterM(p => Files.readAttributes[BasicFileAttributes](p).map(_.isDirectory))
-          .mapM { p =>
+          .filterZIO(p => Files.readAttributes[BasicFileAttributes](p).map(_.isDirectory))
+          .mapZIO { p =>
             Files
               .readAttributes[BasicFileAttributes](p)
               .map(attr => S3Bucket(p.filename.toString, attr.creationTime().toInstant))
           }
           .runCollect
           .orDie
-          .provide(blocking)
 
       override def deleteObject(bucketName: String, key: String): IO[S3Exception, Unit] =
-        Files.deleteIfExists(path / bucketName / key).orDie.provide(blocking).unit
+        Files.deleteIfExists(path / bucketName / key).orDie.unit
 
       override def getObject(bucketName: String, key: String): Stream[S3Exception, Byte] =
         ZStream
-          .managed(ZManaged.fromAutoCloseable(Task(new FileInputStream((path / bucketName / key).toFile))))
+          .scoped(ZIO.fromAutoCloseable(ZIO.attempt(new FileInputStream((path / bucketName / key).toFile))))
           .flatMap(ZStream.fromInputStream(_, 2048))
           .refineOrDie {
             case e: FileNotFoundException => fileNotFound(e)
           }
-          .provide(blocking)
 
       override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
         (for {
-          (contentType, metadata) <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
-
-          file <- Files
-                    .readAttributes[BasicFileAttributes](path / bucketName / key)
-                    .map(p => ObjectMetadata(metadata, contentType, p.size()))
-                    .provide(blocking)
+          res                    <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
+          (contentType, metadata) = res
+          file                   <- Files
+                                      .readAttributes[BasicFileAttributes](path / bucketName / key)
+                                      .map(p => ObjectMetadata(metadata, contentType, p.size()))
         } yield file).orDie
 
       override def listObjects(
@@ -110,7 +106,7 @@ object Test {
             case (p, _)                               =>
               options.prefix.fold(true)(p.filename.toString().startsWith)
           }
-          .mapM(p => Files.readAttributes[BasicFileAttributes](p).map(a => a -> p))
+          .mapZIO(p => Files.readAttributes[BasicFileAttributes](p).map(a => a -> p))
           .filter { case (attr, _) => attr.isRegularFile }
           .map {
             case (attr, f) =>
@@ -150,7 +146,6 @@ object Test {
               S3ObjectListing(bucketName, options.delimiter, options.starAfter, list, None, None)
           }
           .orDie
-          .provide(blocking)
 
       override def getNextObjects(listing: S3ObjectListing): IO[S3Exception, S3ObjectListing] =
         listing.nextContinuationToken match {
@@ -172,21 +167,27 @@ object Test {
             )
           filePath = path / bucketName / key
           _       <- filePath.parent
-                       .map(parentPath => Files.createDirectories(parentPath).provide(blocking))
+                       .map(parentPath => Files.createDirectories(parentPath))
                        .getOrElse(ZIO.unit)
 
-          _       <-
-            AsynchronousFileChannel
-              .open(filePath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
-              .use(channel =>
-                content
-                  .mapChunks(Chunk.succeed)
-                  .foldM(0L) { case (pos, c) => channel.writeChunk(c, pos).map(_ => pos + c.length) }
-              )
+          _       <- ZIO.scoped[R](
+                       AsynchronousFileChannel
+                         .open(
+                           filePath,
+                           StandardOpenOption.WRITE,
+                           StandardOpenOption.TRUNCATE_EXISTING,
+                           StandardOpenOption.CREATE
+                         )
+                         .flatMap(channel =>
+                           content
+                             .mapChunks(Chunk.succeed)
+                             .runFoldZIO(0L) { case (pos, c) => channel.writeChunk(c, pos).as(pos + c.length) }
+                         )
+                     )
         } yield ()).orDie
 
       override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
-        IO.dieMessage("Not implemented error - please don't call execute() S3 Test mode")
+        ZIO.dieMessage("Not implemented error - please don't call execute() S3 Test mode")
 
       override def multipartUpload[R](
         bucketName: String,
@@ -208,7 +209,7 @@ object Test {
                  bucketName,
                  key,
                  0,
-                 content.chunkN(options.partSize),
+                 content.rechunk(options.partSize),
                  options.uploadOptions.copy(contentType = _contentType)
                )
         } yield ()
