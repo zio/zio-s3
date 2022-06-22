@@ -181,11 +181,12 @@ object S3Suite {
       },
       test("get object") {
         for {
-          content <- getObject(bucketName, "dir1/hello.txt")
-                       .via(ZPipeline.utf8Decode)
-                       .runCollect
+          content      <- getObject(bucketName, "dir1/hello.txt")
+                            .via(ZPipeline.utf8Decode)
+                            .runCollect
+          contentString = content.mkString
         } yield assertTrue(
-          content.mkString ==
+          contentString ==
             """|Hello ZIO s3
                |this is a beautiful day""".stripMargin
         )
