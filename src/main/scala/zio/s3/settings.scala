@@ -33,7 +33,7 @@ object S3Region { self =>
   /**
    * Only use for supporting other region for different s3 compatible storage provider such as OVH
    * Your S3 region might be invalid and will result into runtime error.
-   * @param s unsafe region
+   * @param r unsafe region
    */
   def unsafeFromString(r: String): S3Region =
     new S3Region(Region.of(r)) {}
