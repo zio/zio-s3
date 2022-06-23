@@ -7,7 +7,6 @@ import java.util.UUID
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio.nio.file.{ Path => ZPath }
-import zio.nio.file.{ Files => ZFiles }
 import zio.stream.{ ZPipeline, ZStream }
 import zio.test.Assertion._
 import zio.test.TestAspect.sequential
@@ -17,7 +16,6 @@ import zio.{ Chunk, Scope, ZLayer }
 import scala.util.Random
 
 object S3LiveSpec extends ZIOSpecDefault {
-  private val root = ZPath("minio/data")
 
   private val s3 =
     zio.s3
@@ -29,7 +27,7 @@ object S3LiveSpec extends ZIOSpecDefault {
       .mapError(TestFailure.die)
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    S3Suite.spec("S3LiveSpec", root).provideLayerShared(s3)
+    S3Suite.spec("S3LiveSpec").provideLayerShared(s3)
 }
 
 object S3TestSpec extends ZIOSpecDefault {
@@ -38,7 +36,7 @@ object S3TestSpec extends ZIOSpecDefault {
   private val s3: ZLayer[Any, Nothing, S3] = zio.s3.stub(root)
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    S3Suite.spec("S3TestSpec", root).provideLayerShared(s3)
+    S3Suite.spec("S3TestSpec").provideLayerShared(s3)
 }
 
 object InvalidS3LayerTestSpec extends ZIOSpecDefault {
@@ -65,7 +63,7 @@ object S3Suite {
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
 
-  def spec(label: String, root: ZPath): Spec[S3, Exception] =
+  def spec(label: String): Spec[S3, Exception] =
     suite(label)(
       test("listAllObjects") {
         for {
@@ -166,14 +164,6 @@ object S3Suite {
         for {
           succeed <- isBucketExists(UUID.randomUUID().toString)
         } yield assertTrue(!succeed)
-      },
-      test("delete object") {
-        val objectTmp = UUID.randomUUID().toString
-
-        for {
-          _       <- ZFiles.createFile(root / bucketName / objectTmp)
-          succeed <- deleteObject(bucketName, objectTmp)
-        } yield assert(succeed)(isUnit)
       },
       test("delete object - invalid identifier") {
         for {
