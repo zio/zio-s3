@@ -10,6 +10,7 @@ import zio.nio.file.{ Path => ZPath }
 import zio.nio.file.{ Files => ZFiles }
 import zio.stream.{ ZPipeline, ZStream }
 import zio.test.Assertion._
+import zio.test.TestAspect.sequential
 import zio.test._
 import zio.{ Chunk, Scope, ZLayer }
 
@@ -359,6 +360,6 @@ object S3Suite {
         } yield assertTrue(objectMetadata.contentType == "application/json") &&
           assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
       }
-    )
+    ) @@ sequential
 
 }
