@@ -20,6 +20,8 @@ services:
 
   mc:
     image: minio/mc
+    volumes:
+      - ./minio/export:/export
     depends_on:
       - minio
     environment:
@@ -29,9 +31,10 @@ services:
       /bin/sh -c "
       echo Waiting for minio service to start...;
 
-      curl --retry 10 --retry-delay 10 -s -o /dev/null "http://minio:9000/minio/health/live"
+      curl --retry 10 --retry-delay 10 -s -o /dev/null http://minio:9000/minio/health/live
 
       echo Minio is started;
       /usr/bin/mc config host add my-minio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
       /usr/bin/mc mb -p my-minio/bucket-1;
+      /usr/bin/mc mirror export/ my-minio/bucket-1;
       "

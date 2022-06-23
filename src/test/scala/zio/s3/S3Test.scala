@@ -127,7 +127,7 @@ object S3Suite {
         val bucketTmp = UUID.randomUUID().toString
         for {
           succeed <- createBucket(bucketTmp)
-          _       <- ZFiles.delete(root / bucketTmp)
+          _       <- deleteBucket(bucketTmp)
         } yield assert(succeed)(isUnit)
       },
       test("create empty bucket name fail") {
@@ -221,7 +221,7 @@ object S3Suite {
         for {
           _                   <- putObject(bucketName, tmpKey, contentLength, data)
           objectContentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                                   ZFiles.delete(root / bucketName / tmpKey)
+                                   deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectContentLength == contentLength)
 
       },
@@ -248,7 +248,7 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
+                             deleteObject(bucketName, tmpKey)
         } yield assertTrue(contentLength > 0L)
       },
       test("multipart with parrallelism = 1") {
@@ -258,7 +258,7 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
+                             deleteObject(bucketName, tmpKey)
         } yield assertTrue(contentLength == dataLength.toLong)
       },
       test("multipart with invalid parallelism value 0") {
@@ -280,7 +280,7 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
+                             deleteObject(bucketName, tmpKey)
         } yield assertTrue(contentLength == 0L)
       },
       test("multipart object when the content type is not provided") {
@@ -290,7 +290,7 @@ object S3Suite {
         for {
           _           <- multipartUpload(bucketName, tmpKey, data)(4)
           contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
-                           ZFiles.delete(root / bucketName / tmpKey)
+                           deleteObject(bucketName, tmpKey)
         } yield assertTrue(contentType == "binary/octet-stream")
       },
       test("multipart object when there is a content type and metadata") {
@@ -307,7 +307,7 @@ object S3Suite {
                                 UploadOptions(metadata, ObjectCannedACL.PRIVATE, Some("application/json"))
                               )
                             )(4)
-          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
+          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectMetadata.contentType == "application/json") &&
           assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
       },
@@ -318,7 +318,7 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions.fromPartSize(10 * PartSize.Mega))(4)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
+                             deleteObject(bucketName, tmpKey)
         } yield assertTrue(contentLength == dataSize.toLong)
       },
       test("stream lines") {
@@ -340,7 +340,7 @@ object S3Suite {
         for {
           _             <- putObject(bucketName, tmpKey, dataSize.toLong, data)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
+                             deleteObject(bucketName, tmpKey)
         } yield assertTrue(dataSize.toLong == contentLength)
       },
       test("put object when there is a content type and metadata") {
@@ -356,7 +356,7 @@ object S3Suite {
                               data,
                               UploadOptions.from(_metadata, "application/json")
                             )
-          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
+          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectMetadata.contentType == "application/json") &&
           assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
       }
