@@ -55,7 +55,7 @@ package object s3 {
   )
 
   def stub(path: ZPath): ZLayer[Any, Nothing, S3] =
-    ZLayer.succeed(Test.connect(path))
+    ZLayer.fromZIO(Test.connect(path))
 
   def listAllObjects(bucketName: String): S3Stream[S3ObjectSummary] =
     ZStream.serviceWithStream[S3](_.listAllObjects(bucketName))
