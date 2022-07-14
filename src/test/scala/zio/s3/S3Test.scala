@@ -22,7 +22,7 @@ object S3LiveSpec extends ZIOSpecDefault {
       .live(
         Region.CA_CENTRAL_1,
         AwsBasicCredentials.create("TESTKEY", "TESTSECRET"),
-        Some(URI.create("http://localhost:9000"))
+        Some(URI.create("http://127.0.0.1:9000"))
       )
       .mapError(TestFailure.die)
 
