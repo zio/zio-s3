@@ -46,7 +46,7 @@ lazy val `zio-s3` = project
       if (scalaVersion.value == ScalaDotty)
         Seq()
       else
-        Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
+        Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0")
     },
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
