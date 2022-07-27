@@ -1,4 +1,4 @@
-addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.2.24")
+addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.3.3")
 addSbtPlugin("com.eed3si9n"       % "sbt-unidoc"                % "0.4.3")
 addSbtPlugin("ch.epfl.scala"      % "sbt-bloop"                 % "1.5.0")
 addSbtPlugin("ch.epfl.scala"      % "sbt-scalafix"              % "0.10.0")
