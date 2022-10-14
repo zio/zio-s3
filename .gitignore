@@ -362,9 +362,6 @@ gradle-app.setting
 # Compiled class file
 *.class
 
-# Log file
-*.log
-
 # BlueJ files
 *.ctxt
 
@@ -405,7 +402,6 @@ project/plugins/project/
 .cache
 .lib/
 *.class
-*.log
 
 .metals/
 metals.sbt

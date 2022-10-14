@@ -8,27 +8,26 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
 import zio.blocking.Blocking
 import zio.nio.file.{ Path => ZPath }
-import zio.nio.file.{ Files => ZFiles }
 import zio.stream.{ ZStream, ZTransducer }
 import zio.test.Assertion._
+import zio.test.TestAspect.sequential
 import zio.test._
 import zio.{ Chunk, ZLayer }
 
 import scala.util.Random
 
 object S3LiveSpec extends DefaultRunnableSpec {
-  private val root = ZPath("minio/data")
 
   private val s3 =
     live(
       Region.CA_CENTRAL_1,
       AwsBasicCredentials.create("TESTKEY", "TESTSECRET"),
-      Some(URI.create("http://localhost:9000"))
+      Some(URI.create("http://127.0.0.1:9000"))
     )
       .mapError(TestFailure.die)
 
   override def spec =
-    S3Suite.spec("S3LiveSpec", root).provideCustomLayerShared(s3)
+    S3Suite.spec("S3LiveSpec").provideCustomLayerShared(s3)
 }
 
 object S3TestSpec extends DefaultRunnableSpec {
@@ -37,7 +36,7 @@ object S3TestSpec extends DefaultRunnableSpec {
   private val s3: ZLayer[Blocking, Nothing, S3] = zio.s3.stub(root)
 
   override def spec =
-    S3Suite.spec("S3TestSpec", root).provideCustomLayerShared(Blocking.live >>> s3)
+    S3Suite.spec("S3TestSpec").provideCustomLayerShared(Blocking.live >>> s3)
 }
 
 object InvalidS3LayerTestSpec extends DefaultRunnableSpec {
@@ -51,7 +50,6 @@ object InvalidS3LayerTestSpec extends DefaultRunnableSpec {
         assertM(listBuckets.provideCustomLayer(s3).either)(isLeft(isSubtype[S3Exception](anything)))
       }
     }
-
 }
 
 object S3Suite {
@@ -64,7 +62,7 @@ object S3Suite {
     (size, ZStream.fromChunks(Chunk.fromArray(bytes)))
   }
 
-  def spec(label: String, root: ZPath): Spec[S3 with Blocking, TestFailure[Exception], TestSuccess] =
+  def spec(label: String) =
     suite(label)(
       testM("listAllObjects") {
         for {
@@ -74,22 +72,21 @@ object S3Suite {
       testM("list buckets") {
         for {
           buckets <- listBuckets
-        } yield assert(buckets.map(_.name))(equalTo(Chunk.single(bucketName)))
+        } yield assertTrue(buckets.map(_.name) == Chunk.single(bucketName))
       },
       testM("list objects") {
         for {
           succeed <- listObjects(bucketName)
-        } yield assert(succeed.bucketName)(equalTo(bucketName)) && assert(
-          succeed.objectSummaries.map(s => s.bucketName -> s.key)
-        )(
-          hasSameElements(
-            List(
-              (bucketName, "console.log"),
-              (bucketName, "dir1/hello.txt"),
-              (bucketName, "dir1/user.csv")
+        } yield assertTrue(succeed.bucketName == bucketName) &&
+          assert(succeed.objectSummaries.map(s => s.bucketName -> s.key))(
+            hasSameElements(
+              List(
+                (bucketName, "console.log"),
+                (bucketName, "dir1/hello.txt"),
+                (bucketName, "dir1/user.csv")
+              )
             )
           )
-        )
       },
       testM("list objects with prefix") {
         for {
@@ -106,29 +103,28 @@ object S3Suite {
       testM("list objects with not match prefix") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.from("blah", 10))
-        } yield assert(succeed.bucketName -> succeed.objectSummaries)(
-          equalTo(bucketName              -> Chunk.empty)
-        )
+        } yield assertTrue(succeed.bucketName -> succeed.objectSummaries == bucketName -> Chunk.empty)
       },
       testM("list objects with delimiter") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions(Some("dir1/"), 10, Some("/"), None))
-        } yield assert(succeed.bucketName -> succeed.objectSummaries.map(_.key))(
-          equalTo(bucketName              -> Chunk("dir1/hello.txt", "dir1/user.csv"))
+        } yield assertTrue(
+          succeed.bucketName          -> succeed.objectSummaries
+            .map(_.key) == bucketName -> Chunk("dir1/hello.txt", "dir1/user.csv")
         )
       },
       testM("list objects with startAfter dir1/hello.txt") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.fromStartAfter("dir1/hello.txt"))
-        } yield assert(succeed.bucketName -> succeed.objectSummaries.map(_.key).sorted)(
-          equalTo(bucketName              -> Chunk("dir1/user.csv"))
+        } yield assertTrue(
+          succeed.bucketName -> succeed.objectSummaries.map(_.key).sorted == bucketName -> Chunk("dir1/user.csv")
         )
       },
       testM("create bucket") {
         val bucketTmp = UUID.randomUUID().toString
         for {
           succeed <- createBucket(bucketTmp)
-          _       <- ZFiles.delete(root / bucketTmp)
+          _       <- deleteBucket(bucketTmp)
         } yield assert(succeed)(isUnit)
       },
       testM("create empty bucket name fail") {
@@ -136,13 +132,13 @@ object S3Suite {
         for {
           succeed <- createBucket("")
                        .foldCause(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
+        } yield assertTrue(!succeed)
       },
       testM("create bucket already exist") {
         for {
           succeed <- createBucket(bucketName)
                        .foldCause(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
+        } yield assertTrue(!succeed)
       },
       testM("delete bucket") {
         val bucketTmp = UUID.randomUUID().toString
@@ -155,26 +151,18 @@ object S3Suite {
       testM("delete bucket dont exist") {
         for {
           succeed <- deleteBucket(UUID.randomUUID().toString).foldCause(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
+        } yield assertTrue(!succeed)
       },
       testM("exists bucket") {
         for {
           succeed <- isBucketExists(bucketName)
-        } yield assert(succeed)(isTrue)
+        } yield assertTrue(succeed)
 
       },
       testM("exists bucket - invalid identifier") {
         for {
           succeed <- isBucketExists(UUID.randomUUID().toString)
-        } yield assert(succeed)(isFalse)
-      },
-      testM("delete object") {
-        val objectTmp = UUID.randomUUID().toString
-
-        for {
-          _       <- ZFiles.createFile(root / bucketName / objectTmp)
-          succeed <- deleteObject(bucketName, objectTmp)
-        } yield assert(succeed)(isUnit)
+        } yield assertTrue(!succeed)
       },
       testM("delete object - invalid identifier") {
         for {
@@ -201,12 +189,12 @@ object S3Suite {
         for {
           token   <- listObjects(bucketName, ListObjectOptions.fromMaxKeys(1)).map(_.nextContinuationToken)
           listing <- getNextObjects(S3ObjectListing.from(bucketName, token))
-        } yield assert(listing.objectSummaries)(isNonEmpty)
+        } yield assertTrue(listing.objectSummaries.nonEmpty)
       },
       testM("get nextObjects - invalid token") {
         for {
           succeed <- getNextObjects(S3ObjectListing.from(bucketName, Some(""))).foldCause(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
+        } yield assertTrue(!succeed)
 
       },
       testM("put object") {
@@ -217,8 +205,8 @@ object S3Suite {
 
         for {
           _                   <- putObject(bucketName, tmpKey, contentLength, data)
-          objectContentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                                   ZFiles.delete(root / bucketName / tmpKey)
+          objectContentLength <-
+            getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <* deleteObject(bucketName, tmpKey)
         } yield assert(objectContentLength)(equalTo(contentLength))
 
       },
@@ -245,8 +233,8 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentLength)(isGreaterThan(0L))
+                             deleteObject(bucketName, tmpKey)
+        } yield assertTrue(contentLength > 0L)
       },
       testM("multipart with parrallelism = 1") {
         val (dataLength, data) = randomNEStream()
@@ -255,8 +243,8 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentLength)(equalTo(dataLength.toLong))
+                             deleteObject(bucketName, tmpKey)
+        } yield assertTrue(contentLength == dataLength.toLong)
       },
       testM("multipart with invalid parallelism value 0") {
         val data   = ZStream.empty
@@ -277,8 +265,8 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data)(1)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentLength)(equalTo(0L))
+                             deleteObject(bucketName, tmpKey)
+        } yield assertTrue(contentLength == 0L)
       },
       testM("multipart object when the content type is not provided") {
         val (_, data) = randomNEStream()
@@ -287,8 +275,8 @@ object S3Suite {
         for {
           _           <- multipartUpload(bucketName, tmpKey, data)(4)
           contentType <- getObjectMetadata(bucketName, tmpKey).map(_.contentType) <*
-                           ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentType)(equalTo("binary/octet-stream"))
+                           deleteObject(bucketName, tmpKey)
+        } yield assertTrue(contentType == "binary/octet-stream")
       },
       testM("multipart object when there is a content type and metadata") {
         val metadata  = Map("key1" -> "value1")
@@ -304,9 +292,9 @@ object S3Suite {
                                 UploadOptions(metadata, ObjectCannedACL.PRIVATE, Some("application/json"))
                               )
                             )(4)
-          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v })(equalTo(Map("key1" -> "value1")))
+          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
+        } yield assertTrue(objectMetadata.contentType == "application/json") &&
+          assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
       },
       testM("multipart object when the chunk size and parallelism are customized") {
         val (dataSize, data) = randomNEStream()
@@ -315,20 +303,20 @@ object S3Suite {
         for {
           _             <- multipartUpload(bucketName, tmpKey, data, MultipartUploadOptions.fromPartSize(10 * PartSize.Mega))(4)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(contentLength)(equalTo(dataSize.toLong))
+                             deleteObject(bucketName, tmpKey)
+        } yield assertTrue(contentLength == dataSize.toLong)
       },
       testM("stream lines") {
 
         for {
           list <- streamLines(bucketName, "dir1/user.csv").runCollect
-        } yield assert(list.headOption)(isSome(equalTo("John,Doe,120 jefferson st.,Riverside, NJ, 08075"))) &&
-          assert(list.lastOption)(isSome(equalTo("Marie,White,20 time square,Bronx, NY,08220")))
+        } yield assertTrue(list.headOption.get == "John,Doe,120 jefferson st.,Riverside, NJ, 08075") &&
+          assertTrue(list.lastOption.get == "Marie,White,20 time square,Bronx, NY,08220")
       },
       testM("stream lines - invalid key") {
         for {
           succeed <- streamLines(bucketName, "blah").runCollect.fold(_ => false, _ => true)
-        } yield assert(succeed)(isFalse)
+        } yield assertTrue(!succeed)
       },
       testM("put object when the content type is not provided") {
         val (dataSize, data) = randomNEStream()
@@ -337,8 +325,8 @@ object S3Suite {
         for {
           _             <- putObject(bucketName, tmpKey, dataSize.toLong, data)
           contentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
-                             ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(dataSize.toLong)(equalTo(contentLength))
+                             deleteObject(bucketName, tmpKey)
+        } yield assertTrue(dataSize.toLong == contentLength)
       },
       testM("put object when there is a content type and metadata") {
         val _metadata        = Map("key1" -> "value1")
@@ -353,10 +341,10 @@ object S3Suite {
                               data,
                               UploadOptions.from(_metadata, "application/json")
                             )
-          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* ZFiles.delete(root / bucketName / tmpKey)
-        } yield assert(objectMetadata.contentType)(equalTo("application/json")) &&
-          assert(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v })(equalTo(Map("key1" -> "value1")))
+          objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
+        } yield assertTrue(objectMetadata.contentType == "application/json") &&
+          assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
       }
-    )
+    ) @@ sequential
 
 }

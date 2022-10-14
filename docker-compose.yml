@@ -2,39 +2,38 @@ version: "3.7"
 
 services:
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     ports:
       - "9000:9000"
+      - "9001:9001"
     volumes:
       - ./minio/data:/data
     environment:
-      - MINIO_ACCESS_KEY=TESTKEY
-      - MINIO_SECRET_KEY=TESTSECRET
+      - MINIO_ROOT_USER=TESTKEY
+      - MINIO_ROOT_PASSWORD=TESTSECRET
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
-
-    command: server --compat /data
+    command: server /data --console-address ":9001"
 
   mc:
-    image: minio/mc
+    image: quay.io/minio/mc
+    volumes:
+      - ./minio/export:/export
     depends_on:
       - minio
     environment:
-      - MINIO_ACCESS_KEY=TESTKEY
-      - MINIO_SECRET_KEY=TESTSECRET
+      - MINIO_ROOT_USER=TESTKEY
+      - MINIO_ROOT_PASSWORD=TESTSECRET
     entrypoint: >
       /bin/sh -c "
       echo Waiting for minio service to start...;
-      apk add --no-cache curl;
-
-      while ! curl -I 'http://minio:9000/minio/health/live' 2>&1 | grep -w '200\|301';
-      do
-        sleep 10;
-      done;
+      curl --retry 10 --retry-delay 10 -s -o /dev/null http://minio:9000/minio/health/live
+      
       echo Minio is started;
-      /usr/bin/mc config host add my-minio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+      /usr/bin/mc config host add my-minio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
       /usr/bin/mc mb -p my-minio/bucket-1;
+      /usr/bin/mc mirror export/ my-minio/bucket-1;
       "
