@@ -27,7 +27,7 @@ import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.s3.errors._
 import zio.s3.errors.syntax._
-import zio.stream.{ Stream, ZSink, ZStream }
+import zio.stream.{ Stream, ZChannel, ZPipeline, ZSink, ZStream }
 
 import java.net.URI
 import java.nio.ByteBuffer
@@ -149,78 +149,97 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       }
       .unit
 
-  def multipartUpload[R](
-    bucketName: String,
-    key: String,
-    content: ZStream[R, Throwable, Byte],
-    options: MultipartUploadOptions
-  )(parallelism: Int): ZIO[R, S3Exception, Unit] =
-    for {
-      _        <- ZIO.dieMessage(s"parallelism must be > 0. $parallelism is invalid").unless(parallelism > 0)
-      _        <-
+  def multipartUploadSink(bucketName: String, key: String, options: MultipartUploadOptions)(
+    parallelism: Int
+  ): ZSink[Any, S3Exception, Byte, Byte, Unit] = {
+
+    val startUpload = ZSink.fromZIO(
+      execute(
+        _.createMultipartUpload {
+          val builder = CreateMultipartUploadRequest
+            .builder()
+            .bucket(bucketName)
+            .key(key)
+            .metadata(options.uploadOptions.metadata.asJava)
+            .acl(options.uploadOptions.cannedAcl)
+          options.uploadOptions.contentType
+            .fold(builder)(builder.contentType)
+            .build()
+        }
+      )
+        .map(_.uploadId())
+    )
+
+    def completeUpload(uploadId: String, parts: Chunk[CompletedPart]) =
+      ZSink.fromZIO(
+        execute(
+          _.completeMultipartUpload(
+            CompleteMultipartUploadRequest
+              .builder()
+              .bucket(bucketName)
+              .key(key)
+              .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
+              .uploadId(uploadId)
+              .build()
+          )
+        )
+      )
+
+    def uploadParts(uploadId: String): ZSink[Any, S3Exception, Byte, Nothing, Chunk[CompletedPart]] = {
+      def go(
+        hasFirst: Boolean,
+        partNumber: Int
+      ): ZChannel[Any, S3Exception, Chunk[Byte], Any, S3Exception, (Chunk[Byte], Int), Unit] =
+        ZChannel.readWith(
+          (in: Chunk[Byte]) => ZChannel.write(in -> partNumber) *> go(hasFirst = true, partNumber + 1),
+          (err: S3Exception) => ZChannel.fail(err),
+          (_: Any) =>
+            if (hasFirst) ZChannel.unit
+            else ZChannel.write(Chunk.empty -> partNumber) *> ZChannel.unit
+        )
+
+      def writer(
+        uploadId: String
+      ): ZChannel[Any, Nothing, Chunk[Byte], Any, S3Exception, Chunk[CompletedPart], Unit] =
+        go(false, 1)
+          .mapOutZIOPar(parallelism) {
+            case (chunk, partNumber) =>
+              execute(
+                _.uploadPart(
+                  UploadPartRequest
+                    .builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .partNumber(partNumber)
+                    .uploadId(uploadId)
+                    .contentLength(chunk.length.toLong)
+                    .build(),
+                  AsyncRequestBody.fromBytes(chunk.toArray)
+                )
+              ).map(r => Chunk.single(CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build()))
+          }
+
+      ZSink.fromChannel(writer(uploadId)).collectLeftover.map(_._2)
+    }
+
+    val writeThrough = ZSink.fromChannel(ZChannel.identity[S3Exception, Chunk[Byte], Any])
+
+    val uploader = for {
+      uploadId <- startUpload
+      parts    <- uploadParts(uploadId).zipParLeft(writeThrough)
+      _        <- completeUpload(uploadId, parts)
+    } yield ()
+
+    ZSink.unwrap(for {
+      _ <- ZIO.dieMessage(s"parallelism must be > 0. $parallelism is invalid").unless(parallelism > 0)
+      _ <-
         ZIO
           .dieMessage(
             s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
           )
           .unless(options.partSize >= PartSize.Min)
-
-      uploadId <- execute(
-                    _.createMultipartUpload {
-                      val builder = CreateMultipartUploadRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .metadata(options.uploadOptions.metadata.asJava)
-                        .acl(options.uploadOptions.cannedAcl)
-                      options.uploadOptions.contentType
-                        .fold(builder)(builder.contentType)
-                        .build()
-                    }
-                  ).map(_.uploadId())
-
-      parts    <- ZStream
-                    .scoped[R](
-                      content
-                        .rechunk(options.partSize)
-                        .mapChunks(Chunk.single)
-                        .peel(ZSink.head[Chunk[Byte]])
-                    )
-                    .flatMap {
-                      case (Some(head), rest) => ZStream(head) ++ rest
-                      case (None, _)          => ZStream(Chunk.empty)
-                    }
-                    .zipWithIndex
-                    .mapZIOPar(parallelism) {
-                      case (chunk, partNumber) =>
-                        execute(
-                          _.uploadPart(
-                            UploadPartRequest
-                              .builder()
-                              .bucket(bucketName)
-                              .key(key)
-                              .partNumber(partNumber.toInt + 1)
-                              .uploadId(uploadId)
-                              .contentLength(chunk.length.toLong)
-                              .build(),
-                            AsyncRequestBody.fromBytes(chunk.toArray)
-                          )
-                        ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
-                    }
-                    .runCollect
-                    .mapErrorCause(_.flatMap(_.asS3Exception()))
-
-      _        <- execute(
-                    _.completeMultipartUpload(
-                      CompleteMultipartUploadRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .multipartUpload(CompletedMultipartUpload.builder().parts(parts.asJavaCollection).build())
-                        .uploadId(uploadId)
-                        .build()
-                    )
-                  )
-    } yield ()
+    } yield ZPipeline.rechunk[Byte](options.partSize) >>> uploader)
+  }
 
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineOrDie {

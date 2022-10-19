@@ -4,7 +4,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.s3.S3Bucket.S3BucketListing
 import zio.s3.errors.DecodingException
-import zio.stream.{ Stream, ZPipeline, ZStream }
+import zio.stream.{ Stream, ZPipeline, ZSink, ZStream }
 import zio.{ IO, ZIO }
 
 import java.nio.charset.CharacterCodingException
@@ -133,7 +133,31 @@ trait S3 { self =>
     key: String,
     content: ZStream[R, Throwable, Byte],
     options: MultipartUploadOptions = MultipartUploadOptions.default
-  )(parallelism: Int): ZIO[R, S3Exception, Unit]
+  )(parallelism: Int): ZIO[R, S3Exception, Unit] =
+    (content.mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build()) >>> multipartUploadSink(
+      bucketName,
+      key,
+      options
+    )(parallelism)).refineOrDie {
+      case e: S3Exception => e
+    }
+
+  /**
+   * Store data object into a specific bucket, minimum size of the data is 5 Mb to use multipart upload (restriction from amazon API)
+   * Returns a ZSink to allow for easier composition with streams
+   *
+   * @param bucketName name of the S3 bucket
+   * @param key unique object identifier (e.g. a filename)
+   * @param options the optional configurations of the multipart upload
+   * @param parallelism the number of parallel requests to upload at a time
+   *
+   * * @see [[multipartUpload]]
+   */
+  def multipartUploadSink(
+    bucketName: String,
+    key: String,
+    options: MultipartUploadOptions = MultipartUploadOptions.default
+  )(parallelism: Int): ZSink[Any, S3Exception, Byte, Byte, Unit]
 
   /**
    * Read an object by lines
