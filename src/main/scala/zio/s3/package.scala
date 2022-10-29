@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.nio.file.{ Path => ZPath }
 import zio.s3.S3Bucket.S3BucketListing
-import zio.s3.providers.const
+import zio.s3.providers.{ basic, const }
 import zio.stream.ZStream
 
 import java.net.URI
@@ -32,7 +32,7 @@ package object s3 {
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
   def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None): Layer[S3Exception, S3] =
-    liveZIO(region, const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
+    liveZIO(region, const(credentials), uriEndpoint)
 
   def liveZIO[R](
     region: Region,
@@ -50,7 +50,7 @@ package object s3 {
 
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.scoped(
     ZIO.serviceWithZIO[S3Settings](s =>
-      Live.connect(s.s3Region, const(s.credentials.accessKeyId, s.credentials.secretAccessKey), None)
+      Live.connect(s.s3Region, basic(s.credentials.accessKeyId, s.credentials.secretAccessKey), None)
     )
   )
 
