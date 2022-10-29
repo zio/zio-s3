@@ -1,6 +1,6 @@
 package zio.s3
 
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.{ AwsBasicCredentials, AwsSessionCredentials }
 import software.amazon.awssdk.regions.Region
 import zio.s3.providers._
 import zio.test.Assertion._
@@ -25,14 +25,19 @@ object S3ProvidersTest extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment with Scope, Any] =
     suite("Providers")(
-      test("cred with const") {
+      test("basic credentials") {
         ZIO
-          .scoped(const("k", "v").map(_.resolveCredentials()))
+          .scoped(basic("k", "v").map(_.resolveCredentials()))
           .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
-      test("cred with default fallback const") {
+      test("session credentials") {
         ZIO
-          .scoped((env <> const("k", "v")).map(_.resolveCredentials()))
+          .scoped(session("k", "v", "t").map(_.resolveCredentials()))
+          .map(res => assertTrue(res == AwsSessionCredentials.create("k", "v", "t")))
+      },
+      test("basic credentials default fallback const") {
+        ZIO
+          .scoped((env <> basic("k", "v")).map(_.resolveCredentials()))
           .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
       test("cred in system properties") {
