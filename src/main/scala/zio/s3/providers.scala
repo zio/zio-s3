@@ -5,8 +5,14 @@ import zio.{ IO, Scope, UIO, ZIO }
 
 object providers {
 
-  def const(accessKeyId: String, secretAccessKey: String): UIO[AwsCredentialsProvider] =
-    ZIO.succeedNow[AwsCredentialsProvider](() => AwsBasicCredentials.create(accessKeyId, secretAccessKey))
+  def const(credential: AwsCredentials): UIO[AwsCredentialsProvider] =
+    ZIO.succeedNow[AwsCredentialsProvider](() => credential)
+
+  def basic(accessKeyId: String, secretAccessKey: String): UIO[AwsCredentialsProvider] =
+    const(AwsBasicCredentials.create(accessKeyId, secretAccessKey))
+
+  def session(accessKeyId: String, secretAccessKey: String, sessionToken: String): UIO[AwsCredentialsProvider] =
+    const(AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken))
 
   val system: IO[InvalidCredentials, SystemPropertyCredentialsProvider] =
     ZIO

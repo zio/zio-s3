@@ -31,8 +31,11 @@ import java.util.concurrent.CompletableFuture
 package object s3 {
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
+  def settings[R](region: Region, cred: ZIO[R, S3Exception, AwsCredentials]): ZLayer[R, S3Exception, S3Settings] =
+    ZLayer(cred.flatMap(S3Settings.from(region, _)))
+
   def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None): Layer[S3Exception, S3] =
-    liveZIO(region, const(credentials.accessKeyId, credentials.secretAccessKey), uriEndpoint)
+    liveZIO(region, const(credentials), uriEndpoint)
 
   def liveZIO[R](
     region: Region,
@@ -45,13 +48,8 @@ package object s3 {
         .flatMap(Live.connect[R](_, provider, uriEndpoint))
     )
 
-  def settings[R](region: Region, cred: ZIO[R, S3Exception, AwsCredentials]): ZLayer[R, S3Exception, S3Settings] =
-    ZLayer(cred.flatMap(S3Settings.from(region, _)))
-
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.scoped(
-    ZIO.serviceWithZIO[S3Settings](s =>
-      Live.connect(s.s3Region, const(s.credentials.accessKeyId, s.credentials.secretAccessKey), None)
-    )
+    ZIO.serviceWithZIO[S3Settings](s => Live.connect(s.s3Region, const(s.credentials), None))
   )
 
   def stub(path: ZPath): ZLayer[Any, Nothing, S3] =
