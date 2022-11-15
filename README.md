@@ -10,7 +10,7 @@ Setup
 -----
 
 The library is a thin wrapper over s3 async client.
-Please find more details in the [website](https://zio.github.io/zio-s3/)
+Please find more details in the [website](https://zio.dev/zio-s3/)
 
 [Badge-Circle]: https://circleci.com/gh/zio/zio-s3.svg?style=svg "circleci"
 [Link-Circle]: https://circleci.com/gh/zio/zio-s3 "circleci"
