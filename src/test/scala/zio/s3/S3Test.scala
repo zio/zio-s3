@@ -13,6 +13,7 @@ import zio.test.TestAspect.sequential
 import zio.test._
 import zio.{ Chunk, Scope, ZLayer }
 
+import java.nio.charset.CharacterCodingException
 import scala.util.Random
 
 object S3LiveSpec extends ZIOSpecDefault {
@@ -186,8 +187,12 @@ object S3Suite {
         for {
           succeed <- getObject(bucketName, UUID.randomUUID().toString)
                        .via(ZPipeline.utf8Decode)
+                       .refineOrDie {
+                         case ex: S3Exception => ex
+                         case ex: CharacterCodingException => DecodingException(ex)
+                       }
                        .runCollect
-                       .fold(_ => false, _ => true)
+                       .fold(ex => if (ex.statusCode() == 404) false else true, _ => true)
         } yield assertTrue(!succeed)
       },
       test("get nextObjects") {

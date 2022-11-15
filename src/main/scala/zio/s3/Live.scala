@@ -68,7 +68,6 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       )
       .flatMap(identity)
       .flattenChunks
-      .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
       .refineOrDie {
         case e: S3Exception => e
       }
