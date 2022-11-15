@@ -1,7 +1,10 @@
 ---
-id: quickstart_index
-title: "Quick Start"
+id: index
+title: "Introduction to ZIO S3"
+sidebar_label: "ZIO S3"
 ---
+
+Thin wrapper over S3 async client for ZIO
 
 Setup
 -----
@@ -9,7 +12,7 @@ Setup
 ```
 //support scala 2.12 / 2.13
 
-libraryDependencies += "dev.zio" %% "zio-s3" % "<version>"
+libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
 ```
 
 How to use it ?

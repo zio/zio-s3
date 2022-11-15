@@ -1,0 +1,5 @@
+{
+  "name": "@zio.dev/zio-s3",
+  "description": "ZIO S3 Documentation",
+  "license": "Apache-2.0"
+}
