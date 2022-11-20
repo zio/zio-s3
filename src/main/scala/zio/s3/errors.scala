@@ -16,22 +16,52 @@
 
 package zio.s3
 
-import software.amazon.awssdk.core.exception.SdkException
+import software.amazon.awssdk.core.exception.{ SdkException, SdkServiceException }
 import software.amazon.awssdk.services.s3.model.S3Exception
+import zio.Cause
 
 import java.nio.charset.CharacterCodingException
+import scala.util.control.NonFatal
 
-final case class SdkError(error: SdkException)
-    extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error))
+object errors {
 
-final case class InvalidCredentials(message: String) extends S3Exception(S3Exception.builder().message(message))
+  final case class SdkError(error: SdkException)
+      extends S3Exception(S3Exception.builder().message(error.getMessage).cause(error))
 
-final case class InvalidSettings(message: String) extends S3Exception(S3Exception.builder().message(message))
+  final case class InvalidCredentials(message: String) extends S3Exception(S3Exception.builder().message(message))
 
-final case class ConnectionError(message: String, cause: Throwable)
-    extends S3Exception(S3Exception.builder().message(message))
+  final case class InvalidSettings(message: String) extends S3Exception(S3Exception.builder().message(message))
 
-final case class InvalidPartSize(message: String, size: Int) extends S3Exception(S3Exception.builder().message(message))
+  final case class ConnectionError(message: String, cause: Throwable)
+      extends S3Exception(S3Exception.builder().message(message))
 
-final case class DecodingException(cause: CharacterCodingException)
-    extends S3Exception(S3Exception.builder().cause(cause))
+  final case class InvalidPartSize(message: String, size: Int)
+      extends S3Exception(S3Exception.builder().message(message))
+
+  final case class DecodingException(cause: CharacterCodingException)
+      extends S3Exception(S3Exception.builder().cause(cause))
+
+  object syntax {
+
+    implicit class S3ExceptionOps(ex: Throwable) {
+
+      def asS3Exception(): Cause[S3Exception] =
+        ex match {
+          case e: SdkServiceException =>
+            Cause.fail(
+              S3Exception
+                .builder()
+                .statusCode(e.statusCode())
+                .requestId(e.requestId())
+                .message(e.getMessage)
+                .cause(e)
+                .build()
+                .asInstanceOf[S3Exception]
+            )
+          case NonFatal(e)            =>
+            Cause.fail(S3Exception.builder().message(e.getMessage).cause(e).build().asInstanceOf[S3Exception])
+          case other                  => Cause.die(other)
+        }
+    }
+  }
+}
