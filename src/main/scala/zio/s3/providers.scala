@@ -2,6 +2,7 @@ package zio.s3
 
 import software.amazon.awssdk.auth.credentials._
 import zio.{ IO, Scope, UIO, ZIO }
+import zio.s3.errors._
 
 object providers {
 

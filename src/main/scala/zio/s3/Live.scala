@@ -26,7 +26,8 @@ import zio.interop.reactivestreams._
 import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZSink, ZStream }
-
+import zio.s3.errors._
+import zio.s3.errors.syntax._
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
@@ -68,10 +69,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       )
       .flatMap(identity)
       .flattenChunks
-      .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
-      .refineOrDie {
-        case e: S3Exception => e
-      }
+      .mapErrorCause(_.flatMap(_.asS3Exception()))
 
   override def getObjectMetadata(bucketName: String, key: String): IO[S3Exception, ObjectMetadata] =
     execute(_.headObject(HeadObjectRequest.builder().bucket(bucketName).key(key).build()))
@@ -119,10 +117,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
     options: UploadOptions
   ): ZIO[R, S3Exception, Unit] =
     content
-      .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
-      .refineOrDie {
-        case e: S3Exception => e
-      }
+      .mapErrorCause(_.flatMap(_.asS3Exception()))
       .mapChunks(c => Chunk(ByteBuffer.wrap(c.toArray)))
       .toPublisher
       .flatMap { publisher =>
@@ -204,10 +199,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
                         ).map(r => CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build())
                     }
                     .runCollect
-                    .mapError(e => S3Exception.builder().message(e.getMessage).cause(e).build())
-                    .refineOrDie {
-                      case e: S3Exception => e
-                    }
+                    .mapErrorCause(_.flatMap(_.asS3Exception()))
 
       _        <- execute(
                     _.completeMultipartUpload(

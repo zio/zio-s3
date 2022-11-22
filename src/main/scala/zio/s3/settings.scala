@@ -19,6 +19,7 @@ package zio.s3
 import software.amazon.awssdk.auth.credentials._
 import software.amazon.awssdk.regions.Region
 import zio.{ IO, ZIO }
+import zio.s3.errors._
 
 sealed abstract class S3Region(val region: Region)
 
