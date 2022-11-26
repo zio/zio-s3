@@ -3,6 +3,7 @@ package zio.s3
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.{ IO, ZIO }
+import zio.s3.errors.DecodingException
 import zio.s3.S3Bucket.S3BucketListing
 import zio.stream.{ Stream, ZPipeline, ZStream }
 

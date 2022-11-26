@@ -187,8 +187,9 @@ object S3Suite {
           succeed <- getObject(bucketName, UUID.randomUUID().toString)
                        .via(ZPipeline.utf8Decode)
                        .runCollect
-                       .fold(_ => false, _ => true)
-        } yield assertTrue(!succeed)
+                       .refineToOrDie[S3Exception]
+                       .fold(ex => ex.statusCode() == 404, _ => false)
+        } yield assertTrue(succeed)
       },
       test("get nextObjects") {
         for {
