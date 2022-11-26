@@ -8,6 +8,6 @@ addSbtPlugin("com.github.cb372"   % "sbt-explicit-dependencies" % "0.2.16")
 addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.2.0")
 addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.5")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.4.6")
-addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.0.0+84-6fd7d64e-SNAPSHOT")
+addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.0.0+86-4319f79f-SNAPSHOT")
 
 resolvers += Resolver.sonatypeRepo("public")
