@@ -1,6 +1,15 @@
 const sidebars = {
   sidebar: [
-    "index"
+    {
+      type: "category",
+      label: "ZIO S3",
+      collapsed: false,
+      link: { type: "doc", id: "index" },
+      items: [ 
+        "credentials",
+        "testing" 
+      ]
+    }
   ]
 };
 
