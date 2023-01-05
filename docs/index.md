@@ -4,22 +4,13 @@ title: "Introduction to ZIO S3"
 sidebar_label: "ZIO S3"
 ---
 
-Thin wrapper over S3 async client for ZIO
+[ZIO S3](https://github.com/zio/zio-s3) is a thin wrapper over S3 async client for ZIO.
 
-Setup
------
+@PROJECT_BADGES@
 
-```
-//support scala 2.12 / 2.13
-
-libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
-```
-
-How to use it ?
----------------
+## Introduction
 
 ZIO-S3 is a thin wrapper over the s3 async java client. It exposes the main operations of the s3 java client.
-
 
 ```scala
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -44,70 +35,66 @@ import software.amazon.awssdk.services.s3.model.S3Exception
 
 All available s3 combinators and operations are available in the package object `zio.s3`, you only need to `import zio.s3._`
 
+## Installation
 
-Credentials
------------
-
-zio-s3 expose credentials providers from aws https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html
-If credentials cannot be found in one or multiple providers selected the operation will fail with `InvalidCredentials`
+In order to use this library, we need to add the following line in our `build.sbt` file:
 
 ```scala
+libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@" 
+```
+
+## Example 1
+
+Let's try an example of creating a bucket and adding an object into it. To run this example, we need to run an instance of _Minio_ which is object storage compatible with S3:
+
+```bash
+docker run -p 9000:9000 -e MINIO_ACCESS_KEY=MyKey -e MINIO_SECRET_KEY=MySecret minio/minio  server --compat /data
+```
+
+In this example we create a bucket and then add a JSON object to it and then retrieve that:
+
+```scala mdoc:compile-only
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import zio._
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.model.S3Exception
+import zio._
 import zio.s3._
-import zio.s3.providers._
+import zio.stream.{ZStream, ZPipeline}
+import zio.{Chunk, ExitCode, URIO}
 
-// build S3 Layer from basic credentials
-val s3: Layer[S3Exception, S3] =
-  live(Region.AF_SOUTH_1, AwsBasicCredentials.create("key", "secret"))
+import java.net.URI
 
-// build S3 Layer from System properties or Environment variables
-val s3: Layer[S3Exception, S3] =
-  liveZIO(Region.AF_SOUTH_1, system <> env)
+object ZIOS3Example extends ZIOAppDefault {
 
-// build S3 Layer  from Instance profile credentials
-val s3: Layer[S3Exception, S3] =
-  liveZIO(Region.AF_SOUTH_1, instanceProfile)
+  val myApp = for {
+    _ <- createBucket("docs")
+    json = Chunk.fromArray("""{  "id" : 1 , "name" : "A1" }""".getBytes)
+    _ <- putObject(
+      bucketName = "docs",
+      key = "doc1",
+      contentLength = json.length,
+      content = ZStream.fromChunk(json),
+      options = UploadOptions.fromContentType("application/json")
+    )
+    _ <- getObject("docs", "doc1")
+      .via(ZPipeline.utf8Decode)
+      .foreach(Console.printLine(_))
+  } yield ()
 
-// build S3 Layer from web identity token credentials with STS. awssdk sts module required to be on classpath
-val s3: Layer[S3Exception, S3] = liveZIO(Region.AF_SOUTH_1, webIdentity)
-
-// build S3 Layer from default available credentials providers
-val s3: Layer[S3Exception, S3] = liveZIO(Region.AF_SOUTH_1, default)
-
-// use custom logic to fetch aws credentials
-val zcredentials: ZIO[R, S3Exception, AwsCredentials] = ??? // specific implementation to fetch credentials
-val s3: ZLayer[Any, S3Exception, S3] = settings(Region.AF_SOUTH_1, zcredentials) >>> live
-
-
+  def run =
+    myApp
+      .provide(
+        live(
+          Region.CA_CENTRAL_1,
+          AwsBasicCredentials.create("MyKey", "MySecret"),
+          Some(URI.create("http://localhost:9000"))
+        )
+      )
+}
 ```
 
-Test / Stub
------------
+## Example 2
 
-a stub implementation of s3 storage is provided for testing purpose and use internally a filesystem to simulate s3 storage
-
-```scala
-import zio.nio.core.file.{Path => ZPath}
-import zio.s3._
-
-// build s3 Layer
-val stubS3: ZLayer[Any, Nothing, S3] = stub(ZPath("/tmp/s3-data"))
-
-// list all buckets available by using S3 Stub Layer 
-// will list all directories of `/tmp/s3-data`
-listBuckets.provideLayer(stubS3) 
-```
-
-More information here on how to use [ZLayer https://zio.dev/docs/howto/howto_use_layers](https://zio.dev/docs/howto/howto_use_layers)
-
-
-Examples
---------
-
-```scala
+```scala mdoc:compile-only
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.stream.{ ZSink, ZStream }
@@ -143,8 +130,7 @@ val os: OutputStream = ???
 val proc3: ZIO[S3, Exception, Long] = getObject("bucket-1", "upload/myfile.zip").run(ZSink.fromOutputStream(os))
 ```
 
-Support any commands ?
----
+## Support any commands?
 
 If you need a method which is not wrapped by the library, you can have access to underlying S3 client in a safe manner by using
 
