@@ -23,7 +23,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
 val zioVersion = "2.0.2"
-val awsVersion = "2.16.61"
+val awsVersion = "2.16.104"
 
 lazy val `zio-s3` = project
   .in(file("."))
