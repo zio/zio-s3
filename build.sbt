@@ -56,8 +56,9 @@ lazy val `zio-s3` = project
 
 lazy val docs = project
   .in(file("zio-s3-docs"))
+  .settings(stdSettings("zio-s3-docs"))
+  .settings(dottySettings)
   .settings(
-    skip / publish := true,
     moduleName := "zio-s3-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
