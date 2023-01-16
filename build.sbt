@@ -25,8 +25,11 @@ addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck"
 val zioVersion = "2.0.2"
 val awsVersion = "2.16.61"
 
+lazy val root =
+  project.in(file(".")).settings(publish / skip := true).aggregate(`zio-s3`, docs)
+
 lazy val `zio-s3` = project
-  .in(file("."))
+  .in(file("zio-s3"))
   .enablePlugins(BuildInfoPlugin)
   .settings(buildInfoSettings("zio.s3"))
   .settings(stdSettings("zio-s3"))
@@ -58,17 +61,12 @@ lazy val docs = project
     moduleName := "zio-s3-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
-    libraryDependencies ++= Seq(
-      "dev.zio" %% "zio" % zioVersion
-    ),
+    libraryDependencies ++= Seq("dev.zio" %% "zio" % zioVersion),
     projectName := "ZIO S3",
-    badgeInfo := Some(
-      BadgeInfo(
-        artifact = "zio-s3_2.12",
-        projectStage = ProjectStage.ProductionReady
-      )
-    ),
-    docsPublishBranch := "zio2"
+    mainModuleName := (`zio-s3` / moduleName).value,
+    projectStage := ProjectStage.ProductionReady,
+    docsPublishBranch := "series/2.x",
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(`zio-s3`)
   )
   .dependsOn(`zio-s3`)
   .enablePlugins(WebsitePlugin)
