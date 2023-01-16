@@ -64,7 +64,7 @@ jobs:
         run: |
             docker-compose -f "docker-compose.yml" up -d --build
       - name: Test
-        run: ./sbt ++${{ matrix.scala }}! test
+        run: ./sbt ++${{ matrix.scala }} test
 
   testJvms:
     runs-on: ubuntu-20.04
