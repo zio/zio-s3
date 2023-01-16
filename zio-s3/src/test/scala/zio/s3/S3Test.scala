@@ -31,7 +31,7 @@ object S3LiveSpec extends ZIOSpecDefault {
 }
 
 object S3TestSpec extends ZIOSpecDefault {
-  private val root = ZPath("test-data")
+  private val root = ZPath("../test-data")
 
   private val s3: ZLayer[Any, Nothing, S3] = zio.s3.stub(root)
 
