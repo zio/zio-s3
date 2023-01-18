@@ -40,7 +40,7 @@ package object s3 {
 
   def liveZIO[R](
     region: Region,
-    provider: RIO[R with Scope, AwsCredentialsProvider],
+    provider: RIO[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI] = None
   ): ZLayer[R, S3Exception, S3] =
     ZLayer.scoped[R](

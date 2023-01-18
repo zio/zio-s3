@@ -41,10 +41,10 @@ object S3TestSpec extends ZIOSpecDefault {
 
 object InvalidS3LayerTestSpec extends ZIOSpecDefault {
 
-  private val s3: ZLayer[Any, S3Exception, S3] =
-    zio.s3.liveZIO[Any](Region.EU_CENTRAL_1, providers.default)
+  private val s3: ZLayer[Scope, S3Exception, S3] =
+    zio.s3.liveZIO(Region.EU_CENTRAL_1, providers.default)
 
-  override def spec: Spec[Any, Nothing] =
+  override def spec =
     suite("InvalidS3LayerTest") {
       test("listBuckets") {
         listBuckets.provideLayer(s3).either.map(assert(_)(isLeft(isSubtype[S3Exception](anything))))
