@@ -19,15 +19,16 @@ package zio.s3
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.core.exception.SdkException
-import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder }
 import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder }
 import zio._
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
 import zio.s3.S3Bucket.S3BucketListing
-import zio.stream.{ Stream, ZSink, ZStream }
 import zio.s3.errors._
 import zio.s3.errors.syntax._
+import zio.stream.{ Stream, ZSink, ZStream }
+
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
@@ -114,7 +115,8 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions
+    options: UploadOptions,
+    contentMD5: Option[String] = None
   ): ZIO[R, S3Exception, Unit] =
     content
       .mapErrorCause(_.flatMap(_.asS3Exception()))
@@ -131,9 +133,15 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
                 .key(key)
                 .metadata(options.metadata.asJava)
                 .acl(options.cannedAcl)
-              options.contentType
-                .fold(builder)(builder.contentType)
-                .build()
+
+              List(
+                (b: PutObjectRequest.Builder) =>
+                  options.contentType
+                    .fold(b)(b.contentType),
+                (b: PutObjectRequest.Builder) =>
+                  contentMD5
+                    .fold(b)(b.contentMD5)
+              ).foldLeft(builder) { case (b, f) => f(b) }.build()
             },
             AsyncRequestBody.fromPublisher(publisher)
           )

@@ -16,19 +16,21 @@
 
 package zio.s3
 
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.utils.{ BinaryUtils, Md5Utils }
+import zio._
+import zio.nio.channels.AsynchronousFileChannel
+import zio.nio.file.{ Files, Path => ZPath }
+import zio.s3.S3Bucket._
+import zio.stream.{ Stream, ZStream }
+
 import java.io.{ FileInputStream, FileNotFoundException }
+import java.nio.charset.StandardCharsets
 import java.nio.file.{ NoSuchFileException, StandardOpenOption }
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
-import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.model.S3Exception
-import zio._
-import zio.nio.channels.AsynchronousFileChannel
-import zio.nio.file.{ Path => ZPath }
-import zio.nio.file.Files
-import zio.s3.S3Bucket._
-import zio.stream.{ Stream, ZStream }
 
 /**
  * Stub Service which is back by a filesystem storage
@@ -86,9 +88,19 @@ object Test {
           (for {
             res                    <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
             (contentType, metadata) = res
+            contents               <- Files
+                                        .readAllBytes(path / bucketName / key)
+                                        .catchAll(_ => ZIO.succeed(Chunk.fromArray("".getBytes)))
             file                   <- Files
                                         .readAttributes[BasicFileAttributes](path / bucketName / key)
-                                        .map(p => ObjectMetadata(metadata, contentType, p.size()))
+                                        .map(p =>
+                                          ObjectMetadata(
+                                            metadata,
+                                            contentType,
+                                            p.size(),
+                                            BinaryUtils.toHex(Md5Utils.computeMD5Hash(contents.asString(StandardCharsets.UTF_8).getBytes))
+                                          )
+                                        )
           } yield file)
             .refineOrDie {
               case e: NoSuchFileException => fileNotFound(e)
@@ -157,7 +169,8 @@ object Test {
           key: String,
           contentLength: Long,
           content: ZStream[R, Throwable, Byte],
-          options: UploadOptions
+          options: UploadOptions,
+          contentMD5: Option[String] = None
         ): ZIO[R, S3Exception, Unit] =
           (for {
             _       <- refDb.update(db =>
