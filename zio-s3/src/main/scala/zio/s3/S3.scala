@@ -2,10 +2,10 @@ package zio.s3
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
-import zio.{ IO, ZIO }
-import zio.s3.errors.DecodingException
 import zio.s3.S3Bucket.S3BucketListing
+import zio.s3.errors.DecodingException
 import zio.stream.{ Stream, ZPipeline, ZStream }
+import zio.{ IO, ZIO }
 
 import java.nio.charset.CharacterCodingException
 import java.util.concurrent.CompletableFuture
@@ -88,10 +88,24 @@ trait S3 { self =>
   /**
    * Store data object into a specific bucket
    *
+   * ==Example of creating a contentMD5 option==
+   *
+   * The md5 option is required when the target bucket is configured with object locking, otherwise
+   * the AWS S3 API will not accept the [[putObject]] request.
+   *
+   * {{{
+   *  import software.amazon.awssdk.utils.Md5Utils
+   *  import scala.util.Random
+   *
+   *  val bytes  = Random.nextString(65536).getBytes()
+   *  val contentMD5 = Some(Md5Utils.md5AsBase64(bytes))
+   * }}}
+   *
    * @param bucketName name of the bucket
    * @param key unique object identifier
    * @param contentLength length of the data in bytes
    * @param content object data
+   * @param contentMD5 a String Option containing the MD5 hash of the content encoded as base64
    * @return
    */
   def putObject[R](
@@ -99,7 +113,8 @@ trait S3 { self =>
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default
+    options: UploadOptions = UploadOptions.default,
+    contentMD5: Option[String] = None
   ): ZIO[R, S3Exception, Unit]
 
   /**

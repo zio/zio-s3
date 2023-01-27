@@ -1,11 +1,9 @@
 package zio.s3
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-
-import java.net.URI
-import java.util.UUID
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
+import software.amazon.awssdk.utils.{ BinaryUtils, Md5Utils }
 import zio.nio.file.{ Path => ZPath }
 import zio.stream.{ ZPipeline, ZStream }
 import zio.test.Assertion._
@@ -13,6 +11,8 @@ import zio.test.TestAspect.sequential
 import zio.test._
 import zio.{ Chunk, Scope, ZLayer }
 
+import java.net.URI
+import java.util.UUID
 import scala.util.Random
 
 object S3LiveSpec extends ZIOSpecDefault {
@@ -211,13 +211,20 @@ object S3Suite {
 
       },
       test("put object") {
-        val c             = Chunk.fromArray(Random.nextString(65536).getBytes())
+        val bytes         = Random.nextString(65536).getBytes()
+        val c             = Chunk.fromArray(bytes)
         val contentLength = c.length.toLong
         val data          = ZStream.fromChunks(c).rechunk(5)
         val tmpKey        = Random.alphanumeric.take(10).mkString
 
         for {
-          _                   <- putObject(bucketName, tmpKey, contentLength, data)
+          _                   <- putObject(
+                                   bucketName,
+                                   tmpKey,
+                                   contentLength,
+                                   data,
+                                   UploadOptions.default
+                                 )
           objectContentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                                    deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectContentLength == contentLength)
@@ -357,6 +364,35 @@ object S3Suite {
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectMetadata.contentType == "application/json") &&
           assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
+      },
+      test("put object when there is a contentMD5 option, content type and metadata") {
+        val bytes         = Random.nextString(65536).getBytes()
+        val _metadata     = Map("key1" -> "value1")
+        val md5Base64     = Md5Utils.md5AsBase64(bytes)
+        val c             = Chunk.fromArray(bytes)
+        val contentLength = c.length.toLong
+        val data          = ZStream.fromChunks(c).rechunk(5)
+        val tmpKey        = Random.alphanumeric.take(10).mkString
+
+        for {
+          _        <- putObject(
+                        bucketName,
+                        tmpKey,
+                        contentLength,
+                        data,
+                        UploadOptions.from(_metadata, "application/json"),
+                        Some(md5Base64)
+                      )
+          metadata <- getObjectMetadata(bucketName, tmpKey) <*
+                        deleteObject(bucketName, tmpKey)
+          actualMD5 = BinaryUtils.toBase64(BinaryUtils.fromHex(metadata.eTag))
+        } yield assertTrue(
+          metadata.contentLength == contentLength,
+          actualMD5 == md5Base64,
+          metadata.contentType == "application/json",
+          metadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1")
+        )
+
       }
     ) @@ sequential
 

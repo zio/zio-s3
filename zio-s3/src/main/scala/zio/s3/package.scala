@@ -21,8 +21,8 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
 import zio.nio.file.{ Path => ZPath }
-import zio.s3.errors._
 import zio.s3.S3Bucket.S3BucketListing
+import zio.s3.errors._
 import zio.s3.providers.const
 import zio.stream.ZStream
 
@@ -108,9 +108,10 @@ package object s3 {
     key: String,
     contentLength: Long,
     content: ZStream[R, Throwable, Byte],
-    options: UploadOptions = UploadOptions.default
+    options: UploadOptions = UploadOptions.default,
+    contentMD5: Option[String] = None
   ): ZIO[S3 with R, S3Exception, Unit] =
-    ZIO.serviceWithZIO[S3](_.putObject(bucketName, key, contentLength, content, options))
+    ZIO.serviceWithZIO[S3](_.putObject(bucketName, key, contentLength, content, options, contentMD5))
 
   /**
    * Same as multipartUpload with default parallelism = 1

@@ -16,11 +16,10 @@
 
 package zio.s3
 
-import java.time.Instant
-
 import software.amazon.awssdk.services.s3.model.{ Bucket, HeadObjectResponse, ListObjectsV2Response }
 import zio.Chunk
 
+import java.time.Instant
 import scala.jdk.CollectionConverters._
 
 final case class S3Bucket(name: String, creationDate: Instant)
@@ -69,11 +68,23 @@ final case class S3ObjectSummary(bucketName: String, key: String, lastModified: 
  * @param metadata the user-defined metadata without the "x-amz-meta-" prefix
  * @param contentType the content type of the object (application/json, application/zip, text/plain, ...)
  * @param contentLength the size of the object in bytes
+ * @param eTag the etag for the response as hex string
  */
-final case class ObjectMetadata(metadata: Map[String, String], contentType: String, contentLength: Long)
+final case class ObjectMetadata(
+  metadata: Map[String, String],
+  contentType: String,
+  contentLength: Long,
+  eTag: String
+)
 
 object ObjectMetadata {
 
   def fromResponse(r: HeadObjectResponse): ObjectMetadata =
-    ObjectMetadata(r.metadata().asScala.toMap, r.contentType(), r.contentLength())
+    ObjectMetadata(
+      r.metadata().asScala.toMap,
+      r.contentType(),
+      r.contentLength(),
+      // ETag is including quotes
+      r.eTag().replace("\"", "")
+    )
 }
