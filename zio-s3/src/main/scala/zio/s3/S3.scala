@@ -105,7 +105,7 @@ trait S3 { self =>
    * @param key unique object identifier
    * @param contentLength length of the data in bytes
    * @param content object data
-   * @param contentMD5 [[Option]] of [[String]] containing the MD5 hash of the content encoded as base64
+   * @param contentMD5 a String Option containing the MD5 hash of the content encoded as base64
    * @return
    */
   def putObject[R](
