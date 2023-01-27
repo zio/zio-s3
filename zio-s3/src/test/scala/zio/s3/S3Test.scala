@@ -191,6 +191,13 @@ object S3Suite {
                        .fold(ex => ex.statusCode() == 404, _ => false)
         } yield assertTrue(succeed)
       },
+      test("get object metadata - invalid identifier") {
+        for {
+          succeed <- getObjectMetadata(bucketName, UUID.randomUUID().toString)
+                       .refineToOrDie[S3Exception]
+                       .fold(ex => ex.statusCode() == 404, _ => false)
+        } yield assertTrue(succeed)
+      },
       test("get nextObjects") {
         for {
           token   <- listObjects(bucketName, ListObjectOptions.fromMaxKeys(1)).map(_.nextContinuationToken)

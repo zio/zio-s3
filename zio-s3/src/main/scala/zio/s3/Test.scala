@@ -16,8 +16,8 @@
 
 package zio.s3
 
-import java.io.FileInputStream
-import java.nio.file.StandardOpenOption
+import java.io.{ FileInputStream, FileNotFoundException }
+import java.nio.file.{ NoSuchFileException, StandardOpenOption }
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -30,14 +30,12 @@ import zio.nio.file.Files
 import zio.s3.S3Bucket._
 import zio.stream.{ Stream, ZStream }
 
-import java.io.FileNotFoundException
-
 /**
  * Stub Service which is back by a filesystem storage
  */
 object Test {
 
-  private def fileNotFound(err: FileNotFoundException): S3Exception =
+  private def fileNotFound(err: Throwable): S3Exception =
     S3Exception
       .builder()
       .message("Key does not exist.")
@@ -91,7 +89,10 @@ object Test {
             file                   <- Files
                                         .readAttributes[BasicFileAttributes](path / bucketName / key)
                                         .map(p => ObjectMetadata(metadata, contentType, p.size()))
-          } yield file).orDie
+          } yield file)
+            .refineOrDie {
+              case e: NoSuchFileException => fileNotFound(e)
+            }
 
         override def listObjects(
           bucketName: String,
