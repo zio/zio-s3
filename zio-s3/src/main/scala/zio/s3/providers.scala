@@ -7,7 +7,7 @@ import zio.s3.errors._
 object providers {
 
   def const(credential: AwsCredentials): UIO[AwsCredentialsProvider] =
-    ZIO.succeedNow[AwsCredentialsProvider](() => credential)
+    ZIO.succeed[AwsCredentialsProvider](() => credential)
 
   def basic(accessKeyId: String, secretAccessKey: String): UIO[AwsCredentialsProvider] =
     const(AwsBasicCredentials.create(accessKeyId, secretAccessKey))
