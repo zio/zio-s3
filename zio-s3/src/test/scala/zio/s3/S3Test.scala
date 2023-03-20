@@ -101,6 +101,13 @@ object S3Suite {
             )
         )
       },
+      test("list objects with path-like prefix") {
+        for {
+          succeed <- listObjects(bucketName, ListObjectOptions.from("dir1", 10))
+        } yield assert(succeed.objectSummaries.map(_.key))(
+          hasSameElements(List("dir1/hello.txt", "dir1/user.csv"))
+        )
+      },
       test("list objects with not match prefix") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.from("blah", 10))
