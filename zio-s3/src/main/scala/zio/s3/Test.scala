@@ -112,18 +112,32 @@ object Test {
         ): IO[S3Exception, S3ObjectListing] =
           Files
             .find(path / bucketName) {
-              case (p, _) if options.delimiter.nonEmpty =>
-                options.prefix.fold(true)((path / bucketName).relativize(p).toString().startsWith)
-              case (p, _)                               =>
-                options.prefix.fold(true)(p.filename.toString().startsWith)
+              case (_, fileAttr) =>
+                fileAttr.isRegularFile
             }
-            .mapZIO(p => Files.readAttributes[BasicFileAttributes](p).map(a => a -> p))
-            .filter { case (attr, _) => attr.isRegularFile }
+            .mapZIO { filePath =>
+              Files.readAttributes[BasicFileAttributes](filePath).map { attrs =>
+                attrs -> (path / bucketName).relativize(filePath).toString()
+              }
+            }
+            .filter {
+              case (_, relativePath) =>
+                options.prefix.fold(true)(relativePath.startsWith)
+            }
+            .filter {
+              case (_, relativePath) =>
+                options.delimiter.fold(true) { delim =>
+                  relativePath
+                    .stripPrefix(options.prefix.getOrElse(""))
+                    .stripSuffix(delim)
+                    .indexOf(delim) < 0
+                }
+            }
             .map {
-              case (attr, f) =>
+              case (attr, relativePath) =>
                 S3ObjectSummary(
                   bucketName,
-                  (path / bucketName).relativize(f).toString(),
+                  relativePath,
                   attr.lastModifiedTime().toInstant,
                   attr.size()
                 )

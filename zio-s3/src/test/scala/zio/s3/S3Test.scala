@@ -113,12 +113,20 @@ object S3Suite {
           succeed <- listObjects(bucketName, ListObjectOptions.from("blah", 10))
         } yield assertTrue(succeed.bucketName -> succeed.objectSummaries == bucketName -> Chunk.empty)
       },
-      test("list objects with delimiter") {
+      test("list objects with prefix and delimiter") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions(Some("dir1/"), 10, Some("/"), None))
         } yield assertTrue(
-          succeed.bucketName          -> succeed.objectSummaries
-            .map(_.key) == bucketName -> Chunk("dir1/hello.txt", "dir1/user.csv")
+          succeed.bucketName -> succeed.objectSummaries.map(_.key) ==
+            bucketName       -> Chunk("dir1/hello.txt", "dir1/user.csv")
+        )
+      },
+      test("list objects with delimiter") {
+        for {
+          succeed <- listObjects(bucketName, ListObjectOptions(None, 10, Some("/"), None))
+        } yield assertTrue(
+          succeed.bucketName -> succeed.objectSummaries.map(_.key) ==
+            bucketName       -> Chunk("console.log")
         )
       },
       test("list objects with startAfter dir1/hello.txt") {
