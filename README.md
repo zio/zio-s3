@@ -40,7 +40,7 @@ All available s3 combinators and operations are available in the package object 
 In order to use this library, we need to add the following line in our `build.sbt` file:
 
 ```scala
-libraryDependencies += "dev.zio" %% "zio-s3" % "0.4.2.3" 
+libraryDependencies += "dev.zio" %% "zio-s3" % "0.4.2.4" 
 ```
 
 ## Example 1
