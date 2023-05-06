@@ -178,8 +178,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3.Service {
       parts    <- ZStream
                     .managed(
                       content
-                        .chunkN(options.partSize)
-                        .mapChunks(Chunk.single)
+                        .grouped(options.partSize)
                         .peel(ZSink.head[Chunk[Byte]])
                     )
                     .flatMap {
