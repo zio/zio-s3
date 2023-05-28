@@ -2,6 +2,7 @@ package zio.s3
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.regions.Region
+import zio.s3.errors._
 import zio.test._
 
 object S3SettingsTest extends ZIOSpecDefault {

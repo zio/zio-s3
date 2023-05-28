@@ -16,28 +16,28 @@
 
 package zio.s3
 
-import java.io.FileInputStream
-import java.nio.file.StandardOpenOption
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.UUID
-import java.util.concurrent.CompletableFuture
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.utils.{ BinaryUtils, Md5Utils }
 import zio._
 import zio.nio.channels.AsynchronousFileChannel
-import zio.nio.file.{ Path => ZPath }
-import zio.nio.file.Files
+import zio.nio.file.{ Files, Path => ZPath }
 import zio.s3.S3Bucket._
 import zio.stream.{ Stream, ZStream }
 
-import java.io.FileNotFoundException
+import java.io.{ FileInputStream, FileNotFoundException }
+import java.nio.charset.StandardCharsets
+import java.nio.file.{ NoSuchFileException, StandardOpenOption }
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.UUID
+import java.util.concurrent.CompletableFuture
 
 /**
  * Stub Service which is back by a filesystem storage
  */
 object Test {
 
-  private def fileNotFound(err: FileNotFoundException): S3Exception =
+  private def fileNotFound(err: Throwable): S3Exception =
     S3Exception
       .builder()
       .message("Key does not exist.")
@@ -88,10 +88,23 @@ object Test {
           (for {
             res                    <- refDb.get.map(_.getOrElse(bucketName + key, "" -> Map.empty[String, String]))
             (contentType, metadata) = res
+            contents               <- Files
+                                        .readAllBytes(path / bucketName / key)
+                                        .catchAll(_ => ZIO.succeed(Chunk.fromArray("".getBytes)))
             file                   <- Files
                                         .readAttributes[BasicFileAttributes](path / bucketName / key)
-                                        .map(p => ObjectMetadata(metadata, contentType, p.size()))
-          } yield file).orDie
+                                        .map(p =>
+                                          ObjectMetadata(
+                                            metadata,
+                                            contentType,
+                                            p.size(),
+                                            BinaryUtils.toHex(Md5Utils.computeMD5Hash(contents.asString(StandardCharsets.UTF_8).getBytes))
+                                          )
+                                        )
+          } yield file)
+            .refineOrDie {
+              case e: NoSuchFileException => fileNotFound(e)
+            }
 
         override def listObjects(
           bucketName: String,
@@ -99,18 +112,32 @@ object Test {
         ): IO[S3Exception, S3ObjectListing] =
           Files
             .find(path / bucketName) {
-              case (p, _) if options.delimiter.nonEmpty =>
-                options.prefix.fold(true)((path / bucketName).relativize(p).toString().startsWith)
-              case (p, _)                               =>
-                options.prefix.fold(true)(p.filename.toString().startsWith)
+              case (_, fileAttr) =>
+                fileAttr.isRegularFile
             }
-            .mapZIO(p => Files.readAttributes[BasicFileAttributes](p).map(a => a -> p))
-            .filter { case (attr, _) => attr.isRegularFile }
+            .mapZIO { filePath =>
+              Files.readAttributes[BasicFileAttributes](filePath).map { attrs =>
+                attrs -> (path / bucketName).relativize(filePath).toString()
+              }
+            }
+            .filter {
+              case (_, relativePath) =>
+                options.prefix.fold(true)(relativePath.startsWith)
+            }
+            .filter {
+              case (_, relativePath) =>
+                options.delimiter.fold(true) { delim =>
+                  relativePath
+                    .stripPrefix(options.prefix.getOrElse(""))
+                    .stripSuffix(delim)
+                    .indexOf(delim) < 0
+                }
+            }
             .map {
-              case (attr, f) =>
+              case (attr, relativePath) =>
                 S3ObjectSummary(
                   bucketName,
-                  (path / bucketName).relativize(f).toString(),
+                  relativePath,
                   attr.lastModifiedTime().toInstant,
                   attr.size()
                 )
@@ -156,7 +183,8 @@ object Test {
           key: String,
           contentLength: Long,
           content: ZStream[R, Throwable, Byte],
-          options: UploadOptions
+          options: UploadOptions,
+          contentMD5: Option[String] = None
         ): ZIO[R, S3Exception, Unit] =
           (for {
             _       <- refDb.update(db =>

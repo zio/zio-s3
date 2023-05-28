@@ -2,11 +2,12 @@ package zio.s3
 
 import software.amazon.awssdk.auth.credentials._
 import zio.{ IO, Scope, UIO, ZIO }
+import zio.s3.errors._
 
 object providers {
 
   def const(credential: AwsCredentials): UIO[AwsCredentialsProvider] =
-    ZIO.succeedNow[AwsCredentialsProvider](() => credential)
+    ZIO.succeed[AwsCredentialsProvider](() => credential)
 
   def basic(accessKeyId: String, secretAccessKey: String): UIO[AwsCredentialsProvider] =
     const(AwsBasicCredentials.create(accessKeyId, secretAccessKey))

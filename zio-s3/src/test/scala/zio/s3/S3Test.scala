@@ -1,11 +1,9 @@
 package zio.s3
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-
-import java.net.URI
-import java.util.UUID
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{ ObjectCannedACL, S3Exception }
+import software.amazon.awssdk.utils.{ BinaryUtils, Md5Utils }
 import zio.nio.file.{ Path => ZPath }
 import zio.stream.{ ZPipeline, ZStream }
 import zio.test.Assertion._
@@ -13,6 +11,8 @@ import zio.test.TestAspect.sequential
 import zio.test._
 import zio.{ Chunk, Scope, ZLayer }
 
+import java.net.URI
+import java.util.UUID
 import scala.util.Random
 
 object S3LiveSpec extends ZIOSpecDefault {
@@ -31,7 +31,7 @@ object S3LiveSpec extends ZIOSpecDefault {
 }
 
 object S3TestSpec extends ZIOSpecDefault {
-  private val root = ZPath("test-data")
+  private val root = ZPath("../test-data")
 
   private val s3: ZLayer[Any, Nothing, S3] = zio.s3.stub(root)
 
@@ -41,10 +41,10 @@ object S3TestSpec extends ZIOSpecDefault {
 
 object InvalidS3LayerTestSpec extends ZIOSpecDefault {
 
-  private val s3: ZLayer[Any, S3Exception, S3] =
-    zio.s3.liveZIO[Any](Region.EU_CENTRAL_1, providers.default)
+  private val s3: ZLayer[Scope, S3Exception, S3] =
+    zio.s3.liveZIO(Region.EU_CENTRAL_1, providers.default)
 
-  override def spec: Spec[Any, Nothing] =
+  override def spec =
     suite("InvalidS3LayerTest") {
       test("listBuckets") {
         listBuckets.provideLayer(s3).either.map(assert(_)(isLeft(isSubtype[S3Exception](anything))))
@@ -101,17 +101,32 @@ object S3Suite {
             )
         )
       },
+      test("list objects with path-like prefix") {
+        for {
+          succeed <- listObjects(bucketName, ListObjectOptions.from("dir1", 10))
+        } yield assert(succeed.objectSummaries.map(_.key))(
+          hasSameElements(List("dir1/hello.txt", "dir1/user.csv"))
+        )
+      },
       test("list objects with not match prefix") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions.from("blah", 10))
         } yield assertTrue(succeed.bucketName -> succeed.objectSummaries == bucketName -> Chunk.empty)
       },
-      test("list objects with delimiter") {
+      test("list objects with prefix and delimiter") {
         for {
           succeed <- listObjects(bucketName, ListObjectOptions(Some("dir1/"), 10, Some("/"), None))
         } yield assertTrue(
-          succeed.bucketName          -> succeed.objectSummaries
-            .map(_.key) == bucketName -> Chunk("dir1/hello.txt", "dir1/user.csv")
+          succeed.bucketName -> succeed.objectSummaries.map(_.key) ==
+            bucketName       -> Chunk("dir1/hello.txt", "dir1/user.csv")
+        )
+      },
+      test("list objects with delimiter") {
+        for {
+          succeed <- listObjects(bucketName, ListObjectOptions(None, 10, Some("/"), None))
+        } yield assertTrue(
+          succeed.bucketName -> succeed.objectSummaries.map(_.key) ==
+            bucketName       -> Chunk("console.log")
         )
       },
       test("list objects with startAfter dir1/hello.txt") {
@@ -187,8 +202,16 @@ object S3Suite {
           succeed <- getObject(bucketName, UUID.randomUUID().toString)
                        .via(ZPipeline.utf8Decode)
                        .runCollect
-                       .fold(_ => false, _ => true)
-        } yield assertTrue(!succeed)
+                       .refineToOrDie[S3Exception]
+                       .fold(ex => ex.statusCode() == 404, _ => false)
+        } yield assertTrue(succeed)
+      },
+      test("get object metadata - invalid identifier") {
+        for {
+          succeed <- getObjectMetadata(bucketName, UUID.randomUUID().toString)
+                       .refineToOrDie[S3Exception]
+                       .fold(ex => ex.statusCode() == 404, _ => false)
+        } yield assertTrue(succeed)
       },
       test("get nextObjects") {
         for {
@@ -203,13 +226,20 @@ object S3Suite {
 
       },
       test("put object") {
-        val c             = Chunk.fromArray(Random.nextString(65536).getBytes())
+        val bytes         = Random.nextString(65536).getBytes()
+        val c             = Chunk.fromArray(bytes)
         val contentLength = c.length.toLong
         val data          = ZStream.fromChunks(c).rechunk(5)
         val tmpKey        = Random.alphanumeric.take(10).mkString
 
         for {
-          _                   <- putObject(bucketName, tmpKey, contentLength, data)
+          _                   <- putObject(
+                                   bucketName,
+                                   tmpKey,
+                                   contentLength,
+                                   data,
+                                   UploadOptions.default
+                                 )
           objectContentLength <- getObjectMetadata(bucketName, tmpKey).map(_.contentLength) <*
                                    deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectContentLength == contentLength)
@@ -349,6 +379,35 @@ object S3Suite {
           objectMetadata <- getObjectMetadata(bucketName, tmpKey) <* deleteObject(bucketName, tmpKey)
         } yield assertTrue(objectMetadata.contentType == "application/json") &&
           assertTrue(objectMetadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1"))
+      },
+      test("put object when there is a contentMD5 option, content type and metadata") {
+        val bytes         = Random.nextString(65536).getBytes()
+        val _metadata     = Map("key1" -> "value1")
+        val md5Base64     = Md5Utils.md5AsBase64(bytes)
+        val c             = Chunk.fromArray(bytes)
+        val contentLength = c.length.toLong
+        val data          = ZStream.fromChunks(c).rechunk(5)
+        val tmpKey        = Random.alphanumeric.take(10).mkString
+
+        for {
+          _        <- putObject(
+                        bucketName,
+                        tmpKey,
+                        contentLength,
+                        data,
+                        UploadOptions.from(_metadata, "application/json"),
+                        Some(md5Base64)
+                      )
+          metadata <- getObjectMetadata(bucketName, tmpKey) <*
+                        deleteObject(bucketName, tmpKey)
+          actualMD5 = BinaryUtils.toBase64(BinaryUtils.fromHex(metadata.eTag))
+        } yield assertTrue(
+          metadata.contentLength == contentLength,
+          actualMD5 == md5Base64,
+          metadata.contentType == "application/json",
+          metadata.metadata.map { case (k, v) => k.toLowerCase -> v } == Map("key1" -> "value1")
+        )
+
       }
     ) @@ sequential
 
