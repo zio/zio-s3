@@ -201,7 +201,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       def writer(
         uploadId: String
       ): ZChannel[Any, Nothing, Chunk[Byte], Any, S3Exception, Chunk[CompletedPart], Unit] =
-        go(false, 1)
+        go(hasFirst = false, 1)
           .mapOutZIOPar(parallelism) {
             case (chunk, partNumber) =>
               execute(
@@ -216,8 +216,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
                     .build(),
                   AsyncRequestBody.fromBytes(chunk.toArray)
                 )
-              ).map(r => Chunk.single(CompletedPart.builder().partNumber(partNumber.toInt + 1).eTag(r.eTag()).build()))
+              ).map(r => Chunk.single(CompletedPart.builder().partNumber(partNumber).eTag(r.eTag()).build()))
           }
+          .mapErrorCause(_.flatMap(_.asS3Exception()))
 
       ZSink.fromChannel(writer(uploadId)).collectLeftover.map(_._2)
     }
