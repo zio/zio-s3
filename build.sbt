@@ -38,7 +38,7 @@ lazy val `zio-s3` = project
     libraryDependencies ++= Seq(
       "dev.zio"               %% "zio"                         % zioVersion,
       "dev.zio"               %% "zio-streams"                 % zioVersion,
-      "dev.zio"               %% "zio-nio"                     % "2.0.0",
+      "dev.zio"               %% "zio-nio"                     % "2.0.2",
       "dev.zio"               %% "zio-interop-reactivestreams" % "2.0.0",
       "software.amazon.awssdk" % "s3"                          % awsVersion,
       "software.amazon.awssdk" % "sts"                         % awsVersion,
