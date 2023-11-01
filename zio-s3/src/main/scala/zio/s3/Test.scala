@@ -23,7 +23,7 @@ import zio._
 import zio.nio.channels.AsynchronousFileChannel
 import zio.nio.file.{ Files, Path => ZPath }
 import zio.s3.S3Bucket._
-import zio.stream.{ Stream, ZStream }
+import zio.stream.{ Stream, ZChannel, ZSink, ZStream }
 
 import java.io.{ FileInputStream, FileNotFoundException }
 import java.nio.charset.StandardCharsets
@@ -215,31 +215,38 @@ object Test {
         override def execute[T](f: S3AsyncClient => CompletableFuture[T]): IO[S3Exception, T] =
           ZIO.dieMessage("Not implemented error - please don't call execute() S3 Test mode")
 
-        override def multipartUpload[R](
-          bucketName: String,
-          key: String,
-          content: ZStream[R, Throwable, Byte],
-          options: MultipartUploadOptions
-        )(parallelism: Int): ZIO[R, S3Exception, Unit] = {
+        override def multipartUploadSink(bucketName: ContentType, key: ContentType, options: MultipartUploadOptions)(
+          parallelism: Int
+        ): ZSink[Any, S3Exception, Byte, Byte, Unit] = {
           val _contentType = options.uploadOptions.contentType.orElse(Some("binary/octet-stream"))
 
-          for {
-            _ <- ZIO.dieMessage(s"parallelism must be > 0. $parallelism is invalid").unless(parallelism > 0)
-            _ <-
-              ZIO
-                .dieMessage(
-                  s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
-                )
-                .unless(options.partSize >= PartSize.Min)
-            _ <- putObject(
-                   bucketName,
-                   key,
-                   0,
-                   content.rechunk(options.partSize),
-                   options.uploadOptions.copy(contentType = _contentType)
-                 )
-          } yield ()
+          ZSink.unwrap(
+            for {
+              _ <- ZIO.dieMessage(s"parallelism must be > 0. $parallelism is invalid").unless(parallelism > 0)
+              _ <-
+                ZIO
+                  .dieMessage(
+                    s"Invalid part size ${Math.floor(options.partSize.toDouble / PartSize.Mega.toDouble * 100d) / 100d} Mb, minimum size is ${PartSize.Min / PartSize.Mega} Mb"
+                  )
+                  .unless(options.partSize >= PartSize.Min)
+            } yield ZSink
+              .fromChannel(ZChannel.identity[Nothing, Chunk[Byte], Any])
+              .zipParRight(
+                ZSink
+                  .collectAll[Byte]
+                  .mapZIO(chunk =>
+                    putObject(
+                      bucketName,
+                      key,
+                      0,
+                      ZStream.fromChunk(chunk).rechunk(options.partSize),
+                      options.uploadOptions.copy(contentType = _contentType)
+                    )
+                  )
+              )
+          )
         }
+
       }
     }
   }
