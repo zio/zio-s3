@@ -22,8 +22,8 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "2.0.2"
-val awsVersion = "2.16.61"
+val zioVersion = "2.0.21"
+val awsVersion = "2.23.4"
 
 lazy val root =
   project.in(file(".")).settings(publish / skip := true).aggregate(`zio-s3`, docs)
@@ -38,8 +38,8 @@ lazy val `zio-s3` = project
     libraryDependencies ++= Seq(
       "dev.zio"               %% "zio"                         % zioVersion,
       "dev.zio"               %% "zio-streams"                 % zioVersion,
-      "dev.zio"               %% "zio-nio"                     % "2.0.0",
-      "dev.zio"               %% "zio-interop-reactivestreams" % "2.0.0",
+      "dev.zio"               %% "zio-nio"                     % "2.0.2",
+      "dev.zio"               %% "zio-interop-reactivestreams" % "2.0.2",
       "software.amazon.awssdk" % "s3"                          % awsVersion,
       "software.amazon.awssdk" % "sts"                         % awsVersion,
       "dev.zio"               %% "zio-test"                    % zioVersion % Test,
@@ -49,7 +49,7 @@ lazy val `zio-s3` = project
       if (scalaVersion.value == ScalaDotty)
         Seq()
       else
-        Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
+        Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0")
     },
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
