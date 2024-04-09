@@ -422,3 +422,4 @@ website/static/api
 .minio.sys/
 
 .vscode/
+/zio-s3/src/test/scala/zio/s3/S3App.scala
