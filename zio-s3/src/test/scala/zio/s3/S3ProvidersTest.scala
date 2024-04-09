@@ -27,22 +27,22 @@ object S3ProvidersTest extends ZIOSpecDefault {
     suite("Providers")(
       test("basic credentials") {
         ZIO
-          .scoped(basic("k", "v").map(_.resolveCredentials()))
+          .scoped[Any](basic("k", "v").map(_.resolveCredentials()))
           .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
       test("session credentials") {
         ZIO
-          .scoped(session("k", "v", "t").map(_.resolveCredentials()))
+          .scoped[Any](session("k", "v", "t").map(_.resolveCredentials()))
           .map(res => assertTrue(res == AwsSessionCredentials.create("k", "v", "t")))
       },
       test("basic credentials default fallback const") {
         ZIO
-          .scoped((env <> basic("k", "v")).map(_.resolveCredentials()))
+          .scoped[Any]((env <> basic("k", "v")).map(_.resolveCredentials()))
           .map(res => assertTrue(res == AwsBasicCredentials.create("k", "v")))
       },
       test("cred in system properties") {
         for {
-          cred <- ZIO.scoped(system.flatMap(p => ZIO.attempt(p.resolveCredentials())))
+          cred <- ZIO.scoped[Any](system.flatMap(p => ZIO.attempt(p.resolveCredentials())))
         } yield assertTrue(cred == AwsBasicCredentials.create("k1", "s1"))
       } @@ flaky @@ around(
         setProps(("aws.accessKeyId", "k1"), ("aws.secretAccessKey", "s1")),
@@ -50,7 +50,7 @@ object S3ProvidersTest extends ZIOSpecDefault {
       ),
       test("no cred in system properties") {
         for {
-          failure <- ZIO.scoped(system).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](system).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       } @@ around(
         unsetProps("aws.accessKeyId", "aws.secretAccessKey"),
@@ -58,41 +58,41 @@ object S3ProvidersTest extends ZIOSpecDefault {
       ),
       test("no cred in environment properties") {
         for {
-          failure <- ZIO.scoped(env).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](env).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("no cred in profile") {
         for {
-          failure <- ZIO.scoped(profile).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](profile).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("no cred in named profile") {
         for {
-          failure <- ZIO.scoped(profile(Some("name"))).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](profile(Some("name"))).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("no cred in container") {
         for {
-          failure <- ZIO.scoped(container).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](container).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("no cred in instance profile credentials") {
         for {
-          failure <- ZIO.scoped(instanceProfile).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](instanceProfile).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("no cred in webidentity credentials") {
         for {
-          failure <- ZIO.scoped(webIdentity).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](webIdentity).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       },
       test("settings from invalid creds") {
         for {
           failure <- ZIO
-                       .scoped(
+                       .scoped[Any](
                          settings(
                            Region.AF_SOUTH_1,
-                           ZIO.scoped(system).map(_.resolveCredentials())
+                           ZIO.scoped[Any](system).map(_.resolveCredentials())
                          ).build
                        )
                        .flip
@@ -100,7 +100,7 @@ object S3ProvidersTest extends ZIOSpecDefault {
       },
       test("no cred when chain all providers") {
         for {
-          failure <- ZIO.scoped(default.flatMap(c => ZIO.attempt(c.resolveCredentials()))).flip.map(_.getMessage)
+          failure <- ZIO.scoped[Any](default.flatMap(c => ZIO.attempt(c.resolveCredentials()))).flip.map(_.getMessage)
         } yield assert(failure)(isNonEmptyString)
       }
     ) @@ sequential

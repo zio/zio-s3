@@ -78,7 +78,7 @@ object Test {
 
         override def getObject(bucketName: String, key: String): Stream[S3Exception, Byte] =
           ZStream
-            .scoped(ZIO.fromAutoCloseable(ZIO.attempt(new FileInputStream((path / bucketName / key).toFile))))
+            .scoped[Any](ZIO.fromAutoCloseable(ZIO.attempt(new FileInputStream((path / bucketName / key).toFile))))
             .flatMap(ZStream.fromInputStream(_, 2048))
             .refineOrDie {
               case e: FileNotFoundException => fileNotFound(e)
