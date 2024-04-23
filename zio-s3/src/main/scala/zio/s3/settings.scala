@@ -40,10 +40,10 @@ object S3Region { self =>
     new S3Region(Region.of(r)) {}
 }
 
-final case class S3Settings(s3Region: S3Region, credentials: AwsCredentials)
+final case class S3Settings(s3Region: S3Region, credentials: AwsCredentials, forcePathStyle: Option[Boolean])
 
 object S3Settings {
 
-  def from(region: Region, credentials: AwsCredentials): IO[InvalidSettings, S3Settings] =
-    ZIO.fromEither(S3Region.from(region)).map(S3Settings(_, credentials))
+  def from(region: Region, credentials: AwsCredentials, forcePathStyle: Option[Boolean] = None): IO[InvalidSettings, S3Settings] =
+    ZIO.fromEither(S3Region.from(region)).map(S3Settings(_, credentials, forcePathStyle))
 }
