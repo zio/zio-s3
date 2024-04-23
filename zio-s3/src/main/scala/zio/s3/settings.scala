@@ -44,6 +44,10 @@ final case class S3Settings(s3Region: S3Region, credentials: AwsCredentials, for
 
 object S3Settings {
 
-  def from(region: Region, credentials: AwsCredentials, forcePathStyle: Option[Boolean] = None): IO[InvalidSettings, S3Settings] =
+  def from(
+    region: Region,
+    credentials: AwsCredentials,
+    forcePathStyle: Option[Boolean] = None
+  ): IO[InvalidSettings, S3Settings] =
     ZIO.fromEither(S3Region.from(region)).map(S3Settings(_, credentials, forcePathStyle))
 }

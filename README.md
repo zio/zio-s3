@@ -40,7 +40,7 @@ All available s3 combinators and operations are available in the package object 
 In order to use this library, we need to add the following line in our `build.sbt` file:
 
 ```scala
-libraryDependencies += "dev.zio" %% "zio-s3" % "0.4.2.4" 
+libraryDependencies += "dev.zio" %% "zio-s3" % "0.4.3"
 ```
 
 ## Example 1
@@ -106,7 +106,7 @@ val json: Chunk[Byte] = Chunk.fromArray("""{  "id" : 1 , "name" : "A1" }""".getB
 val up: ZIO[S3, S3Exception, Unit] = putObject(
   "bucket-1",
   "user.json",
-  json.length,
+  json.length.toLong,
   ZStream.fromChunk(json),
   UploadOptions.fromContentType("application/json")
 )

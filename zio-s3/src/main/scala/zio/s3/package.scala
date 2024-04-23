@@ -32,10 +32,19 @@ import java.util.concurrent.CompletableFuture
 package object s3 {
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
-  def settings[R](region: Region, cred: ZIO[R, S3Exception, AwsCredentials], forcePathStyle: Option[Boolean] = None): ZLayer[R, S3Exception, S3Settings] =
+  def settings[R](
+    region: Region,
+    cred: ZIO[R, S3Exception, AwsCredentials],
+    forcePathStyle: Option[Boolean] = None
+  ): ZLayer[R, S3Exception, S3Settings] =
     ZLayer(cred.flatMap(S3Settings.from(region, _, forcePathStyle)))
 
-  def live(region: Region, credentials: AwsCredentials, uriEndpoint: Option[URI] = None, forcePathStyle: Option[Boolean] = None): Layer[S3Exception, S3] =
+  def live(
+    region: Region,
+    credentials: AwsCredentials,
+    uriEndpoint: Option[URI] = None,
+    forcePathStyle: Option[Boolean] = None
+  ): Layer[S3Exception, S3] =
     liveZIO(region, const(credentials), uriEndpoint, forcePathStyle)
 
   def liveZIO[R](

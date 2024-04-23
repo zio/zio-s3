@@ -48,7 +48,7 @@ libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
 Let's try an example of creating a bucket and adding an object into it. To run this example, we need to run an instance of _Minio_ which is object storage compatible with S3:
 
 ```bash
-docker run -p 9000:9000 -e MINIO_ACCESS_KEY=MyKey -e MINIO_SECRET_KEY=MySecret minio/minio  server --compat /data
+docker run -p 9000:9000 -e MINIO_ROOT_USER=MyKey -e MINIO_ROOT_PASSWORD=MySecret minio/minio  server --compat /data
 ```
 
 In this example we create a bucket and then add a JSON object to it and then retrieve that:
@@ -59,7 +59,7 @@ import software.amazon.awssdk.regions.Region
 import zio._
 import zio.s3._
 import zio.stream.{ZStream, ZPipeline}
-import zio.{Chunk, ExitCode, URIO}
+import zio.Chunk
 
 import java.net.URI
 
@@ -71,7 +71,7 @@ object ZIOS3Example extends ZIOAppDefault {
     _ <- putObject(
       bucketName = "docs",
       key = "doc1",
-      contentLength = json.length,
+      contentLength = json.length.toLong,
       content = ZStream.fromChunk(json),
       options = UploadOptions.fromContentType("application/json")
     )
@@ -86,7 +86,8 @@ object ZIOS3Example extends ZIOAppDefault {
         live(
           Region.CA_CENTRAL_1,
           AwsBasicCredentials.create("MyKey", "MySecret"),
-          Some(URI.create("http://localhost:9000"))
+          Some(URI.create("http://localhost:9000")),
+          forcePathStyle = Some(true) // Required for path-style S3 requests (MinIO by default uses them)
         )
       )
 }
@@ -105,7 +106,7 @@ val json: Chunk[Byte] = Chunk.fromArray("""{  "id" : 1 , "name" : "A1" }""".getB
 val up: ZIO[S3, S3Exception, Unit] = putObject(
   "bucket-1",
   "user.json",
-  json.length,
+  json.length.toLong,
   ZStream.fromChunk(json),
   UploadOptions.fromContentType("application/json")
 )
