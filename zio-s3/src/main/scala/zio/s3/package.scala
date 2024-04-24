@@ -32,18 +32,14 @@ import java.util.concurrent.CompletableFuture
 package object s3 {
   type S3Stream[A] = ZStream[S3, S3Exception, A]
 
-  def settings[R](
-    region: Region,
-    cred: ZIO[R, S3Exception, AwsCredentials],
-    forcePathStyle: Option[Boolean] = None
-  ): ZLayer[R, S3Exception, S3Settings] =
-    ZLayer(cred.flatMap(S3Settings.from(region, _, forcePathStyle)))
+  def settings[R](region: Region, cred: ZIO[R, S3Exception, AwsCredentials]): ZLayer[R, S3Exception, S3Settings] =
+    ZLayer(cred.flatMap(S3Settings.from(region, _)))
 
   def live(
     region: Region,
     credentials: AwsCredentials,
     uriEndpoint: Option[URI] = None,
-    forcePathStyle: Option[Boolean] = None
+    forcePathStyle: Boolean = false
   ): Layer[S3Exception, S3] =
     liveZIO(region, const(credentials), uriEndpoint, forcePathStyle)
 
@@ -51,7 +47,7 @@ package object s3 {
     region: Region,
     provider: RIO[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI] = None,
-    forcePathStyle: Option[Boolean] = None
+    forcePathStyle: Boolean = false
   ): ZLayer[R, S3Exception, S3] =
     ZLayer.scoped[R](
       ZIO
@@ -60,7 +56,7 @@ package object s3 {
     )
 
   val live: ZLayer[S3Settings, ConnectionError, S3] = ZLayer.scoped(
-    ZIO.serviceWithZIO[S3Settings](s => Live.connect(s.s3Region, const(s.credentials), None, s.forcePathStyle))
+    ZIO.serviceWithZIO[S3Settings](s => Live.connect(s.s3Region, const(s.credentials), None))
   )
 
   def stub(path: ZPath): ZLayer[Any, Nothing, S3] =
