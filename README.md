@@ -87,7 +87,7 @@ object ZIOS3Example extends ZIOAppDefault {
           Region.CA_CENTRAL_1,
           AwsBasicCredentials.create("MyKey", "MySecret"),
           Some(URI.create("http://localhost:9000")),
-          forcePathStyle = true // Required for path-style S3 requests (MinIO by default uses them)
+          forcePathStyle = Some(true) // Required for path-style S3 requests (MinIO by default uses them)
         )
       )
 }

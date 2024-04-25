@@ -38,7 +38,7 @@ object S3LiveHostnameSpec extends ZIOSpecDefault {
         Region.CA_CENTRAL_1,
         AwsBasicCredentials.create("TESTKEY", "TESTSECRET"),
         Some(URI.create("http://localhost:9000")),
-        forcePathStyle = true
+        forcePathStyle = Some(true)
       )
       .mapError(TestFailure.die)
 

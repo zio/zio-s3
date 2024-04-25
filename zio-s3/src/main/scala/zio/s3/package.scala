@@ -39,7 +39,7 @@ package object s3 {
     region: Region,
     credentials: AwsCredentials,
     uriEndpoint: Option[URI] = None,
-    forcePathStyle: Boolean = false
+    forcePathStyle: Option[Boolean] = None
   ): Layer[S3Exception, S3] =
     liveZIO(region, const(credentials), uriEndpoint, forcePathStyle)
 
@@ -47,7 +47,7 @@ package object s3 {
     region: Region,
     provider: RIO[R, AwsCredentialsProvider],
     uriEndpoint: Option[URI] = None,
-    forcePathStyle: Boolean = false
+    forcePathStyle: Option[Boolean] = None
   ): ZLayer[R, S3Exception, S3] =
     ZLayer.scoped[R](
       ZIO
