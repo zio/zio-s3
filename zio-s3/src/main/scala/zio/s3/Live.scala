@@ -234,7 +234,8 @@ object Live {
   def connect[R](
     region: S3Region,
     provider: RIO[R with Scope, AwsCredentialsProvider],
-    uriEndpoint: Option[URI]
+    uriEndpoint: Option[URI],
+    forcePathStyle: Option[Boolean] = None
   ): ZIO[R with Scope, ConnectionError, S3] =
     for {
       credentials <- provider.mapError(e => ConnectionError(e.getMessage, e.getCause))
@@ -244,6 +245,7 @@ object Live {
                          .credentialsProvider(credentials)
                          .region(region.region)
                        uriEndpoint.foreach(builder.endpointOverride)
+                       forcePathStyle.foreach(builder.forcePathStyle(_))
                        builder
                      }
       service     <- connect(builder)

@@ -30,6 +30,22 @@ object S3LiveSpec extends ZIOSpecDefault {
     S3Suite.spec("S3LiveSpec").provideLayerShared(s3)
 }
 
+object S3LiveHostnameSpec extends ZIOSpecDefault {
+
+  private val s3 =
+    zio.s3
+      .live(
+        Region.CA_CENTRAL_1,
+        AwsBasicCredentials.create("TESTKEY", "TESTSECRET"),
+        Some(URI.create("http://localhost:9000")),
+        forcePathStyle = Some(true)
+      )
+      .mapError(TestFailure.die)
+
+  override def spec: Spec[TestEnvironment with Scope, Any] =
+    S3Suite.spec("S3LiveHostnameSpec").provideLayerShared(s3)
+}
+
 object S3TestSpec extends ZIOSpecDefault {
   private val root = ZPath("../test-data")
 
@@ -44,7 +60,7 @@ object InvalidS3LayerTestSpec extends ZIOSpecDefault {
   private val s3: ZLayer[Scope, S3Exception, S3] =
     zio.s3.liveZIO(Region.EU_CENTRAL_1, providers.default)
 
-  override def spec =
+  override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("InvalidS3LayerTest") {
       test("listBuckets") {
         listBuckets.provideLayer(s3).either.map(assert(_)(isLeft(isSubtype[S3Exception](anything))))
