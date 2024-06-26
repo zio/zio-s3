@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
-      - name: Setup Action
+      - name: Setup Scala and Java
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:21
@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3.3.0
-      - name: Setup Action
+      - name: Setup Scala and Java
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:21
@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
-      - name: Setup Action
+      - name: Setup Scala and Java
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:${{ matrix.java }}
@@ -79,16 +79,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['11', '17', '21']
+        java: ['corretto:17.0.11.9.1', 'corretto:21.0.3.9.1']
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
-      - name: Setup Action
+      - name: Setup Scala and Java
         uses: coursier/setup-action@v1
         with:
-          jvm: temurin:${{ matrix.java }}
+          jvm: ${{ matrix.java }}
           apps: sbt
       - name: Cache scala dependencies
         uses: coursier/cache-action@v6
@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0
-      - name: Setup Action
+      - name: Setup Scala and Java
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:21
