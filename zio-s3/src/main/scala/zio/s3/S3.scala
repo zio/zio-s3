@@ -2,12 +2,14 @@ package zio.s3
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest
 import zio.s3.S3Bucket.S3BucketListing
 import zio.s3.errors.DecodingException
 import zio.stream.{ Stream, ZPipeline, ZStream }
 import zio.{ IO, ZIO }
 
 import java.nio.charset.CharacterCodingException
+import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -176,6 +178,12 @@ trait S3 { self =>
       case current @ S3ObjectListing(_, _, _, _, None, _) => ZIO.succeed(current -> None)
       case current                                        => self.getNextObjects(current).map(next => current -> Some(next))
     }
+
+  def presignGetObject(
+    bucketName: String,
+    key: String,
+    signatureDuration: Duration
+  ): IO[S3Exception, PresignedGetObjectRequest]
 
   /**
    * *

@@ -18,6 +18,7 @@ package zio.s3
 
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest
 import software.amazon.awssdk.utils.{ BinaryUtils, Md5Utils }
 import zio._
 import zio.nio.channels.AsynchronousFileChannel
@@ -240,6 +241,9 @@ object Test {
                  )
           } yield ()
         }
+
+        override def presignGetObject(bucketName: ContentType, key: ContentType, signatureDuration: Duration)
+          : IO[S3Exception, PresignedGetObjectRequest] = ZIO.fail(???)
       }
     }
   }
