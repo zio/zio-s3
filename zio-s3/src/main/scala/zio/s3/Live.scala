@@ -164,14 +164,17 @@ final class Live(unsafeClient: S3AsyncClient, s3Presigner: S3Presigner) extends 
     key: String,
     signatureDuration: Duration
   ): IO[S3Exception, PresignedGetObjectRequest] =
+    presignGetObject(
+      GetObjectPresignRequest
+        .builder()
+        .signatureDuration(signatureDuration)
+        .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(key).build())
+        .build()
+    )
+
+  override def presignGetObject(request: GetObjectPresignRequest): IO[S3Exception, PresignedGetObjectRequest] =
     ZIO.succeed {
-      s3Presigner.presignGetObject(
-        GetObjectPresignRequest
-          .builder()
-          .signatureDuration(signatureDuration)
-          .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(key).build())
-          .build()
-      )
+      s3Presigner.presignGetObject(request)
     }
 
   def multipartUpload[R](
