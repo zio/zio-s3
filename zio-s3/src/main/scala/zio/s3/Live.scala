@@ -20,7 +20,9 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.core.async.{ AsyncRequestBody, AsyncResponseTransformer, SdkPublisher }
 import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder }
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.{ GetObjectPresignRequest, PresignedGetObjectRequest }
+import software.amazon.awssdk.services.s3.{ S3AsyncClient, S3AsyncClientBuilder, S3Configuration }
 import zio._
 import zio.interop.reactivestreams._
 import zio.s3.Live.{ StreamAsyncResponseTransformer, StreamResponse }
@@ -39,7 +41,7 @@ import scala.jdk.CollectionConverters._
  *
  * @param unsafeClient: Amazon Async S3 Client
  */
-final class Live(unsafeClient: S3AsyncClient) extends S3 {
+final class Live(unsafeClient: S3AsyncClient, s3Presigner: S3Presigner) extends S3 {
 
   override def createBucket(bucketName: String): IO[S3Exception, Unit] =
     execute(_.createBucket(CreateBucketRequest.builder().bucket(bucketName).build())).unit
@@ -149,6 +151,29 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       }
       .unit
 
+  /**
+   * This method generates a `PresignedGetObjectRequest` containing an URL that allows the object to be downloaded
+   * without any credentials. Signature happens locally, it does not issue any network call. It's not a pure
+   * computation neither as it performs an IO by looking at the current time.
+   *
+   * See https://web.archive.org/web/20240621234636/https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html
+   * for further details regarding signature with S3.
+   */
+  override def presignGetObject(
+    bucketName: String,
+    key: String,
+    signatureDuration: Duration
+  ): IO[S3Exception, PresignedGetObjectRequest] =
+    ZIO.succeed {
+      s3Presigner.presignGetObject(
+        GetObjectPresignRequest
+          .builder()
+          .signatureDuration(signatureDuration)
+          .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(key).build())
+          .build()
+      )
+    }
+
   def multipartUpload[R](
     bucketName: String,
     key: String,
@@ -227,6 +252,7 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       case s3: S3Exception   => s3
       case sdk: SdkException => SdkError(sdk)
     }
+
 }
 
 object Live {
@@ -238,23 +264,39 @@ object Live {
     forcePathStyle: Option[Boolean] = None
   ): ZIO[R with Scope, ConnectionError, S3] =
     for {
-      credentials <- provider.mapError(e => ConnectionError(e.getMessage, e.getCause))
-      builder     <- ZIO.succeed {
-                       val builder = S3AsyncClient
-                         .builder()
-                         .credentialsProvider(credentials)
-                         .region(region.region)
-                       uriEndpoint.foreach(builder.endpointOverride)
-                       forcePathStyle.foreach(builder.forcePathStyle(_))
-                       builder
-                     }
-      service     <- connect(builder)
+      credentials        <- provider.mapError(e => ConnectionError(e.getMessage, e.getCause))
+      builder            <- ZIO.succeed {
+                              val builder = S3AsyncClient
+                                .builder()
+                                .credentialsProvider(credentials)
+                                .region(region.region)
+                              uriEndpoint.foreach(builder.endpointOverride)
+                              forcePathStyle.foreach(builder.forcePathStyle(_))
+                              builder
+                            }
+      s3PresignerBuilder <- ZIO.succeed {
+                              val builder = S3Presigner
+                                .builder()
+                                .credentialsProvider(credentials)
+                                .region(region.region)
+                                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
+                              uriEndpoint.foreach(builder.endpointOverride)
+                              builder
+                            }
+      service            <- connect(builder, s3PresignerBuilder)
     } yield service
 
-  def connect[R](builder: S3AsyncClientBuilder): ZIO[R with Scope, ConnectionError, S3] =
-    ZIO
-      .fromAutoCloseable(ZIO.attempt(builder.build()))
-      .mapBoth(e => ConnectionError(e.getMessage, e.getCause), new Live(_))
+  def connect[R](
+    builder: S3AsyncClientBuilder,
+    s3PresignerBuilder: S3Presigner.Builder
+  ): ZIO[R with Scope, ConnectionError, S3] =
+    for {
+      s3Client    <- ZIO
+                       .fromAutoCloseable(ZIO.attempt(builder.build()))
+                       .mapError(e => ConnectionError(e.getMessage, e.getCause))
+      s3Presigner <- ZIO.fromAutoCloseable(ZIO.succeed(s3PresignerBuilder.build()))
+
+    } yield new Live(s3Client, s3Presigner)
 
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
 
