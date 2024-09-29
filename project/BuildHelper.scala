@@ -10,7 +10,7 @@ import scalafix.sbt.ScalafixPlugin.autoImport._
 object BuildHelper {
   val Scala212   = "2.12.15"
   val Scala213   = "2.13.14"
-  val ScalaDotty = "3.3.3"
+  val ScalaDotty = "3.3.4"
 
   private val stdOptions = Seq(
     "-deprecation",
