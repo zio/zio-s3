@@ -8,6 +8,8 @@ addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.3.2")
 addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.5")
 addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.5.4")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.5.2")
-addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.3.4")
+addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.4.0-alpha.28")
+addSbtPlugin("dev.zio"            % "zio-sbt-ci"                % "0.4.0-alpha.28")
 
 addDependencyTreePlugin
+resolvers ++= Resolver.sonatypeOssRepos("public")
