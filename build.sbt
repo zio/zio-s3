@@ -1,4 +1,7 @@
-import BuildHelper._
+import BuildHelper.*
+import zio.sbt.githubactions.Job
+
+def ciJobWithSetup(job: Job) = job.copy(runsOn = "ubuntu-22.04")
 
 inThisBuild(
   List(
@@ -15,7 +18,14 @@ inThisBuild(
     pgpSecretRing := file("/tmp/secret.asc"),
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-s3/"), "scm:git:git@github.com:zio/zio-s3.git")
-    )
+    ),
+    ciEnabledBranches  := Seq("series/2.x"),
+    ciTestJobs         := ciTestJobs.value.map(ciJobWithSetup),
+    ciLintJobs         := ciLintJobs.value.map(ciJobWithSetup),
+    ciBuildJobs        := ciBuildJobs.value.map(ciJobWithSetup),
+    ciReleaseJobs      := ciReleaseJobs.value.map(ciJobWithSetup),
+    ciUpdateReadmeJobs := ciUpdateReadmeJobs.value.map(ciJobWithSetup),
+    ciPostReleaseJobs  := ciPostReleaseJobs.value.map(ciJobWithSetup),
   )
 )
 
@@ -24,6 +34,9 @@ addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck"
 
 val zioVersion = "2.0.21"
 val awsVersion = "2.25.70"
+
+
+
 
 lazy val root =
   project.in(file(".")).settings(publish / skip := true).aggregate(`zio-s3`, docs)
@@ -58,7 +71,6 @@ lazy val docs = project
     projectName := "ZIO S3",
     mainModuleName := (`zio-s3` / moduleName).value,
     projectStage := ProjectStage.ProductionReady,
-    docsPublishBranch := "series/2.x",
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(`zio-s3`),
     //conflict with the dependency zio-nio & sbt-mdoc
     excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_3"
