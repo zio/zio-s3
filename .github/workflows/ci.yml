@@ -112,7 +112,7 @@ jobs:
       - name: Cache scala dependencies
         uses: coursier/cache-action@v6
       - name: Release artifacts
-        run: sbt publish
+        run: sbt + publish
         env:
           NEXUS_USER: ${{ secrets.NEXUS_USER }}
           NEXUS_PWD: ${{ secrets.NEXUS_PWD }}
