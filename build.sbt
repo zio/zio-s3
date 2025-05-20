@@ -22,7 +22,7 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "2.0.21"
+val zioVersion = "2.0.22"
 val awsVersion = "2.25.70"
 
 lazy val root =
