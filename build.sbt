@@ -22,8 +22,8 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "2.0.21"
-val awsVersion = "2.25.70"
+val zioVersion = "2.0.22"
+val awsVersion = "2.31.45"
 
 lazy val root =
   project.in(file(".")).settings(publish / skip := true).aggregate(`zio-s3`, docs)
