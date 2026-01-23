@@ -5,9 +5,10 @@ const sidebars = {
       label: "ZIO S3",
       collapsed: false,
       link: { type: "doc", id: "index" },
-      items: [ 
+      items: [
         "credentials",
-        "testing" 
+        "testing",
+        "troubleshooting"
       ]
     }
   ]
