@@ -54,12 +54,13 @@ For files larger than 5MB, prefer `multipartUpload` which handles large files mo
 import zio._
 import zio.s3._
 import zio.stream.ZStream
+import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.FileInputStream
 import java.nio.file.Path
 
-def uploadLargeFile(bucket: String, key: String, path: Path): ZIO[S3, Throwable, Unit] = {
+def uploadLargeFile(bucket: String, key: String, path: Path): ZIO[S3, S3Exception, Unit] = {
   val stream = ZStream.fromInputStream(new FileInputStream(path.toFile))
-  multipartUpload(bucket, key, stream)(chunkSize = 10) // 10MB chunks
+  multipartUpload(bucket, key, stream)(parallelism = 10)
 }
 ```
 
