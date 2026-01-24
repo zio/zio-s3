@@ -21,16 +21,15 @@ Control the number of concurrent uploads to prevent excessive buffer allocation:
 import zio._
 import zio.s3._
 import zio.stream.ZStream
+import software.amazon.awssdk.services.s3.model.S3Exception
 
-def uploadFiles(files: List[(String, String, ZStream[Any, Throwable, Byte])]): ZIO[S3, Throwable, Unit] =
+// For files >= 5MB, use multipartUpload with semaphore to limit concurrency
+def uploadFiles(files: List[(String, String, ZStream[Any, Throwable, Byte])]): ZIO[S3, S3Exception, Unit] =
   for {
     semaphore <- Semaphore.make(50) // limit to 50 concurrent uploads
     _ <- ZIO.foreachPar(files) { case (bucket, key, content) =>
       semaphore.withPermit {
-        for {
-          bytes <- content.runCollect
-          _ <- putObject(bucket, key, bytes.length.toLong, ZStream.fromChunk(bytes))
-        } yield ()
+        multipartUpload(bucket, key, content)(parallelism = 1)
       }
     }
   } yield ()
@@ -68,7 +67,7 @@ def uploadLargeFile(bucket: String, key: String, path: Path): ZIO[S3, S3Exceptio
 
 | Scenario | Recommended Approach |
 |----------|---------------------|
-| Many small files (< 5MB) | Semaphore + `putObject` |
-| Large files (> 5MB) | `multipartUpload` |
-| Mixed workload | Combine Semaphore with size-based routing |
-| Memory-constrained environment | JVM option + Semaphore |
+| Small files (< 5MB) | `putObject` with known content length |
+| Large files (≥ 5MB) | Semaphore + `multipartUpload` |
+| Mixed workload | Size-based routing to appropriate method |
+| Memory-constrained environment | JVM option + reduced concurrency |
