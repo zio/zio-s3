@@ -53,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['11', '17', '21']
+        java: ['17', '21', '25']
         scala: ['2.12.20', '2.13.16', '3.3.6']
     steps:
       - name: Checkout current branch
@@ -79,7 +79,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['11', '17', '21']
+        java: ['17', '21', '25']
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v3.3.0
