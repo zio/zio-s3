@@ -8,6 +8,6 @@ addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.3.2")
 addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.5")
 addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.7.1")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.5.4")
-addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.3.4")
+addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.5.1")
 
 addDependencyTreePlugin
