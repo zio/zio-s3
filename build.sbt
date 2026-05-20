@@ -58,7 +58,6 @@ lazy val docs = project
     projectName := "ZIO S3",
     mainModuleName := (`zio-s3` / moduleName).value,
     projectStage := ProjectStage.ProductionReady,
-    docsPublishBranch := "series/2.x",
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(`zio-s3`),
     //conflict with the dependency zio-nio & sbt-mdoc
     excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_3"
