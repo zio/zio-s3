@@ -33,10 +33,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       echo Waiting for minio service to be ready...;
-      curl --retry 30 --retry-delay 2 -s -o /dev/null http://minio:9000/minio/health/live
-
       echo Minio is ready;
-      /usr/bin/mc config host add my-minio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc alias set my-minio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
       /usr/bin/mc mb -p my-minio/bucket-1;
       /usr/bin/mc mirror /export/ my-minio/bucket-1;
       /usr/bin/mc ls my-minio/bucket-1;
