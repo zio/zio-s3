@@ -33,7 +33,7 @@ object errors {
   final case class InvalidSettings(message: String) extends S3Exception(S3Exception.builder().message(message))
 
   final case class ConnectionError(message: String, cause: Throwable)
-      extends S3Exception(S3Exception.builder().message(message))
+      extends S3Exception(S3Exception.builder().message(message).cause(cause))
 
   final case class InvalidPartSize(message: String, size: Int)
       extends S3Exception(S3Exception.builder().message(message))
