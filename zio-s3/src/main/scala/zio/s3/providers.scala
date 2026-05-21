@@ -83,6 +83,6 @@ object providers {
    */
   val default: ZIO[Scope, InvalidCredentials, AwsCredentialsProvider] =
     ZIO.fromAutoCloseable(
-      ZIO.succeed(DefaultCredentialsProvider.create())
+      ZIO.succeed(DefaultCredentialsProvider.builder().build())
     )
 }
