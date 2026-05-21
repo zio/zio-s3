@@ -9,6 +9,13 @@ object S3SettingsTest extends ZIOSpecDefault {
 
   def spec: Spec[Any, InvalidSettings] =
     suite("Settings")(
+      suite("ConnectionError")(
+        test("getCause returns the wrapped throwable") {
+          val underlying = new RuntimeException("underlying")
+          val error      = ConnectionError("connection failed", underlying)
+          assertTrue(error.getCause == underlying)
+        }
+      ),
       test("invalid region") {
         for {
           failure <- S3Settings
