@@ -1,13 +1,9 @@
-addSbtPlugin("com.github.sbt"     % "sbt-unidoc"                % "0.6.1")
-addSbtPlugin("ch.epfl.scala"      % "sbt-bloop"                 % "2.0.19")
-addSbtPlugin("ch.epfl.scala"      % "sbt-scalafix"              % "0.14.3")
 addSbtPlugin("com.eed3si9n"       % "sbt-buildinfo"             % "0.13.1")
-addSbtPlugin("com.geirsson"       % "sbt-ci-release"            % "1.5.5")
 addSbtPlugin("com.github.cb372"   % "sbt-explicit-dependencies" % "0.2.16")
 addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.3.2")
-addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.5")
-addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.9.0")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.5.4")
+addSbtPlugin("dev.zio"            % "zio-sbt-ecosystem"         % "0.5.2")
+addSbtPlugin("dev.zio"            % "zio-sbt-ci"                % "0.5.2")
 addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.5.2")
 
 addDependencyTreePlugin

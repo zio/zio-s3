@@ -1,21 +1,17 @@
-import BuildHelper._
+import BuildHelper.{ buildInfoSettings => _, stdSettings => _, _ }
+
+enablePlugins(ZioSbtEcosystemPlugin, ZioSbtCiPlugin)
 
 inThisBuild(
   List(
-    organization := "dev.zio",
-    homepage := Some(url("https://zio.dev/zio-s3/")),
-    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    name := "ZIO S3",
     developers := List(
       Developer("regis-leray", "Regis Leray", "regis.leray@gmail.com", url("https://github.com/regis-leray"))
     ),
+    ciEnabledBranches := Seq("series/2.x"),
+    ciBackgroundJobs := Seq("docker compose -f docker-compose.yml up -d --build"),
     Test / fork := true,
-    (Test / parallelExecution) := false,
-    pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
-    pgpPublicRing := file("/tmp/public.asc"),
-    pgpSecretRing := file("/tmp/secret.asc"),
-    scmInfo := Some(
-      ScmInfo(url("https://github.com/zio/zio-s3/"), "scm:git:git@github.com:zio/zio-s3.git")
-    )
+    (Test / parallelExecution) := false
   )
 )
 
@@ -31,8 +27,8 @@ lazy val root =
 lazy val `zio-s3` = project
   .in(file("zio-s3"))
   .enablePlugins(BuildInfoPlugin)
-  .settings(buildInfoSettings("zio.s3"))
-  .settings(stdSettings("zio-s3"))
+  .settings(BuildHelper.buildInfoSettings("zio.s3"))
+  .settings(BuildHelper.stdSettings("zio-s3"))
   .settings(dottySettings)
   .settings(
     libraryDependencies ++= Seq(
@@ -50,7 +46,7 @@ lazy val `zio-s3` = project
 
 lazy val docs = project
   .in(file("zio-s3-docs"))
-  .settings(stdSettings("zio-s3-docs"))
+  .settings(BuildHelper.stdSettings("zio-s3-docs"))
   .settings(
     moduleName := "zio-s3-docs",
     scalacOptions -= "-Yno-imports",
