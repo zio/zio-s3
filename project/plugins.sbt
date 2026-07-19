@@ -6,7 +6,7 @@ addSbtPlugin("com.geirsson"       % "sbt-ci-release"            % "1.5.5")
 addSbtPlugin("com.github.cb372"   % "sbt-explicit-dependencies" % "0.2.16")
 addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.3.2")
 addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.5")
-addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.9.0")
+addSbtPlugin("org.scalameta"      % "sbt-mdoc"                  % "2.9.1")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.5.4")
 addSbtPlugin("dev.zio"            % "zio-sbt-website"           % "0.5.2")
 
