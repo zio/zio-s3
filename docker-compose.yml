@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -21,7 +21,7 @@ services:
     command: server /data --console-address ":9001"
 
   mc:
-    image: quay.io/minio/mc
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     volumes:
       - ./minio/export:/export
     depends_on:
