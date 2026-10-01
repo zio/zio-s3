@@ -10,9 +10,6 @@ inThisBuild(
     ),
     Test / fork := true,
     (Test / parallelExecution) := false,
-    pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
-    pgpPublicRing := file("/tmp/public.asc"),
-    pgpSecretRing := file("/tmp/secret.asc"),
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-s3/"), "scm:git:git@github.com:zio/zio-s3.git")
     )
@@ -20,10 +17,19 @@ inThisBuild(
 )
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
+addCommandAlias("lint", "check")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
 val zioVersion = "2.1.26"
 val awsVersion = "2.31.45"
+
+ThisBuild / ciEnabledBranches := Seq("series/2.x")
+ThisBuild / ciDefaultJavaVersion := "21"
+ThisBuild / ciBackgroundJobs := Seq("docker compose up -d --build")
+ThisBuild / ciTargetScalaVersions := targetScalaVersionsFor(`zio-s3`).value
+ThisBuild / ciEnableScalaSteward := false
+ThisBuild / ciEnableDependabot := false
+ThisBuild / ciEnableReleaseDrafter := false
 
 lazy val root =
   project.in(file(".")).settings(publish / skip := true).aggregate(`zio-s3`, docs)
