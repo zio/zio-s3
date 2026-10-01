@@ -10,9 +10,6 @@ inThisBuild(
     ),
     Test / fork := true,
     (Test / parallelExecution) := false,
-    pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
-    pgpPublicRing := file("/tmp/public.asc"),
-    pgpSecretRing := file("/tmp/secret.asc"),
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-s3/"), "scm:git:git@github.com:zio/zio-s3.git")
     )
@@ -20,6 +17,7 @@ inThisBuild(
 )
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
+addCommandAlias("lint", "check")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
 val zioVersion = "1.0.8"
@@ -50,6 +48,18 @@ lazy val `zio-s3` = project
     },
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
+
+ThisBuild / ciEnabledBranches := Seq("master")
+ThisBuild / ciTargetJavaVersions := Seq("8", "11")
+ThisBuild / ciDefaultJavaVersion := "8"
+ThisBuild / ciBackgroundJobs := Seq("docker compose up -d")
+ThisBuild / ciTargetScalaVersions := targetScalaVersionsFor(`zio-s3`).value
+ThisBuild / ciCheckWebsiteBuildProcess := Seq.empty
+ThisBuild / ciUpdateReadmeJobs := Seq.empty
+ThisBuild / ciPostReleaseJobs := Seq.empty
+ThisBuild / ciEnableScalaSteward := false
+ThisBuild / ciEnableDependabot := false
+ThisBuild / ciEnableReleaseDrafter := false
 
 lazy val docs = project
   .in(file("zio-s3-docs"))

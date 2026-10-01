@@ -9,3 +9,5 @@ addSbtPlugin("org.portable-scala" % "sbt-crossproject"          % "1.0.0")
 addSbtPlugin("de.heikoseeberger"  % "sbt-header"                % "5.6.0")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"              % "2.4.2")
 addSbtPlugin("org.scoverage"      % "sbt-scoverage"             % "1.8.1")
+
+addSbtPlugin("dev.zio" % "zio-sbt-ci" % "0.8.5")
