@@ -22,7 +22,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("lint", "check")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "2.1.26"
+val zioVersion = "2.1.27"
 val awsVersion = "2.31.45"
 
 ThisBuild / ciEnabledBranches := Seq("series/2.x")
