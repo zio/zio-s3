@@ -8,11 +8,7 @@ In this tutorial, we build a small program that creates a bucket, uploads a text
 
 ## Add the Dependency
 
-Add ZIO S3 to the `build.sbt` file of your project:
-
-```scala
-libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
-```
+Add ZIO S3 to your project as the [installation section](./index.md#installation) shows.
 
 ## Create an S3 Layer
 
