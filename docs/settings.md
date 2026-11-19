@@ -49,7 +49,7 @@ object S3Region {
 }
 ```
 
-`S3Region.from` accepts only the regions listed by `Region.regions()`. `S3Region.unsafeFromString` skips that check, so an unknown name is accepted and only fails later, when the client makes a request. Use it only with a server that accepts that name, and only through the `live` value that takes `S3Settings`.
+`S3Region.from` accepts only the regions listed by `Region.regions()`. `S3Region.unsafeFromString` skips that check, so an unknown name is accepted and only fails later, when the client makes a request. Use it only with a server that accepts that name, and pass the result to `S3Settings` for the `live` value that takes `S3Settings`, or to `Live.connect` when you need an endpoint.
 
 ## Live
 
@@ -76,7 +76,7 @@ The package object defines `type S3Stream[A] = ZStream[S3, S3Exception, A]`, the
 
 ## Credential Providers
 
-The `zio.s3.providers` object contains the providers that `liveZIO` and `profile` accept. The table lists each provider, its type, and whether it needs a `Scope`:
+The `zio.s3.providers` object contains the providers that `liveZIO` accepts. The table lists each provider, its type, and whether it needs a `Scope`:
 
 | Provider                 | Type                                                                    | Needs `Scope` |
 | ------------------------ | ----------------------------------------------------------------------- | ------------- |
