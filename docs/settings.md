@@ -51,6 +51,29 @@ object S3Region {
 
 `S3Region.from` accepts only the regions listed by `Region.regions()`. `S3Region.unsafeFromString` skips that check, so an unknown name is accepted and only fails later, when the client makes a request. Use it only with a server that accepts that name, and only through the `live` value that takes `S3Settings`.
 
+## Live
+
+`Live` is the class behind every `live` layer. Its `connect` functions build the `S3` service as a scoped effect, and they are public, so you can build the client yourself:
+
+```scala
+object Live {
+  def connect[R](
+    region: S3Region,
+    provider: RIO[R with Scope, AwsCredentialsProvider],
+    uriEndpoint: Option[URI],
+    forcePathStyle: Option[Boolean] = None
+  ): ZIO[R with Scope, ConnectionError, S3]
+
+  def connect[R](builder: S3AsyncClientBuilder): ZIO[R with Scope, ConnectionError, S3]
+}
+```
+
+The first overload is what `liveZIO` uses. The second takes a configured AWS `S3AsyncClientBuilder`, for settings that the layer functions do not expose, such as a custom HTTP client or a proxy. Both fail with `ConnectionError` when the credentials or the client cannot be built.
+
+## S3Stream
+
+The package object defines `type S3Stream[A] = ZStream[S3, S3Exception, A]`, the type of the streaming operations such as `listAllObjects` and `streamLines`.
+
 ## Credential Providers
 
 The `zio.s3.providers` object contains the providers that `liveZIO` and `profile` accept. The table lists each provider, its type, and whether it needs a `Scope`:
