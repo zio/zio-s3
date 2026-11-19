@@ -43,7 +43,7 @@ Add ZIO S3 to your `build.sbt`. The library is published for the JVM only, for S
 ```sbt
 libraryDependencies ++= Seq(
   // ZIO S3 client for the JVM, built on the AWS SDK v2 async client
-  "dev.zio" %% "zio-s3" % "0.4.4"
+  "dev.zio" %% "zio-s3" % "0.4.5"
 )
 ```
 
