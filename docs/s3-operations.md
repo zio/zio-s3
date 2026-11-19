@@ -4,7 +4,7 @@ title: "S3 Operations"
 sidebar_label: "S3 Operations"
 ---
 
-The `S3` trait defines every operation that ZIO S3 supports. The package object `zio.s3` exposes each operation as a function that requires `S3` in the environment, so you call `createBucket("docs")` directly, not `s3.createBucket("docs")`. Every operation returns a ZIO effect or a ZIO Stream, and the failure type is `S3Exception` unless the table below says otherwise. The [settings reference](./settings.md) describes how to build the `S3` layer.
+The `S3` trait defines every operation that ZIO S3 supports. The package object `zio.s3` exposes each operation as a function that requires `S3` in the environment, so you call `createBucket("docs")` directly, not `s3.createBucket("docs")`. Every operation returns a ZIO effect or a ZIO Stream, and the failure type is `S3Exception`. The [settings reference](./settings.md) describes how to build the `S3` layer.
 
 ## Bucket Operations
 
@@ -46,7 +46,7 @@ trait S3 {
 
 ## Multipart Upload
 
-The multipart operation uploads a stream in parts, as described in [stream large files with multipart upload](./multipart-upload.md):
+The multipart operation uploads a stream in parts, as described in [stream large files with multipart upload](./upload-a-large-file-in-parts.md):
 
 ```scala
 trait S3 {
@@ -63,7 +63,7 @@ The `parallelism` argument must be greater than 0. The `options` argument holds 
 
 ## Listing Operations
 
-Listing operations return one page of objects, the next page, or a stream of every object. The default page size is 1000 objects, as described in [list and paginate objects](./list-and-paginate-objects.md):
+Listing operations return one page of objects, the next page, or a stream of every object. The default page size is 1000 objects, as described in [list and paginate objects](./list-objects-page-by-page.md):
 
 ```scala
 trait S3 {
@@ -76,7 +76,7 @@ trait S3 {
 }
 ```
 
-`getNextObjects` returns an empty listing when the given listing has no continuation token. `paginate` emits the initial listing first and then each following page.
+`getNextObjects` returns an empty listing when the given listing has no continuation token. The stub differs and stops with a defect, as the [testing how-to](./testing.md) describes. `paginate` emits the initial listing first and then each following page.
 
 ## Escape Hatch
 

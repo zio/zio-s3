@@ -1,7 +1,7 @@
 ---
-id: object-metadata
-title: "Work with Object Metadata"
-sidebar_label: "Work with Object Metadata"
+id: set-and-read-object-metadata
+title: "Set and Read Object Metadata"
+sidebar_label: "Set and Read Object Metadata"
 ---
 
 Each S3 object carries a content type, a size, an ETag, and a set of user-defined metadata entries. ZIO S3 lets you set these when you upload, and read them without downloading the object. The [models reference](./models.md#objectmetadata) describes the `ObjectMetadata` type, and the [options reference](./options.md#uploadoptions) describes the upload settings.

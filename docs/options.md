@@ -23,7 +23,7 @@ The fields have these meanings:
 
 - `prefix` keeps only the objects whose keys start with the prefix.
 - `maxKeys` sets the number of objects per request. The default is `MaxKeys.Max`, which is 1000.
-- `delimiter` groups keys that contain the delimiter, as S3 does for folder-style listings. Later pages do not reapply it, as [list and paginate objects](./list-and-paginate-objects.md#know-the-limits-of-paging) describes.
+- `delimiter` is sent to S3 as the listing delimiter. S3 then groups the keys below the delimiter into common prefixes, but `S3ObjectListing` has no field for common prefixes, so those keys are left out of the listing and the prefixes are not returned. Later pages do not reapply it, as [list objects page by page](./list-objects-page-by-page.md#know-the-limits-of-paging) describes.
 - `starAfter` starts the listing after the given key.
 
 The companion object provides these constructors:
@@ -106,7 +106,7 @@ object PartSize {
 }
 ```
 
-`PartSize.Min` is 5 MB, the smallest part that S3 accepts for every part except the last one. Multiply a constant by a count, as in `10 * PartSize.Mega`, to set a part size.
+`PartSize.Min` is 5 MB, the smallest part that S3 accepts for every part except the last one. Multiply a constant by a count, as in `10 * PartSize.Mega`, to set a part size. The part size is an `Int`, so it cannot exceed 2 GiB minus one byte, and `2 * PartSize.Giga` overflows. S3 accepts at most 10,000 parts per upload, so the part size times 10,000 is the largest object that `multipartUpload` can store.
 
 ## MaxKeys
 

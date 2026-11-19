@@ -4,15 +4,11 @@ title: "Tutorial: Upload, List and Download Files"
 sidebar_label: "Tutorial"
 ---
 
-In this tutorial, we build a small program that creates a bucket, uploads a text file, lists the objects in the bucket, and downloads the file again. We use the local stub from the [testing how-to](./testing.md), so we do not need a running S3 server or AWS account. The same code works against AWS or MinIO once we swap the layer, as [S3-compatible endpoints](./s3-compatible-endpoints.md) describes.
+In this tutorial, we build a small program that creates a bucket, uploads a text file, lists the objects in the bucket, and downloads the file again. We use the local stub from the [testing how-to](./testing.md), so we do not need a running S3 server or AWS account. The same code works against AWS or MinIO once we swap the layer, as [S3-compatible endpoints](./connect-to-an-s3-compatible-store.md) describes.
 
 ## Add the Dependency
 
-Add ZIO S3 to the `build.sbt` file of your project:
-
-```scala
-libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
-```
+Add ZIO S3 to your project as the [installation section](./index.md#installation) shows.
 
 ## Create an S3 Layer
 
@@ -71,7 +67,7 @@ val printKeys: ZIO[S3, S3Exception, Unit] =
     .runForeach(summary => Console.printLine(summary.key).orDie)
 ```
 
-For a bucket with more than one page of results, see [list and paginate objects](./list-and-paginate-objects.md).
+For a bucket with more than one page of results, see [list and paginate objects](./list-objects-page-by-page.md).
 
 ## Download a File
 
