@@ -35,7 +35,7 @@ final case class S3ObjectListing(
 )
 ```
 
-The `objectSummaries` field holds the objects of the page. A `nextContinuationToken` of `None` means the page is the last one. The [list and paginate objects how-to](./list-and-paginate-objects.md) shows how to use the token.
+The `objectSummaries` field holds the objects of the page. A `nextContinuationToken` of `None` means the page is the last one. The [list and paginate objects how-to](./list-objects-page-by-page.md) shows how to use the token.
 
 ## S3ObjectSummary
 
@@ -60,4 +60,4 @@ final case class ObjectMetadata(
 )
 ```
 
-The `metadata` field holds the user-defined metadata without the `x-amz-meta-` prefix, and `eTag` holds the ETag without the surrounding quotes. The [object metadata how-to](./object-metadata.md) shows how to read these fields.
+The `metadata` field holds the user-defined metadata without the `x-amz-meta-` prefix, and `eTag` holds the ETag without the surrounding quotes. The [object metadata how-to](./set-and-read-object-metadata.md) shows how to read these fields.

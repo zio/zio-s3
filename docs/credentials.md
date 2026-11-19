@@ -112,4 +112,4 @@ See the [errors reference](./errors.md) for the full error hierarchy.
 
 ## Choose the Region
 
-Every layer takes a `Region` from `software.amazon.awssdk.regions.Region`, such as `Region.CA_CENTRAL_1`. For S3-compatible storage that uses a region name the AWS SDK does not know, see [S3-compatible endpoints](./s3-compatible-endpoints.md).
+Every layer takes a `Region` from `software.amazon.awssdk.regions.Region`, such as `Region.CA_CENTRAL_1`. For S3-compatible storage that uses a region name the AWS SDK does not know, see [S3-compatible endpoints](./connect-to-an-s3-compatible-store.md).

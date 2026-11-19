@@ -23,7 +23,7 @@ The fields have these meanings:
 
 - `prefix` keeps only the objects whose keys start with the prefix.
 - `maxKeys` sets the number of objects per request. The default is `MaxKeys.Max`, which is 1000.
-- `delimiter` groups keys that contain the delimiter, as S3 does for folder-style listings. Later pages do not reapply it, as [list and paginate objects](./list-and-paginate-objects.md#know-the-limits-of-paging) describes.
+- `delimiter` groups keys that contain the delimiter, as S3 does for folder-style listings. Later pages do not reapply it, as [list and paginate objects](./list-objects-page-by-page.md#know-the-limits-of-paging) describes.
 - `starAfter` starts the listing after the given key.
 
 The companion object provides these constructors:

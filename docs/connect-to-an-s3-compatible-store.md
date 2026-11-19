@@ -1,7 +1,7 @@
 ---
-id: s3-compatible-endpoints
-title: "Connect to an S3-Compatible Server"
-sidebar_label: "S3-Compatible Endpoints"
+id: connect-to-an-s3-compatible-store
+title: "Connect to MinIO or Another S3-Compatible Store"
+sidebar_label: "Connect to MinIO or Another S3-Compatible Store"
 ---
 
 ZIO S3 works with any server that speaks the S3 API, such as MinIO for local development, or a hosted provider that is not AWS. To connect to such a server, pass its address as the endpoint when you build the layer. The endpoint overrides the AWS address that the client would otherwise use.

@@ -1,7 +1,7 @@
 ---
 id: testing
-title: "Test with the Stub"
-sidebar_label: "Test with the Stub"
+title: "Test Without a Real S3"
+sidebar_label: "Test Without a Real S3"
 ---
 
 ZIO S3 includes a stub implementation of the `S3` service for tests. The stub stores each bucket as a directory under a root path on the local disk, so tests run without a network connection or an S3 server. To build the stub layer, call `stub` with the root path:
@@ -41,7 +41,7 @@ The stub follows the `S3` API for common operations, but a few behaviors differ 
 
 - Errors: `createBucket` on an existing name, `deleteBucket` on a missing or non-empty bucket, and `listObjects` on a missing bucket stop with a defect, not a typed `S3Exception`, so `catchSome` on `S3Exception` does not catch them. Test those cases against a real server.
 - Metadata: the content type and user metadata that `putObject` stores live in memory. They are lost when the JVM exits, and files that were written outside `putObject`, such as the files already in the root directory, report an empty content type and no metadata.
-- Pagination: the stub does not return correct pages when a listing has a `maxKeys` limit and more objects than that limit. Do not test pagination against the stub. Use a MinIO server as shown in [list and paginate objects](./list-and-paginate-objects.md).
+- Pagination: the stub does not return correct pages when a listing has a `maxKeys` limit and more objects than that limit. Do not test pagination against the stub. Use a MinIO server as shown in [list and paginate objects](./list-objects-page-by-page.md).
 - Raw client: `execute` is not supported and stops with a defect, so code that calls `execute` needs a live layer in tests.
 
 For tests that need the real behavior, run a MinIO server as shown in the [introduction](./index.md) and build a `live` layer with `forcePathStyle = Some(true)`.

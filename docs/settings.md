@@ -18,7 +18,7 @@ The table lists each function that builds an `S3` layer, and the errors that bui
 | `settings(region, cred)`                                          | `ZLayer[R, S3Exception, S3Settings]`      | An `AwsCredentials` effect, as `S3Settings`     |
 | `stub(path)`                                                      | `ZLayer[Any, Nothing, S3]`                | A local directory, for tests                    |
 
-The optional parameters, `uriEndpoint` and `forcePathStyle`, default to `None`. With `None`, the AWS SDK uses its standard endpoint and addressing style. Set `uriEndpoint` to a `java.net.URI` to connect to another server, and set `forcePathStyle` to `Some(true)` to address buckets in the path, as [S3-compatible endpoints](./s3-compatible-endpoints.md) describes.
+The optional parameters, `uriEndpoint` and `forcePathStyle`, default to `None`. With `None`, the AWS SDK uses its standard endpoint and addressing style. Set `uriEndpoint` to a `java.net.URI` to connect to another server, and set `forcePathStyle` to `Some(true)` to address buckets in the path, as [S3-compatible endpoints](./connect-to-an-s3-compatible-store.md) describes.
 
 The `live` function that takes a region and credentials rejects any region that the AWS SDK does not know, and the layer fails with `InvalidSettings`. The `live` value that takes `S3Settings` does not accept an endpoint.
 

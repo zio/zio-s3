@@ -1,7 +1,7 @@
 ---
-id: list-and-paginate-objects
-title: "List and Paginate Objects"
-sidebar_label: "List and Paginate Objects"
+id: list-objects-page-by-page
+title: "List Objects Page by Page"
+sidebar_label: "List Objects Page by Page"
 ---
 
 S3 returns at most `maxKeys` objects per request and gives a continuation token when more objects remain. ZIO S3 hides that paging for most uses: `listAllObjects` returns one stream of every object in a bucket. When you need one page at a time, you can call `listObjects` and `getNextObjects` yourself. The options that control a listing are in the [options reference](./options.md#listobjectoptions).

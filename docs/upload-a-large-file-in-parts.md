@@ -1,7 +1,7 @@
 ---
-id: multipart-upload
-title: "Stream Large Files with Multipart Upload"
-sidebar_label: "Stream Large Files with Multipart Upload"
+id: upload-a-large-file-in-parts
+title: "Upload a Large File in Parts"
+sidebar_label: "Upload a Large File in Parts"
 ---
 
 S3 accepts a single `putObject` request for data of any size, but a large object is safer to send in parts: each part is a separate request, the parts can be sent in parallel, and a failed part can be retried without resending the whole file. ZIO S3 splits a stream into parts for you with `multipartUpload`, so a file never has to fit in memory.
