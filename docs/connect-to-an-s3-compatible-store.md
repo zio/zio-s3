@@ -83,7 +83,7 @@ The name is not checked, so a wrong region name fails later, when the client mak
 
 ## Verify the Connection
 
-To check that the endpoint answers, list the buckets with the layer you built. A wrong address or credentials fail the effect with `ConnectionError` or `S3Exception`, as described in the [errors reference](./errors.md):
+To check that the endpoint answers, list the buckets with the layer you built. A wrong address fails the effect with `SdkError`, wrong credentials fail it with an `S3Exception` from the server, and a credentials provider or client that cannot be built fails it with `ConnectionError`, as described in the [errors reference](./errors.md):
 
 ```scala mdoc:compile-only
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
