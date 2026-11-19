@@ -17,7 +17,7 @@ Each type below extends `S3Exception`, so a handler for `S3Exception` catches al
 - `SdkError(error: SdkException)` is raised by `execute` when the AWS SDK fails without an S3 response, such as a network error.
 - `InvalidPartSize(message: String, size: Int)` is defined in the library, but no code path raises it today. An invalid part size or parallelism stops the effect with a defect instead, as the [multipart upload how-to](./upload-a-large-file-in-parts.md) describes.
 
-The AWS SDK raises further subtypes of `S3Exception` for S3 responses, such as `NoSuchKeyException` when an object does not exist and `NoSuchBucketException` when a bucket does not exist. The library passes these through unchanged.
+The AWS SDK raises further subtypes of `S3Exception` for S3 responses, such as `NoSuchKeyException` when an object does not exist and `NoSuchBucketException` when a bucket does not exist. `execute` and the operations that call it directly, such as `getObjectMetadata` and `isBucketExists`, pass these through unchanged. `getObject`, `streamLines` and the part uploads of `multipartUpload` rewrap them into a plain `S3Exception` that keeps the status code, message and cause, so match `statusCode` there.
 
 ## Handle Errors
 

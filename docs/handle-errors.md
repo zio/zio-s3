@@ -8,20 +8,20 @@ Most ZIO S3 operations fail with `S3Exception`, so one handler can catch every f
 
 ## Handle a Missing Object
 
-To handle a missing object, match the AWS SDK's `NoSuchKeyException` in `ZIO#catchSome`. Any other `S3Exception` continues to fail:
+To handle a missing object, match an `S3Exception` with status code 404 in `ZIO#catchSome`. `getObject` rewraps the AWS SDK's `NoSuchKeyException` into a plain `S3Exception` that keeps the status code, so matching `NoSuchKeyException` never succeeds. Any other `S3Exception` continues to fail:
 
 ```scala mdoc:compile-only
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.s3._
 import zio.stream.ZPipeline
 
-val readOrEmpty: ZIO[S3, Throwable, String] =
+val readOrEmpty: ZIO[S3, S3Exception, String] =
   getObject("docs", "missing.txt")
     .via(ZPipeline.utf8Decode)
     .runCollect
     .map(_.mkString)
-    .catchSome { case _: NoSuchKeyException => ZIO.succeed("") }
+    .catchSome { case e: S3Exception if e.statusCode == 404 => ZIO.succeed("") }
 ```
 
 ## Handle Connection Failures
