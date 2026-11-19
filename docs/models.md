@@ -47,6 +47,10 @@ final case class S3ObjectSummary(bucketName: String, key: String, lastModified: 
 
 The `key` field is the full key of the object, including any slashes, and `size` is the object's length in bytes.
 
+## Build Models from AWS Responses
+
+Each model has a helper that converts the AWS SDK type: `S3Bucket.fromBucket` and `S3Bucket.fromBuckets`, `S3ObjectListing.fromResponse` for a `ListObjectsV2Response`, and `ObjectMetadata.fromResponse` for a `HeadObjectResponse`. Use them to convert the result of a call that you make with [`execute`](./run-s3-calls-with-the-raw-client.md). `S3ObjectListing.from` builds an empty listing for a bucket and a continuation token.
+
 ## ObjectMetadata
 
 `ObjectMetadata` describes one object as returned by `getObjectMetadata`:
