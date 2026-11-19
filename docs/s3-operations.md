@@ -4,7 +4,7 @@ title: "S3 Operations"
 sidebar_label: "S3 Operations"
 ---
 
-The `S3` trait defines every operation that ZIO S3 supports. The package object `zio.s3` exposes each operation as a function that requires `S3` in the environment, so you call `createBucket("docs")` directly, not `s3.createBucket("docs")`. Every operation returns a ZIO effect or a ZIO Stream, and the failure type is `S3Exception` unless the table below says otherwise. The [settings reference](./settings.md) describes how to build the `S3` layer.
+The `S3` trait defines every operation that ZIO S3 supports. The package object `zio.s3` exposes each operation as a function that requires `S3` in the environment, so you call `createBucket("docs")` directly, not `s3.createBucket("docs")`. Every operation returns a ZIO effect or a ZIO Stream, and the failure type is `S3Exception`. The [settings reference](./settings.md) describes how to build the `S3` layer.
 
 ## Bucket Operations
 
@@ -76,7 +76,7 @@ trait S3 {
 }
 ```
 
-`getNextObjects` returns an empty listing when the given listing has no continuation token. `paginate` emits the initial listing first and then each following page.
+`getNextObjects` returns an empty listing when the given listing has no continuation token. The stub differs and stops with a defect, as the [testing how-to](./testing.md) describes. `paginate` emits the initial listing first and then each following page.
 
 ## Escape Hatch
 
