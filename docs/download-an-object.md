@@ -11,7 +11,6 @@ sidebar_label: "Download an Object"
 To write an object to a local file, run the byte stream into a file sink. The sink creates the file and closes it when the stream ends:
 
 ```scala mdoc:compile-only
-import software.amazon.awssdk.services.s3.model.S3Exception
 import zio._
 import zio.s3._
 import zio.stream.ZSink
