@@ -57,6 +57,35 @@ val fromDefaultChain: ZLayer[Scope, S3Exception, S3] =
 
 The providers `env` and `system` need no scope, so their layers have type `ZLayer[Any, S3Exception, S3]`. The providers `instanceProfile`, `webIdentity`, `default`, `profile`, and `container` need a `Scope`, because they hold resources that the scope closes.
 
+To pass a fixed key pair through a provider, use `providers.basic`, or `providers.session` for temporary credentials. These need no scope:
+
+```scala mdoc:compile-only
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model.S3Exception
+import zio._
+import zio.s3._
+import zio.s3.providers._
+
+val fromKeys: ZLayer[Any, S3Exception, S3] =
+  liveZIO(Region.AF_SOUTH_1, basic("key", "secret"))
+
+val fromTemporaryKeys: ZLayer[Any, S3Exception, S3] =
+  liveZIO(Region.AF_SOUTH_1, session("key", "secret", "token"))
+```
+
+To read the credentials that Amazon ECS or EKS inject into a container, use `container`. It needs a `Scope`:
+
+```scala mdoc:compile-only
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model.S3Exception
+import zio._
+import zio.s3._
+import zio.s3.providers._
+
+val fromContainer: ZLayer[Scope, S3Exception, S3] =
+  liveZIO(Region.AF_SOUTH_1, container)
+```
+
 To read a named profile from `~/.aws/credentials`, use `profile` with `Some(name)`:
 
 ```scala mdoc:compile-only
