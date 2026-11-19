@@ -35,13 +35,33 @@ val bucketsAfterCreate: ZIO[Any, Throwable, Boolean] =
 
 The check for the bucket name runs inside the same effect as the create call, so it reads the bucket that the create call made. Pass the result to the assertion library that your test framework provides.
 
+## Give Each Test a Fresh Root Directory
+
+To keep tests apart, create a temporary directory for each test and build the stub on it. The scoped directory is deleted when the scope closes:
+
+```scala mdoc:compile-only
+import zio._
+import zio.nio.file.Files
+import zio.s3._
+
+val isolated: ZIO[Scope, Throwable, Boolean] =
+  for {
+    root    <- Files.createTempDirectoryScoped(Some("s3-stub"), Seq.empty)
+    buckets <- (createBucket("tests-bucket") *> listBuckets).provide(stub(root))
+  } yield buckets.exists(_.name == "tests-bucket")
+```
+
+The same effect works inside a test of any framework, such as ZIO Test: run it with `ZIO.scoped` or provide the `Scope`, and assert on the result.
+
 ## Know Where the Stub Differs from AWS
 
 The stub follows the `S3` API for common operations, but a few behaviors differ from a real server, and tests that depend on them can pass against the stub and fail against S3:
 
 - Errors: `createBucket` on an existing name, `deleteBucket` on a missing or non-empty bucket, and `listObjects` on a missing bucket stop with a defect, not a typed `S3Exception`, so `catchSome` on `S3Exception` does not catch them. Test those cases against a real server.
 - Metadata: the content type and user metadata that `putObject` stores live in memory. They are lost when the JVM exits, and files that were written outside `putObject`, such as the files already in the root directory, report an empty content type and no metadata.
-- Pagination: the stub does not return correct pages when a listing has a `maxKeys` limit and more objects than that limit. Do not test pagination against the stub. Use a MinIO server as shown in [list and paginate objects](./list-objects-page-by-page.md).
+- Pagination: the stub does not return correct pages when a listing has a `maxKeys` limit and more objects than that limit. `getNextObjects` ignores the continuation token and lists the bucket again with a page size of 100, and it stops with a defect when the listing has no token, where a real server returns an empty listing. Do not test pagination against the stub. Use a MinIO server as shown in [list and paginate objects](./list-objects-page-by-page.md).
+- ETag: the stub computes the ETag from the file text decoded as UTF-8, so for binary content it differs from the MD5 that S3 reports.
+- Multipart upload: the stub validates the part size and parallelism like S3 does, then writes the stream in one piece, so `parallelism` has no effect.
 - Raw client: `execute` is not supported and stops with a defect, so code that calls `execute` needs a live layer in tests.
 
 For tests that need the real behavior, run a MinIO server as shown in the [introduction](./index.md) and build a `live` layer with `forcePathStyle = Some(true)`.
