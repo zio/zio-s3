@@ -61,7 +61,7 @@ The stub follows the `S3` API for common operations, but a few behaviors differ 
 - Metadata: the content type and user metadata that `putObject` stores live in memory. They are lost when the JVM exits, and files that were written outside `putObject`, such as the files already in the root directory, report an empty content type and no metadata.
 - Pagination: the stub does not return correct pages when a listing has a `maxKeys` limit and more objects than that limit. `getNextObjects` ignores the continuation token and lists the bucket again with a page size of 100, and it stops with a defect when the listing has no token, where a real server returns an empty listing. Do not test pagination against the stub. Use a MinIO server as shown in [list and paginate objects](./list-objects-page-by-page.md).
 - ETag: the stub computes the ETag from the file text decoded as UTF-8, so for binary content it differs from the MD5 that S3 reports.
-- Multipart upload: the stub validates the part size and parallelism like S3 does, then writes the stream in one piece, so `parallelism` has no effect.
+- Multipart upload: the stub validates the part size and parallelism with the same defects as the live service, then writes the stream in one piece, so `parallelism` has no effect.
 - Raw client: `execute` is not supported and stops with a defect, so code that calls `execute` needs a live layer in tests.
 
 For tests that need the real behavior, run a MinIO server as shown in the [introduction](./index.md) and build a `live` layer with `forcePathStyle = Some(true)`.
