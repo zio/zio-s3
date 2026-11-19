@@ -56,7 +56,30 @@ The address `s3.provider.example.com` is a placeholder. Use the endpoint from yo
 
 ## Know the Region Limits
 
-The `live` and `liveZIO` functions accept only regions from the AWS SDK's list, such as `Region.US_EAST_1`. A region name that the SDK does not know makes the layer fail with `InvalidSettings`, so pick the closest SDK region for the provider's signing name. The `live` layer built from `S3Settings` has no endpoint parameter, so it cannot connect to a custom endpoint. Use `live` or `liveZIO` with an endpoint instead.
+The `live` and `liveZIO` functions accept only regions from the AWS SDK's list, such as `Region.US_EAST_1`. A region name that the SDK does not know makes the layer fail with `InvalidSettings`, so pick the closest SDK region for the provider's signing name. The `live` layer built from `S3Settings` has no endpoint parameter, so it cannot connect to a custom endpoint. Use `live` or `liveZIO` with an endpoint instead, or the next section when the region name is not in the SDK's list.
+
+## Use a Region the AWS SDK Does Not Know
+
+To connect to a provider whose region name is not in the AWS SDK's list, build the region with `S3Region.unsafeFromString`, which skips the check, and connect with `Live.connect`, which takes the region, a credentials provider and the endpoint:
+
+```scala mdoc:compile-only
+import zio._
+import zio.s3._
+
+import java.net.URI
+
+val custom: ZLayer[Any, Throwable, S3] =
+  ZLayer.scoped(
+    Live.connect[Any](
+      S3Region.unsafeFromString("custom-region-1"),
+      providers.basic("access-key", "secret-key"),
+      Some(URI.create("https://s3.provider.example.com")),
+      forcePathStyle = Some(true)
+    )
+  )
+```
+
+The name is not checked, so a wrong region name fails later, when the client makes its first request.
 
 ## Verify the Connection
 
