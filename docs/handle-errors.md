@@ -16,7 +16,7 @@ import zio._
 import zio.s3._
 import zio.stream.ZPipeline
 
-val readOrEmpty: ZIO[S3, S3Exception, String] =
+val readOrEmpty: ZIO[S3, Exception, String] =
   getObject("docs", "missing.txt")
     .via(ZPipeline.utf8Decode)
     .runCollect
