@@ -8,7 +8,7 @@ This page runs a first ZIO S3 program: it creates a bucket, stores a JSON object
 
 ## Start a Local S3 Server
 
-To start MinIO with the credentials used in this page, run:
+To start MinIO with the credentials that this page uses, run:
 
 ```bash
 docker run -p 9000:9000 -e MINIO_ROOT_USER=MyKey -e MINIO_ROOT_PASSWORD=MySecret minio/minio server --compat /data
