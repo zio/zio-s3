@@ -41,8 +41,6 @@ All operations live in the package object `zio.s3`, so a single `import zio.s3._
 Add ZIO S3 to your `build.sbt`. The library is published for the JVM only, for Scala 2.12, 2.13 and 3:
 
 ```sbt
-libraryDependencies ++= Seq(
-  // ZIO S3 client for the JVM, built on the AWS SDK v2 async client
-  "dev.zio" %% "zio-s3" % "@VERSION@"
-)
+// ZIO S3 client for the JVM, built on the AWS SDK v2 async client
+libraryDependencies += "dev.zio" %% "zio-s3" % "@VERSION@"
 ```
