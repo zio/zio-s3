@@ -33,7 +33,9 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 /**
- * Stub Service which is back by a filesystem storage
+ * A stub `S3` service that keeps buckets and objects on the local filesystem. Use
+ * `connect` to build one. The `stub` function in the package object wraps it in a
+ * layer.
  */
 object Test {
 
@@ -46,6 +48,27 @@ object Test {
       .build()
       .asInstanceOf[S3Exception]
 
+  /**
+   * Creates an `S3` stub that keeps buckets as directories and objects as files under
+   * `path`. The directory `path` must exist.
+   *
+   * The stub differs from the AWS service in these ways, among others:
+   *
+   * - `execute` dies with the message `Not implemented error - please don't call execute() S3 Test mode`.
+   * - `deleteBucket` dies when the bucket is missing. The AWS service fails with an `S3Exception`.
+   * - `putObject` creates the bucket when it is missing.
+   * - `createBucket` on an existing bucket, `deleteBucket` on a non-empty bucket and `listObjects` on a missing bucket die. `putObject` dies when `content` fails.
+   * - `getNextObjects` ignores the continuation token. It lists the bucket again from the first key, with up to 100 keys, and without the prefix, delimiter or start-after key of the first request. So when the first page of `listAllObjects` or `paginate` has a continuation token, the following pages repeat keys, and a bucket with more than 100 objects repeats its first 100 keys without end.
+   * - `getNextObjects` dies with `Empty token is invalid` when the listing has no token.
+   * - `starAfter` skips the keys up to and including the first key that equals the start-after key or is a prefix of it, and the listing is empty when no key does. The AWS service returns the keys that sort after the start-after key.
+   * - Content types and user metadata are kept in memory, under the bucket name joined with the key. Different bucket and key pairs can share them, and they are lost when the stub is built again. An object that was not stored through the stub has an empty content type and no metadata.
+   * - The stored content type defaults to `application/octet-stream` for `putObject` and to `binary/octet-stream` for `multipartUpload`.
+   * - The ETag is the MD5 of the content decoded as UTF-8 text. It differs from the MD5 of the bytes when the content is not valid UTF-8.
+   * - `putObject` ignores `contentLength` and `contentMD5`.
+   * - `multipartUpload` writes the content as one object and checks only `parallelism` and `partSize`.
+   *
+   * @param path directory that holds the buckets
+   */
   def connect(path: ZPath): UIO[S3] = {
     type ContentType = String
     type Metadata    = Map[String, String]
