@@ -35,9 +35,10 @@ import java.util.concurrent.CompletableFuture
 import scala.jdk.CollectionConverters._
 
 /**
- * Service use to wrap the unsafe amazon s3 client and access safely to s3 storage
+ * The `S3` service that calls Amazon S3 through an AWS async client. Build one with
+ * `Live.connect`, or with `live` from the package object.
  *
- * @param unsafeClient: Amazon Async S3 Client
+ * @param unsafeClient the AWS async S3 client
  */
 final class Live(unsafeClient: S3AsyncClient) extends S3 {
 
@@ -149,6 +150,11 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
       }
       .unit
 
+  /**
+   * Implements `S3.multipartUpload` with the AWS multipart upload requests: one
+   * request to create the upload, one request per part, then one request to complete
+   * it. See `S3.multipartUpload`.
+   */
   def multipartUpload[R](
     bucketName: String,
     key: String,
@@ -222,6 +228,9 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
                   )
     } yield ()
 
+  /**
+   * Runs `f` on the AWS async client. See `S3.execute`.
+   */
   def execute[T](f: S3AsyncClient => CompletableFuture[T]): ZIO[Any, S3Exception, T] =
     ZIO.fromCompletionStage(f(unsafeClient)).refineOrDie {
       case s3: S3Exception   => s3
@@ -229,8 +238,23 @@ final class Live(unsafeClient: S3AsyncClient) extends S3 {
     }
 }
 
+/**
+ * Builds and types for the `Live` service.
+ */
 object Live {
 
+  /**
+   * Builds an `S3` service for `region`, with the credentials from `provider`. The
+   * client is closed when the scope ends. `uriEndpoint` replaces the endpoint of the
+   * client when it is defined, and `forcePathStyle` is applied when it is defined. The
+   * effect fails with a `ConnectionError` when the provider fails or the client cannot be
+   * built, and dies when `uriEndpoint` has no scheme.
+   *
+   * @param region region of the client
+   * @param provider effect that gives the AWS credentials provider
+   * @param uriEndpoint endpoint that replaces the default one
+   * @param forcePathStyle whether to force path-style access
+   */
   def connect[R](
     region: S3Region,
     provider: RIO[R with Scope, AwsCredentialsProvider],
@@ -251,11 +275,21 @@ object Live {
       service     <- connect(builder)
     } yield service
 
+  /**
+   * Builds an `S3` service from an AWS `S3AsyncClientBuilder`. The client is closed
+   * when the scope ends. The effect fails with a `ConnectionError` when the builder
+   * cannot build the client.
+   *
+   * @param builder AWS builder with the settings of the client
+   */
   def connect[R](builder: S3AsyncClientBuilder): ZIO[R with Scope, ConnectionError, S3] =
     ZIO
       .fromAutoCloseable(ZIO.attempt(builder.build()))
       .mapBoth(e => ConnectionError(e.getMessage, e.getCause), new Live(_))
 
+  /**
+   * The body of a `getObject` response: a stream of byte chunks.
+   */
   type StreamResponse = ZStream[Any, Throwable, Chunk[Byte]]
 
   final private[s3] case class StreamAsyncResponseTransformer(cf: CompletableFuture[StreamResponse])
